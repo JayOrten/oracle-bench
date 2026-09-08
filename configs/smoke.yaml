@@ -1,0 +1,40 @@
+# A single real SWE-bench Lite task. All paths are relative to this file.
+dataset:
+  name: princeton-nlp/SWE-bench_Lite
+  revision: 6ec7bb89b9342f664a54a6e0a6ea6501d3437cc2
+  split: test
+  instance_id: psf__requests-2148
+
+environment:
+  image: swebench/sweb.eval.x86_64.psf_1776_requests-2148:latest
+  platform: linux/amd64
+  workdir: /testbed
+  python: /opt/miniconda3/envs/testbed/bin/python
+  source_roots: [requests]
+  import_modules: [requests]
+  existing_test_paths: [test_requests.py, tests]
+  rebuild: python -m pip install --no-deps --no-build-isolation -e .
+  pytest_version: 7.4.4
+  coverage_version: 7.6.1
+  # Developer regression test uses a mock stream, with no external HTTP service.
+  reference_targets: ["test_requests.py::RequestsTestCase::test_iter_content_handles_socket_error"]
+
+harness:
+  model: gpt-5.4
+  version: 0.153.4
+  node_image: node:22.14.0-bookworm-slim
+  api_key_env: OPENAI_API_KEY
+  wall_seconds: 300
+
+task:
+  prompt: ../prompts/unit-tests.md
+  existing_tests: keep  # Change to hide to remove environment.existing_test_paths.
+  generated_dir: oracle_tests
+
+limits:
+  evaluation_seconds: 600
+  setup_seconds: 1800
+  memory: 4g
+  cpus: 2
+
+output: ../runs
