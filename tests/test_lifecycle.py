@@ -2,7 +2,7 @@ from pathlib import Path
 
 import pytest
 
-from oracle_bench.config import load_config
+from oracle_bench.config import RuntimeConfig, load_config
 from oracle_bench.containers import CommandResult, Docker, prepare_workspace
 from oracle_bench.evaluate import archive_previous_evaluation
 from oracle_bench.harnesses.codex import generate, parse_trace
@@ -16,9 +16,9 @@ def test_generation_routes_credentials_without_saving_them(tmp_path, monkeypatch
     import json
 
     docker = RecordingDocker()
-    docker.config.harness.provider = provider
-    docker.config.harness.api_key_env = "TEST_PROVIDER_KEY"
-    monkeypatch.setenv("TEST_PROVIDER_KEY", "secret-test-value")
+    docker.config.agent.provider = provider
+    credential = "OPENROUTER_API_KEY" if provider == "openrouter" else "OPENAI_API_KEY"
+    monkeypatch.setenv(credential, "secret-test-value")
 
     def get(container, source, target, log, **kwargs):
         if source.endswith("trace.jsonl"):
@@ -46,7 +46,14 @@ def test_generation_routes_credentials_without_saving_them(tmp_path, monkeypatch
 
 class RecordingDocker(Docker):
     def __init__(self):
-        super().__init__(load_config(SAMPLE))
+        config = load_config(SAMPLE)
+        config.runtime = RuntimeConfig(
+            image="example/image:latest",
+            source_roots=["requests"],
+            import_modules=["requests"],
+            existing_test_globs=["test_requests.py", "tests"],
+        )
+        super().__init__(config)
         self.calls = []
 
     def command(self, args, log, timeout, **kwargs):

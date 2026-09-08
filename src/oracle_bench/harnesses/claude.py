@@ -10,8 +10,8 @@ from oracle_bench.io import write_json
 
 
 def require_credentials(config):
-    if not os.environ.get(config.harness.api_key_env):
-        raise RuntimeError(f"Set {config.harness.api_key_env} to run the Claude Code harness")
+    if not os.environ.get(config.agent.credential_env):
+        raise RuntimeError(f"Set {config.agent.credential_env} to run the Claude Code harness")
 
 
 def parse_trace(path: Path) -> dict:
@@ -66,13 +66,13 @@ def generate(docker, container: str, run_dir: Path):
         "--strict-mcp-config",
         "--dangerously-skip-permissions",
         "--model",
-        config.harness.model,
+        config.agent.model,
         "--max-budget-usd",
-        str(config.harness.max_budget_usd),
+        str(config.agent.max_budget_usd),
         "--max-turns",
-        str(config.harness.max_turns),
+        str(config.agent.max_turns),
     ]
-    if not config.harness.multi_agent:
+    if not config.agent.multi_agent:
         argv += ["--tools", "Bash,Read,Write,Edit,Glob,Grep"]
     # Permission bypass is confined to the non-root agent inside Docker.
     write_json(directory / "command.json", argv)
@@ -82,18 +82,16 @@ def generate(docker, container: str, run_dir: Path):
         f"{shlex.join(argv)} < /tmp/oracle-prompt.txt "
         "> /tmp/oracle-agent/trace.jsonl 2> /tmp/oracle-agent/stderr.log"
     )
-    key = os.environ[config.harness.api_key_env]
+    key = os.environ[config.agent.credential_env]
     outcome = docker.shell(
         container,
         script,
         log,
-        config.harness.wall_seconds,
+        config.agent.wall_seconds,
         user="10001:10001",
         environment={
             (
-                "ANTHROPIC_API_KEY"
-                if config.harness.auth_mode == "api_key"
-                else "CLAUDE_CODE_OAUTH_TOKEN"
+                "ANTHROPIC_API_KEY" if config.agent.auth == "api_key" else "CLAUDE_CODE_OAUTH_TOKEN"
             ): key,
             "CLAUDE_CONFIG_DIR": "/home/oracle/.claude",
             "HOME": "/home/oracle",

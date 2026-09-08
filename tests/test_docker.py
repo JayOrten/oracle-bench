@@ -51,7 +51,7 @@ def test_real_requests_pair_and_artifact_copy(tmp_path, visibility, monkeypatch)
     if not saved:
         pytest.skip("Set ORACLE_BENCH_SMOKE_RUN to a run with a prepared Requests smoke image")
     saved = Path(saved).resolve()
-    config = load_config(saved / "config.resolved.yaml")
+    config = load_config(saved / "config.resolved.yaml", resolved=True)
     config.task.existing_tests = visibility
     instance = read_json(saved / "instance.json")
     assert instance["instance_id"] == "psf__requests-2148"

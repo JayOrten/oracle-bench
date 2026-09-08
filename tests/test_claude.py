@@ -3,7 +3,7 @@ from pathlib import Path
 
 import pytest
 
-from oracle_bench.config import load_config
+from oracle_bench.config import RuntimeConfig, load_config
 from oracle_bench.containers import CommandResult
 from oracle_bench.harnesses.claude import generate, parse_trace
 
@@ -50,10 +50,15 @@ def test_incomplete_claude_trace_is_not_success(tmp_path):
 @pytest.mark.parametrize("auth_mode", ["oauth", "api_key"])
 def test_claude_launch_limits_and_secret_handling(tmp_path, monkeypatch, auth_mode):
     config = load_config(Path(__file__).parents[1] / "configs/smoke-claude.yaml")
-    config.harness.auth_mode = auth_mode
+    config.agent.auth = auth_mode
+    config.runtime = RuntimeConfig(
+        image="example/image:latest",
+        source_roots=["requests"],
+        import_modules=["requests"],
+        existing_test_globs=["test_requests.py", "tests"],
+    )
     selected = "CLAUDE_CODE_OAUTH_TOKEN" if auth_mode == "oauth" else "ANTHROPIC_API_KEY"
     other = "ANTHROPIC_API_KEY" if auth_mode == "oauth" else "CLAUDE_CODE_OAUTH_TOKEN"
-    config.harness.api_key_env = selected
     monkeypatch.setenv(selected, "secret-test-value")
     monkeypatch.setenv(other, "wrong-account")
 

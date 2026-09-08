@@ -28,14 +28,15 @@ def changed_files(before: dict, after: dict, generated_dir: str) -> tuple[list[s
 
 def snapshot(docker: Docker, container: str, target: Path, log: Path):
     config = docker.config
+    runtime = config.require_runtime()
     docker.put(container, SCRIPTS / "workspace.py", "/tmp/oracle-workspace.py", log)
     docker.execute(
         container,
         [
-            config.environment.python,
+            runtime.python,
             "/tmp/oracle-workspace.py",
             "snapshot",
-            config.environment.workdir,
+            runtime.workdir,
             "/tmp/oracle-snapshot.json",
         ],
         log,
@@ -47,6 +48,7 @@ def snapshot(docker: Docker, container: str, target: Path, log: Path):
 
 def capture(docker: Docker, container: str, run_dir: Path, before: dict, baseline: str):
     config = docker.config
+    runtime = config.require_runtime()
     log = run_dir / "agent" / "capture.log"
     after = snapshot(docker, container, run_dir / "agent" / "after.json", log)
     allowed, forbidden = changed_files(before, after, config.task.generated_dir)
@@ -55,10 +57,10 @@ def capture(docker: Docker, container: str, run_dir: Path, before: dict, baselin
     docker.execute(
         container,
         [
-            config.environment.python,
+            runtime.python,
             "/tmp/oracle-workspace.py",
             "diff",
-            config.environment.workdir,
+            runtime.workdir,
             "/tmp/oracle-workspace.diff",
             baseline,
         ],
@@ -76,7 +78,7 @@ def capture(docker: Docker, container: str, run_dir: Path, before: dict, baselin
     files = {}
     for name in allowed:
         target = generated / "files" / name
-        docker.get(container, config.environment.workdir + "/" + name, target, log)
+        docker.get(container, runtime.workdir + "/" + name, target, log)
         # Copy only regular files with the exact bytes measured in the final snapshot.
         if target.is_symlink() or digest(target.read_bytes()) != after[name]["sha256"]:
             raise RuntimeError(f"Artifact changed during capture: {name}")

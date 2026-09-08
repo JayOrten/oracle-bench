@@ -7,9 +7,9 @@ from pathlib import Path
 import yaml
 
 from oracle_bench.artifacts import capture, snapshot
-from oracle_bench.config import RunConfig, load_config
+from oracle_bench.config import RunConfig, load_config, validate_resolved_config
 from oracle_bench.containers import Docker, prepare_workspace
-from oracle_bench.datasets.swebench import resolve
+from oracle_bench.datasets import resolve_source
 from oracle_bench.evaluate import check_reference, evaluate
 from oracle_bench.harnesses import generate, require_credentials
 from oracle_bench.io import read_json, write_json
@@ -40,28 +40,32 @@ def completion_state(result: dict) -> str:
 
 
 def run(config: RunConfig) -> Path:
-    docker = Docker(config)
-    docker.check()
     require_credentials(config)
     prompt = Path(config.task.prompt).read_text()
     run_id = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ") + "-" + uuid.uuid4().hex[:8]
     run_dir = Path(config.output) / run_id
     run_dir.mkdir(parents=True)
-    # Save the prompt in the run so reevaluation does not depend on the original file.
-    config.task.prompt = str(run_dir / "prompt.txt")
-    (run_dir / "config.resolved.yaml").write_text(yaml.safe_dump(config.to_dict(), sort_keys=False))
-    context = (
-        f"\n\nPlace new tests and fixtures under `{config.task.generated_dir}/`. "
-        "Do not edit existing files outside that directory.\n"
-        f"The project Python is `{config.environment.python}`. "
-        f"Run tests with `python -m pytest -o addopts= {config.task.generated_dir}`.\n"
-    )
-    (run_dir / "prompt.txt").write_text(prompt.rstrip() + context)
     stage = "resolve"
     try:
         status(run_dir, stage)
-        instance = resolve(config.dataset)
+        instance, config.runtime = resolve_source(config.source)
+        validate_resolved_config(config)
+        runtime = config.require_runtime()
+        # Freeze both the expanded configuration and exact delivered prompt in the run.
+        config.task.prompt = str(run_dir / "prompt.txt")
+        (run_dir / "config.resolved.yaml").write_text(
+            yaml.safe_dump(config.to_dict(), sort_keys=False)
+        )
+        context = (
+            f"\n\nPlace new tests and fixtures under `{config.task.generated_dir}/`. "
+            "Do not edit existing files outside that directory.\n"
+            f"The project Python is `{runtime.python}`. "
+            f"Run tests with `python -m pytest -o addopts= {config.task.generated_dir}`.\n"
+        )
+        (run_dir / "prompt.txt").write_text(prompt.rstrip() + context)
         write_json(run_dir / "instance.json", instance)
+        docker = Docker(config)
+        docker.check()
         stage = "build"
         status(run_dir, stage)
         image = docker.prepare_image(run_dir)
@@ -99,7 +103,7 @@ def run(config: RunConfig) -> Path:
 
 
 def reevaluate(run_dir: Path) -> Path:
-    config = load_config(run_dir / "config.resolved.yaml")
+    config = load_config(run_dir / "config.resolved.yaml", resolved=True)
     docker = Docker(config)
     docker.check()
     image = read_json(run_dir / "runtime.json")["image"]

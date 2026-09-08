@@ -113,10 +113,11 @@ and a failed state.
 
 ### `config.resolved.yaml`
 
-The parsed configuration with defaults filled in and host paths made absolute.
-During a run, `task.prompt` points to this attempt's frozen `prompt.txt`. It stores
-the credential variable's name, never its value. See the
-[configuration reference](configuration.md).
+The schema-versioned run lock. It expands the small input configuration with the
+source adapter's repository `runtime`, Oracle Bench's pinned `toolchain`, agent
+defaults, dataset revision, and absolute host paths. During a run, `task.prompt`
+points to this attempt's frozen `prompt.txt`. Credentials and credential values
+are not stored. See the [configuration reference](configuration.md).
 
 ### `instance.json`
 

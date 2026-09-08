@@ -14,6 +14,7 @@ def run_version(
     docker: Docker, image: str, instance: dict, run_dir: Path, version: str, *, reference=False
 ) -> dict:
     config = docker.config
+    runtime = config.require_runtime()
     directory = (run_dir / "reference" if reference else run_dir) / version
     directory.mkdir(parents=True, exist_ok=True)
     log = directory / "output.log"
@@ -24,9 +25,7 @@ def run_version(
                 apply_patch(
                     docker, container, instance["golden_patch"], directory / "repair.patch", log
                 )
-                docker.shell(
-                    container, config.environment.rebuild, log, config.limits.setup_seconds
-                )
+                docker.shell(container, runtime.rebuild, log, config.limits.setup_seconds)
             if reference:
                 apply_patch(
                     docker,
@@ -35,7 +34,7 @@ def run_version(
                     directory / "reference.patch",
                     log,
                 )
-                targets = config.environment.reference_targets or instance["reference_test_ids"]
+                targets = instance["reference_test_ids"]
                 if not targets:
                     raise ValueError("No reference test IDs available for the pair smoke check")
             else:
@@ -43,22 +42,22 @@ def run_version(
                 if manifest["empty"]:
                     return incomplete_result(directory, "no_tests", "Agent produced no test files")
                 docker.put_contents(
-                    container, run_dir / "generated" / "files", config.environment.workdir, log
+                    container, run_dir / "generated" / "files", runtime.workdir, log
                 )
                 targets = [config.task.generated_dir]
             settings = {
-                "workdir": config.environment.workdir,
+                "workdir": runtime.workdir,
                 "output": "/tmp/oracle-results",
                 "targets": targets,
-                "source_roots": config.environment.source_roots,
-                "import_modules": config.environment.import_modules,
+                "source_roots": runtime.source_roots,
+                "import_modules": runtime.import_modules,
             }
             write_json(directory / "runner.json", settings)
             docker.put(container, SCRIPTS / "pytest_runner.py", "/tmp/oracle-runner.py", log)
             docker.put(container, directory / "runner.json", "/tmp/oracle-runner.json", log)
             execution = docker.execute(
                 container,
-                [config.environment.python, "/tmp/oracle-runner.py", "/tmp/oracle-runner.json"],
+                [runtime.python, "/tmp/oracle-runner.py", "/tmp/oracle-runner.json"],
                 log,
                 config.limits.evaluation_seconds,
                 check=False,

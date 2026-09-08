@@ -2,7 +2,8 @@
 
 ## Quickstart
 
-Requires Python 3.11+, [uv](https://docs.astral.sh/uv/), Docker with a running Linux daemon, and an Anthropic API key.
+Requires Python 3.11+, [uv](https://docs.astral.sh/uv/), Docker with a running
+Linux daemon, and a credential for the provider selected in the configuration.
 
 Copy the local secrets file and add your API keys:
 
@@ -77,9 +78,8 @@ The YAML interface defines:
 
 | Section       | Controls                                                                    |
 | ------------- | --------------------------------------------------------------------------- |
-| `dataset`     | Dataset revision and instance ID                                            |
-| `environment` | Repository image, Python, source paths, setup and reference tests           |
-| `harness`     | Agent, provider, model, credential variable, and generation limits          |
+| `source`      | Source adapter and instance ID                                               |
+| `agent`       | Agent harness, provider, model, and generation limits                       |
 | `task`        | Prompt file, generated-test directory, and `existing_tests: keep` or `hide` |
 | `limits`      | Setup/evaluation timeouts and container CPU/memory limits                   |
 | `output`      | Run-directory location                                                      |
@@ -87,7 +87,11 @@ The YAML interface defines:
 See the [complete configuration reference](docs/configuration.md) for every
 setting, default, validation rule, and harness-specific behavior.
 
-File paths are relative to the YAML file. `hide` removes the configured `environment.existing_test_paths`; both evaluation versions use the same visibility setting. The private reference check retains the original tests.
+File paths are relative to the YAML file. The SWE-bench adapter derives the
+prepared image, repository runtime, existing-test paths, coverage settings, and
+private reference targets from the instance. `hide` applies the adapter's
+repository-specific test removal rules; both evaluation versions use the same
+visibility setting. The private reference check retains the original tests.
 
 ### Results
 

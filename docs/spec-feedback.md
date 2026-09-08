@@ -255,9 +255,9 @@ For qualitative analysis, annotate examples as missed target, missed triggering 
 An illustrative configuration could look like this:
 
 ```yaml
-dataset:
-  adapter: swebench
-  source: princeton-nlp/SWE-bench_Verified
+source:
+  kind: swebench
+  dataset: verified
   revision: "<pinned revision>"
   manifest: manifests/pilot.jsonl
 

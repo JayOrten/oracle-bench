@@ -47,9 +47,16 @@ Inspect and pin a concrete upstream revision before integrating SWE-bench enviro
 
 ### Minimum data contracts
 
-`Instance` contains the source task ID, repository identity, base revision, private golden repair patch, environment/image reference, source roots, test-path removal rules, and test command settings. Preserve the original source metadata on the host for later analysis.
+`Instance` contains the source task ID, repository identity, base revision, and
+private golden repair and reference-test patches. The source adapter separately
+resolves the image, source roots, test-path removal rules, and runner settings.
+Preserve the original source metadata on the host for later analysis.
 
-`RunConfig` contains one instance, harness version/install recipe, model, prompt path, time limits, and output location. Credentials come from runtime configuration and are excluded from saved resolved configuration.
+The input `RunConfig` contains the source and agent selectors, prompt path,
+experimental limits, and output location. The source adapter expands it into a
+saved schema-versioned configuration containing the repository runtime and
+internally pinned evaluator toolchain. Credentials are inferred from the selected
+agent/provider and excluded from saved configuration.
 
 `GeneratedTests` contains a frozen bundle of allowed test files and fixtures, its content hash, and the full workspace diff for inspection. Capture untracked files as well as tracked changes.
 
@@ -58,7 +65,9 @@ Inspect and pin a concrete upstream revision before integrating SWE-bench enviro
 ### Repository preparation
 
 1. Resolve the base snapshot and build or obtain its project environment.
-2. Identify existing test paths using a small repository-specific configuration. Remove them only when `existing_tests: hide` is selected; do not use a universal filename heuristic to delete arbitrary project files.
+2. Have the source adapter identify existing test paths using repository-specific
+   rules. Remove them only when `existing_tests: hide` is selected; do not use a
+   universal filename heuristic to delete arbitrary project files.
 3. Preserve build/runtime assets needed by the project. If removing tests breaks installation, adjust the preparation order or choose another initial instance. Do not turn the first stage into general fixture extraction.
 4. Keep the reference issue, golden repair, and developer regression tests on the host.
 5. Prepare both evaluation branches from the same working-tree preparation rules. Apply the production repair only to the golden branch.

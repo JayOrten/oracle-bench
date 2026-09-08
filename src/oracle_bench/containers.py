@@ -73,47 +73,48 @@ class Docker:
 
     def prepare_image(self, run_dir: Path) -> str:
         config = self.config
+        runtime = config.require_runtime()
         build = run_dir / "build"
         build.mkdir()
         log = build / "output.log"
         # Pull the selected instance image; build only the small instrumentation/runtime layer.
-        source = self.inspect_image(config.environment.image)
+        source = self.inspect_image(runtime.image)
         if source is None:
             self.command(
-                ["pull", "--platform", config.environment.platform, config.environment.image],
+                ["pull", "--platform", runtime.platform, runtime.image],
                 log,
                 config.limits.setup_seconds,
             )
-            source = self.inspect_image(config.environment.image)
+            source = self.inspect_image(runtime.image)
         if source is None:
             raise RuntimeError("Pulled image cannot be inspected")
-        node = self.inspect_image(config.harness.node_image)
+        node = self.inspect_image(config.toolchain.node_image)
         if node is None:
             self.command(
-                ["pull", "--platform", config.environment.platform, config.harness.node_image],
+                ["pull", "--platform", runtime.platform, config.toolchain.node_image],
                 log,
                 config.limits.setup_seconds,
             )
-            node = self.inspect_image(config.harness.node_image)
+            node = self.inspect_image(config.toolchain.node_image)
         if node is None:
             raise RuntimeError("Node runtime image cannot be inspected")
         # Registry digests work with BuildKit as well as the legacy builder.
         # Locally built images can instead be referenced by their image ID.
         source_ref = (source.get("RepoDigests") or [source["Id"]])[0]
         node_ref = (node.get("RepoDigests") or [node["Id"]])[0]
-        python_dir = str(Path(config.environment.python).parent)
+        python_dir = str(Path(runtime.python).parent)
         package = (
-            "@anthropic-ai/claude-code" if config.harness.kind == "claude" else "@openai/codex"
+            "@anthropic-ai/claude-code" if config.agent.harness == "claude" else "@openai/codex"
         )
-        agent_prefix = "/opt/oracle-" + config.harness.kind
+        agent_prefix = "/opt/oracle-" + config.agent.harness
         recipe = f"""FROM {node_ref} AS agent_runtime
-RUN npm install --prefix {agent_prefix} {package}@{config.harness.version}
+RUN npm install --prefix {agent_prefix} {package}@{config.agent.version}
 FROM {source_ref}
 USER root
 COPY --from=agent_runtime /usr/local/bin/node /opt/oracle-node/node
 COPY --from=agent_runtime {agent_prefix} {agent_prefix}
 ENV PATH={python_dir}:/opt/oracle-node:{agent_prefix}/node_modules/.bin:$PATH
-RUN {shlex.quote(config.environment.python)} -m pip install pytest=={config.environment.pytest_version} coverage=={config.environment.coverage_version}
+RUN {shlex.quote(runtime.python)} -m pip install pytest=={config.toolchain.pytest_version} coverage=={config.toolchain.coverage_version}
 RUN useradd --create-home --uid 10001 oracle
 """
         (build / "Dockerfile").write_text(recipe)
@@ -121,7 +122,7 @@ RUN useradd --create-home --uid 10001 oracle
         image = "oracle-bench/runtime:" + digest(recipe.encode())[:24]
         if self.inspect_image(image) is None:
             self.command(
-                ["build", "--platform", config.environment.platform, "-t", image, str(build)],
+                ["build", "--platform", runtime.platform, "-t", image, str(build)],
                 log,
                 config.limits.setup_seconds,
             )
@@ -132,11 +133,11 @@ RUN useradd --create-home --uid 10001 oracle
             build / "images.json",
             {
                 "source": {
-                    "reference": config.environment.image,
+                    "reference": runtime.image,
                     "id": source["Id"],
                     "digests": source.get("RepoDigests", []),
                 },
-                "node": {"reference": config.harness.node_image, "id": node["Id"]},
+                "node": {"reference": config.toolchain.node_image, "id": node["Id"]},
                 "runtime": {"reference": image, "id": resolved["Id"]},
             },
         )
@@ -146,6 +147,7 @@ RUN useradd --create-home --uid 10001 oracle
     def container(self, image: str, log: Path, *, network: bool = False):
         name = "oracle-bench-" + uuid.uuid4().hex[:16]
         limits = self.config.limits
+        runtime = self.config.require_runtime()
         args = [
             "run",
             "--detach",
@@ -153,7 +155,7 @@ RUN useradd --create-home --uid 10001 oracle
             "--name",
             name,
             "--platform",
-            self.config.environment.platform,
+            runtime.platform,
             "--memory",
             limits.memory,
             "--cpus",
@@ -182,7 +184,7 @@ RUN useradd --create-home --uid 10001 oracle
         environment: dict | None = None,
         check: bool = True,
     ) -> CommandResult:
-        args = ["exec", "--workdir", self.config.environment.workdir]
+        args = ["exec", "--workdir", self.config.require_runtime().workdir]
         if user:
             args += ["--user", user]
         env = os.environ.copy()
@@ -222,28 +224,30 @@ def prepare_workspace(
     docker: Docker, container: str, instance: dict, log: Path, *, keep_tests: bool = False
 ):
     config = docker.config
+    runtime = config.require_runtime()
     q = shlex.quote
     # The container is new and private to this attempt; resetting it never touches the host repo.
     docker.shell(
         container,
         f"git reset --hard {q(instance['base_commit'])}\ngit clean -fdx\n"
-        f"{config.environment.rebuild}\n"
+        f"{runtime.rebuild}\n"
         "git config user.email oracle-bench@localhost\n"
         "git config user.name OracleBench\n"
-        f"git config --global --add safe.directory {q(config.environment.workdir)}\n",
+        f"git config --global --add safe.directory {q(runtime.workdir)}\n",
         log,
         config.limits.setup_seconds,
     )
     if not keep_tests and config.task.existing_tests == "hide":
         script = """import pathlib, shutil, sys
-for name in sys.argv[1:]:
-    p = pathlib.Path(name)
+root = pathlib.Path('.')
+paths = {p for pattern in sys.argv[1:] for p in root.glob(pattern)}
+for p in sorted(paths, key=lambda value: len(value.parts), reverse=True):
     if p.is_symlink() or p.is_file(): p.unlink()
     elif p.is_dir(): shutil.rmtree(p)
 """
         docker.execute(
             container,
-            [config.environment.python, "-c", script, *config.environment.existing_test_paths],
+            [runtime.python, "-c", script, *runtime.existing_test_globs],
             log,
             60,
         )
@@ -252,7 +256,7 @@ for name in sys.argv[1:]:
         f"test ! -e {q(config.task.generated_dir)}\n"
         f"mkdir -p {q(config.task.generated_dir)}\n"
         "git add -A\ngit commit --allow-empty -m 'Oracle Bench workspace'\n"
-        f"chown -R 10001:10001 {q(config.environment.workdir)}\n",
+        f"chown -R 10001:10001 {q(runtime.workdir)}\n",
         log,
         config.limits.setup_seconds,
     )
