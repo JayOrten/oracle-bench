@@ -37,7 +37,8 @@ def test_local_sdk_build_exec_and_copy(tmp_path):
         context / "container_helpers",
         ignore=shutil.ignore_patterns("__pycache__"),
     )
-    with docker.from_env() as client:
+    client = docker.from_env()
+    try:
         with (tmp_path / "build.log").open("w") as log:
             image = build_image(
                 client,
@@ -71,6 +72,8 @@ def test_local_sdk_build_exec_and_copy(tmp_path):
                 assert (tmp_path / "copied").read_bytes() == prompt.read_bytes()
         finally:
             client.images.remove(image.id)
+    finally:
+        client.close()
 
 
 # Deliberately handwritten evaluator probes, not benchmark predictions.

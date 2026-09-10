@@ -89,7 +89,7 @@ The YAML interface defines:
 | -------- | --------------------------------------------------------------------------- |
 | `source` | Source adapter and instance ID                                              |
 | `agent`  | Agent harness, provider, model, and generation limits                       |
-| `task`   | Prompt file, generated-test directory, and `existing_tests: keep` or `hide` |
+| `task`   | Repository/localized scope, prompt, generated directory, and test visibility |
 | `limits` | Setup/evaluation timeouts and container CPU/memory limits                   |
 | `output` | Run-directory location                                                      |
 
@@ -98,9 +98,10 @@ setting, default, validation rule, and harness-specific behavior.
 
 File paths are relative to the YAML file. The SWE-bench adapter derives the
 prepared image, repository runtime, existing-test paths, coverage settings, and
-private reference targets from the instance. `hide` applies the adapter's
-repository-specific test removal rules; both evaluation versions use the same
-visibility setting. The private reference check retains the original tests.
+private reference targets from the instance. Localized tasks disclose only the
+affected production file or enclosing symbol derived from the private repair.
+`hide_all` removes the adapter's known test paths during generation and final
+evaluation. The private reference check retains the original tests.
 
 ### Results
 

@@ -32,9 +32,19 @@ def test_prompt_controls_how_resolved_environment_is_described(resolved_config):
     )
 
 
-@pytest.mark.parametrize("name", ["unit-tests.md", "smoke-tests.md"])
+def test_localized_prompt_receives_only_the_sanitized_target(resolved_config):
+    prompt = render_prompt(
+        "Generate tests for ${test_target}.",
+        resolved_config,
+        "src/example.py (Example.run)",
+    )
+
+    assert prompt == "Generate tests for src/example.py (Example.run)."
+
+
+@pytest.mark.parametrize("name", ["unit-tests.md", "localized-tests.md", "smoke-tests.md"])
 def test_bundled_prompts_render(name, resolved_config):
-    prompt = render_prompt((ROOT / "prompts" / name).read_text(), resolved_config)
+    prompt = render_prompt((ROOT / "prompts" / name).read_text(), resolved_config, "app/subject.py")
 
     assert "oracle_tests" in prompt
     assert "/opt/miniconda3/envs/testbed/bin/python" in prompt

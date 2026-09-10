@@ -7,6 +7,7 @@ agent:
 
 task:
   prompt: ../prompts/unit-tests.md
-  existing_tests: keep
+  scope: repository
+  existing_tests: hide_all
 
 output: ../runs

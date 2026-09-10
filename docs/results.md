@@ -80,7 +80,9 @@ The machine-readable aggregate for the generated tests.
 | `submission_compliant` | Whether the agent made only permitted changes |
 | `forbidden_changes` | Paths changed outside the allowed submission policy |
 | `diagnostic_only` | Whether violations make this a diagnostic result |
-| `existing_tests` | `keep` or `hide`, matching the generation condition |
+| `task_scope` | `localized` or `repository`, matching the generation assignment |
+| `test_target` | Sanitized localized code area delivered to the agent, or null |
+| `existing_tests` | Test-visibility policy; `keep` means existing tests were visible |
 | `buggy_status`, `golden_status` | Overall execution status for each version |
 | `matrix` | Counts and test IDs in each binary paired cell |
 | `tests` | One paired row per test ID |
@@ -134,6 +136,8 @@ reveal the defect and repair; it must not be exposed to the generation agent.
 
 The exact prompt delivered to the agent after resolving its environment
 variables. Agent-facing instructions remain in the selected prompt template.
+For localized tasks this contains the sanitized production path or enclosing
+symbol, but no private patch text, changed line numbers, or expected behavior.
 
 ### `runtime.json`
 

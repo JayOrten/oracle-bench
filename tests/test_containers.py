@@ -146,7 +146,12 @@ def test_optional_output_only_suppresses_missing_files(config, tmp_path):
 
 @pytest.mark.parametrize(
     "visibility,reference,hide",
-    [("keep", False, False), ("hide", False, True), ("hide", True, False)],
+    [
+        ("keep", False, False),
+        ("hide", False, True),
+        ("hide_all", False, True),
+        ("hide_all", True, False),
+    ],
 )
 def test_workspace_preserves_preparation_order(config, tmp_path, visibility, reference, hide):
     config.task.existing_tests = visibility

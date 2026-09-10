@@ -84,6 +84,8 @@ def evaluate(client, config, image: str, instance: dict, run_dir: Path):
         artifact_sha256=manifest["sha256"],
         submission_compliant=manifest["compliant"],
         forbidden_changes=manifest["forbidden_changes"],
+        task_scope=config.task.scope,
+        test_target=instance.get("test_target") if config.task.scope == "localized" else None,
         existing_tests=config.task.existing_tests,
         agent=read_json(run_dir / "agent" / "result.json"),
         coverage={v: read_json(run_dir / v / "coverage.json") for v in ["buggy", "golden"]},

@@ -16,12 +16,20 @@ def config_file(tmp_path, section, key, value):
     return path
 
 
-@pytest.mark.parametrize("visibility", ["keep", "hide"])
+@pytest.mark.parametrize("visibility", ["keep", "hide", "hide_all"])
 def test_test_visibility_is_explicit_and_paths_are_config_relative(tmp_path, visibility):
     config = load_config(config_file(tmp_path, "task", "existing_tests", visibility))
     assert config.task.existing_tests == visibility
     assert config.task.prompt == str((tmp_path / "../prompts/unit-tests.md").resolve())
     assert config.output == str((tmp_path / "../runs").resolve())
+
+
+def test_sample_uses_repository_scope_with_existing_tests_hidden():
+    config = load_config(SAMPLE)
+
+    assert config.task.scope == "repository"
+    assert config.task.existing_tests == "hide_all"
+    assert config.task.hides_existing_tests
 
 
 def test_small_config_resolves_harness_defaults():
@@ -38,6 +46,7 @@ def test_small_config_resolves_harness_defaults():
     "section,key,value",
     [
         ("task", "existing_tests", "sometimes"),
+        ("task", "scope", "package"),
         ("task", "generated_dir", "../outside"),
         ("task", "generated_dir", "/outside"),
         ("task", "generated_dir", ".git/hooks"),

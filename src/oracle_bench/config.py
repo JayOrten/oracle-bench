@@ -108,8 +108,14 @@ class AgentConfig(ConfigModel):
 
 class TaskConfig(ConfigModel):
     prompt: str
-    existing_tests: Literal["keep", "hide"] = "keep"
+    scope: Literal["localized", "repository"] = "repository"
+    existing_tests: Literal["keep", "hide", "hide_all"] = "hide_all"
     generated_dir: RepositoryPath = "oracle_tests"
+
+    @property
+    def hides_existing_tests(self) -> bool:
+        """Treat the original ``hide`` spelling as a backward-compatible alias."""
+        return self.existing_tests in {"hide", "hide_all"}
 
 
 class LimitsConfig(ConfigModel):

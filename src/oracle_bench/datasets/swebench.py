@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import json
 import re
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 
 from oracle_bench.config import RuntimeConfig, SourceConfig
 from oracle_bench.io import digest
@@ -24,6 +24,78 @@ REPOSITORY_LAYOUTS = {
     "sphinx-doc/sphinx": ("sphinx", "sphinx", ["tests"]),
     "sympy/sympy": ("sympy", "sympy", ["sympy/**/tests"]),
 }
+
+DIFF_FILE = re.compile(r"^\+\+\+ b/(.+)$")
+PYTHON_SCOPE = re.compile(r"^([ ]*)(?:async[ ]+def|def|class)[ ]+([A-Za-z_]\w*)")
+HUNK_HEADER = re.compile(r"^@@ .+ @@(?: (.*))?$")
+
+
+def localized_test_target(patch: str, source_roots: list[str]) -> str:
+    """Derive an agent-safe code location without exposing repair semantics.
+
+    Unified diffs normally retain the enclosing definition in their context. When
+    they do not, the production file remains a stable and useful localization hint.
+    Added/removed content is deliberately ignored when finding symbols so a name
+    introduced by the repair cannot leak to the generation agent.
+    """
+    roots = tuple(PurePosixPath(root) for root in source_roots)
+    targets: dict[str, set[str]] = {}
+    current: str | None = None
+    scopes: list[tuple[int, str]] = []
+    hunk_has_symbol = False
+
+    for line in patch.splitlines():
+        match = DIFF_FILE.match(line)
+        if match:
+            candidate = PurePosixPath(match.group(1))
+            in_source = any(root == candidate or root in candidate.parents for root in roots)
+            current = str(candidate) if in_source else None
+            if current and not _is_test_path(candidate):
+                targets.setdefault(current, set())
+            else:
+                current = None
+            scopes = []
+            hunk_has_symbol = False
+            continue
+        hunk = HUNK_HEADER.match(line)
+        if hunk:
+            scopes = []
+            hunk_has_symbol = False
+            section = hunk.group(1) or ""
+            scope = PYTHON_SCOPE.match(section)
+            if current is not None and scope:
+                targets[current].add(scope.group(2))
+                hunk_has_symbol = True
+            continue
+        if (
+            current is None
+            or hunk_has_symbol
+            or line.startswith(("+++", "---"))
+            or not line.startswith(" ")
+        ):
+            continue
+        scope = PYTHON_SCOPE.match(line[1:])
+        if not scope:
+            continue
+        indent, name = len(scope.group(1)), scope.group(2)
+        scopes = [(depth, value) for depth, value in scopes if depth < indent]
+        scopes.append((indent, name))
+        targets[current].add(".".join(value for _, value in scopes))
+        hunk_has_symbol = True
+
+    if not targets:
+        raise ValueError("Golden patch does not modify a Python production source path")
+    rendered = []
+    for path, symbols in targets.items():
+        if symbols:
+            rendered.append(f"{path} ({', '.join(sorted(symbols))})")
+        else:
+            rendered.append(path)
+    return ", ".join(rendered)
+
+
+def _is_test_path(path: PurePosixPath) -> bool:
+    return "tests" in path.parts or path.name.startswith(("test_", "tests_"))
 
 
 def image_for(instance_id: str, platform: str = "linux/amd64") -> str:
@@ -76,6 +148,7 @@ def resolve(config: SourceConfig) -> tuple[dict, RuntimeConfig]:
         fail_to_pass = json.loads(fail_to_pass)
     if not isinstance(fail_to_pass, list) or not all(isinstance(v, str) for v in fail_to_pass):
         raise ValueError("FAIL_TO_PASS must be a list of test IDs")
+    runtime = runtime_for(record)
     instance = {
         "schema_version": 1,
         "instance_id": record["instance_id"],
@@ -84,6 +157,7 @@ def resolve(config: SourceConfig) -> tuple[dict, RuntimeConfig]:
         "golden_patch": record["patch"],
         "reference_test_patch": record["test_patch"],
         "reference_test_ids": fail_to_pass,
+        "test_target": localized_test_target(record["patch"], runtime.source_roots),
         "source": {
             "kind": config.kind,
             "dataset": config.dataset,
@@ -95,4 +169,4 @@ def resolve(config: SourceConfig) -> tuple[dict, RuntimeConfig]:
         },
         "original_record": record,
     }
-    return instance, runtime_for(record)
+    return instance, runtime

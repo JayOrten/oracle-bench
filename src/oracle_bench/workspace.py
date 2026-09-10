@@ -28,7 +28,7 @@ class RepositoryWorkspace:
             {
                 "workdir": self.runtime.workdir,
                 "generated_dir": self.config.task.generated_dir,
-                "hide": self.config.task.existing_tests == "hide" and not reference,
+                "hide": self.config.task.hides_existing_tests and not reference,
                 "existing_test_globs": self.runtime.existing_test_globs,
             },
         )

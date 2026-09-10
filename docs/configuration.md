@@ -42,6 +42,15 @@ task:
   prompt: ../prompts/unit-tests.md
 ```
 
+For a localized SWE-bench assignment:
+
+```yaml
+task:
+  prompt: ../prompts/localized-tests.md
+  scope: localized
+  existing_tests: hide_all
+```
+
 For a Claude run:
 
 ```yaml
@@ -254,18 +263,35 @@ instructions and may use these resolved environment variables:
 - `${generated_dir}`: repository-relative directory where new tests are allowed.
 - `${project_python}`: absolute path to the resolved project Python.
 - `${workdir}`: repository root inside the container.
+- `${test_target}`: sanitized production file or enclosing symbol derived from
+  the private repair for a localized task.
 
 Oracle Bench substitutes those variables and freezes the exact delivered text as
 `prompt.txt`. Use `$$` when the prompt needs a literal dollar sign.
 
+### `task.scope`
+
+- **Type:** `localized` or `repository`
+- **Default:** `repository`
+
+`localized` bounds a SWE-bench assignment to production files and, when patch
+context identifies one unambiguously, an enclosing class or function. The prompt
+receives this location through `${test_target}`; repair contents, changed lines,
+reference tests, and expected behavior remain private. `repository` supplies no
+issue-derived location and is intended for small projects where repository-wide
+test generation is meaningful.
+
 ### `task.existing_tests`
 
-- **Type:** `keep` or `hide`
-- **Default:** `keep`
+- **Type:** `keep` or `hide_all`
+- **Default:** `hide_all`
 
-Whether existing tests remain visible in generation and final evaluation.
-`hide` applies repository-specific test path rules supplied by the SWE-bench
-adapter. Private reference validation always retains existing tests.
+Whether existing repository tests remain visible to the agent and available in
+the final evaluation workspace. Evaluation still executes only generated tests.
+`hide_all` removes repository-specific test paths supplied by the SWE-bench
+adapter; generated tests therefore cannot reuse their fixtures or helpers. Private
+reference validation always retains existing tests. The former value `hide` is
+accepted as a backward-compatible alias for older configurations.
 
 ### `task.generated_dir`
 

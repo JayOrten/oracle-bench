@@ -22,3 +22,4 @@ def test_report_renders_optional_harness_cost(tmp_path, cost):
     text = report(tmp_path).read_text()
     assert ("$0.0378" in text) == (cost is not None)
     assert ("Monetary cost is unavailable" in text) == (cost is None)
+    assert "Existing repository tests visible to agent: **yes**" in text

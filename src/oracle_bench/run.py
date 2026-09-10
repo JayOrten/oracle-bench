@@ -61,7 +61,8 @@ def run(config: RunConfig) -> Path:
         (run_dir / "config.resolved.yaml").write_text(
             yaml.safe_dump(config.to_dict(), sort_keys=False)
         )
-        (run_dir / "prompt.txt").write_text(render_prompt(prompt_template, config))
+        test_target = instance["test_target"] if config.task.scope == "localized" else None
+        (run_dir / "prompt.txt").write_text(render_prompt(prompt_template, config, test_target))
         write_json(run_dir / "instance.json", instance)
         with docker_client() as client:
             # Preapre task image

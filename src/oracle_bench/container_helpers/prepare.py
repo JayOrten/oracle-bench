@@ -12,16 +12,22 @@ def git(*args):
     subprocess.run(["git", *args], check=True)
 
 
+def remove_existing_tests(root: Path, patterns: list[str]) -> None:
+    """Remove every adapter-declared test path, including nested test trees."""
+    paths = {path for pattern in patterns for path in root.glob(pattern)}
+    # Remove children before parents when adapter patterns happen to overlap.
+    for path in sorted(paths, key=lambda item: len(item.parts), reverse=True):
+        if path.is_symlink() or path.is_file():
+            path.unlink()
+        elif path.is_dir():
+            shutil.rmtree(path)
+
+
 def prepare(settings):
     root = Path(settings["workdir"])
     os.chdir(root)
     if settings["hide"]:
-        paths = {path for pattern in settings["existing_test_globs"] for path in root.glob(pattern)}
-        for path in sorted(paths, key=lambda item: len(item.parts), reverse=True):
-            if path.is_symlink() or path.is_file():
-                path.unlink()
-            elif path.is_dir():
-                shutil.rmtree(path)
+        remove_existing_tests(root, settings["existing_test_globs"])
     # Refuse to repurpose an existing directory: only new files are submissions.
     (root / settings["generated_dir"]).mkdir(parents=True, exist_ok=False)
     git("config", "user.email", "oracle-bench@localhost")

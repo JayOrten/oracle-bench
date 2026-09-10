@@ -18,13 +18,16 @@ def report(run_dir: Path) -> Path:
     lines = [
         f"# Oracle Bench: {results['instance_id']}",
         "",
-        f"Existing tests: **{results['existing_tests']}**. "
+        f"Existing repository tests visible to agent: "
+        f"**{'yes' if results['existing_tests'] == 'keep' else 'no'}**. "
         f"Agent: **{results['agent']['status']}**.",
         "",
         f"Buggy execution: **{results['buggy_status']}**. "
         f"Golden execution: **{results['golden_status']}**.",
         "",
     ]
+    if results.get("test_target"):
+        lines += [f"Localized test target: **{results['test_target']}**.", ""]
     if results["diagnostic_only"]:
         lines += [
             "**Diagnostic only:** the agent changed files outside its allowed test artifact.",
@@ -77,7 +80,12 @@ def report(run_dir: Path) -> Path:
         "Git history and upstream retrieval have not been audited. "
         "The paired counts include only completed test executions on both versions. "
         "Skips, expected failures, setup/collection errors, and incomplete runs are separate. "
-        "Coverage excludes existing tests as execution targets, but generated tests may reuse fixtures.",
+        "Coverage excludes existing tests as execution targets. "
+        + (
+            "Because existing tests were visible, generated tests may reuse their fixtures."
+            if results["existing_tests"] == "keep"
+            else "Existing test paths were removed from both final evaluation workspaces."
+        ),
         "",
         f"Agent wall time: {results['agent'].get('duration_seconds', 0):.1f}s. "
         f"Reported token usage: `{results['agent'].get('usage')}`. "

@@ -12,5 +12,7 @@ agent:
 
 task:
   prompt: ../prompts/smoke-tests.md
+  scope: repository
+  existing_tests: hide_all
 
 output: ../runs
