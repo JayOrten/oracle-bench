@@ -1,3 +1,4 @@
+# NOTE: obviously generated, probably modify this in the future
 from pathlib import Path
 
 from oracle_bench.harnesses.transcript import render_session
@@ -64,6 +65,7 @@ def report(run_dir: Path) -> Path:
         "",
         "- [Paired outcomes and test IDs](results.json)",
         "- [Frozen test manifest](generated/manifest.json)",
+        "- [Image provenance](build/images.json)",
         "- [Readable agent session](agent/session.log)",
         "- [Raw agent events](agent/trace.jsonl)",
         "- [Workspace diff](agent/workspace.diff)",

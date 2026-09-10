@@ -45,6 +45,10 @@ def test_small_config_resolves_harness_defaults():
         ("source", "kind", "git"),
         ("agent", "wall_seconds", 0),
         ("agent", "wall_seconds", True),
+        ("agent", "wall_seconds", "300"),
+        ("agent", "max_turns", 1.5),
+        ("agent", "multi_agent", "false"),
+        ("limits", "cpus", float("inf")),
         ("agent", "typo", 123),
         ("agent", "provider", "unknown"),
     ],
@@ -60,7 +64,7 @@ def test_verbose_schema_is_rejected(tmp_path, old_section):
     raw[old_section] = {}
     path = tmp_path / "config.yaml"
     path.write_text(yaml.safe_dump(raw))
-    with pytest.raises(ValueError, match="Unknown RunConfig settings"):
+    with pytest.raises(ValueError, match="Extra inputs are not permitted"):
         load_config(path)
 
 
@@ -109,3 +113,25 @@ def test_resolved_configuration_contains_no_credential_value(monkeypatch):
     monkeypatch.setenv("OPENAI_API_KEY", "secret-test-value")
     config = load_config(SAMPLE)
     assert "secret-test-value" not in yaml.safe_dump(config.to_dict())
+
+
+@pytest.mark.parametrize(
+    "field,value",
+    [
+        ("source_roots", []),
+        ("source_roots", ["../escape"]),
+        ("existing_test_globs", ["/outside"]),
+        ("python", "relative/python"),
+        ("import_modules", [123]),
+    ],
+)
+def test_runtime_schema_checks_external_adapter_data(field, value):
+    values = {
+        "image": "example/image",
+        "source_roots": ["requests"],
+        "import_modules": ["requests"],
+        "existing_test_globs": ["tests"],
+    }
+    values[field] = value
+    with pytest.raises(ValueError):
+        RuntimeConfig(**values)

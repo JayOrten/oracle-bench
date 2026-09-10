@@ -46,7 +46,9 @@ Preserve these boundaries:
 - `src/oracle_bench/cli.py`: `run`, `evaluate`, and `report` command interface.
 - `src/oracle_bench/config.py`: strict YAML data model, defaults, and validation.
 - `src/oracle_bench/run.py`: top-level lifecycle and status handling.
-- `src/oracle_bench/containers.py`: Docker image, container, and workspace setup.
+- `src/oracle_bench/container/`: Docker SDK integration, lifecycle, transfers, and image builds.
+- `src/oracle_bench/docker/`: checked-in harness/runtime Dockerfiles.
+- `src/oracle_bench/workspace.py`: repository preparation and patch application.
 - `src/oracle_bench/datasets/`: source-record resolution and normalization.
 - `src/oracle_bench/harnesses/`: Codex, Claude Code, and transcript adapters.
 - `src/oracle_bench/artifacts.py`: snapshots, diffs, capture policy, and hashes.

@@ -17,8 +17,12 @@ runs/<run-id>/
 ├── report.md
 ├── results.json
 ├── build/
-│   ├── Dockerfile
-│   ├── .dockerignore
+│   ├── agent/agent.Dockerfile
+│   ├── runtime/runtime.Dockerfile
+│   ├── runtime/container_helpers/*.py
+│   ├── requested.json
+│   ├── agent.inputs.json
+│   ├── runtime.inputs.json
 │   ├── images.json
 │   └── output.log (when a pull or build runs)
 ├── reference/
@@ -128,9 +132,8 @@ reveal the defect and repair; it must not be exposed to the generation agent.
 
 ### `prompt.txt`
 
-The exact prompt delivered to the agent. It combines the selected prompt file
-with instructions identifying the allowed output directory, repository Python,
-and generated-test command.
+The exact prompt delivered to the agent after resolving its environment
+variables. Agent-facing instructions remain in the selected prompt template.
 
 ### `runtime.json`
 
@@ -140,27 +143,30 @@ this image to remain available. Its source images are detailed in
 
 ## `build/`
 
-### `build/Dockerfile`
+### Build contexts and inputs
 
-The generated runtime recipe. It starts from resolved source and Node images,
-installs the pinned agent CLI, copies Node into the repository image, installs
-pytest and coverage in the repository environment, and creates the non-root agent
-user.
+`build/agent/` and `build/runtime/` contain copies of the checked-in Dockerfiles
+and, for the runtime, public Python helpers. These directories are isolated build
+contexts containing only approved assets. Host run data and credentials do not
+enter either context. The runtime recipe copies the harness from its reusable
+image and extends the prepared repository image.
 
-### `build/.dockerignore`
-
-Restricts the build context to the Dockerfile and ignore file. Run data and
-credentials do not enter the Docker build context.
+`requested.json` records source/Node references, platform, and harness/version
+before any pull. `agent.inputs.json` and `runtime.inputs.json` record non-secret
+arguments, platform, recipe name, and SHA-256 hashes of all context files before
+their builds. Cache tags depend on these inputs, including helper contents.
+Earlier runs retain their original `build/Dockerfile` and `.dockerignore` layout.
 
 ### `build/images.json`
 
-Configured references and resolved IDs or digests for the repository, Node, and
-final runtime images. This is the image-provenance record.
+Configured references and resolved IDs or digests for the repository, Node,
+harness, and final runtime images. This record is updated as each image becomes
+available, so interrupted builds can contain only the completed stages.
 
 ### `build/output.log`
 
-Combined output from pulls and the runtime build. It may be short, empty, or
-absent when the image is already cached and no build command runs.
+Raw SDK JSON events from pulls and builds, including build failure evidence.
+It may be empty when all images are cached.
 
 ## `agent/`
 
@@ -220,12 +226,18 @@ versions.
 |---|---|
 | `stderr.log` | Agent CLI standard error; often empty on success |
 | `setup.log` | Generation-container creation, repository reset/rebuild, test visibility, and initial snapshot diagnostics |
-| `launch.log` | Prompt copy, agent launch, and output-copy Docker diagnostics |
+| `launch.log` | Agent launch and setup diagnostics |
 | `capture.log` | Final snapshot, workspace diff, and generated-file copy diagnostics |
 
-Agent stdout goes to `trace.jsonl`, so `launch.log` is not the transcript. Docker
-copy and snapshot tools are normally silent, making `launch.log` and
-`capture.log` commonly empty on success.
+Agent stdout goes to `trace.jsonl`, so `launch.log` is not the transcript. SDK
+transfers and snapshot tools are normally silent. Streamed agent output is
+redacted before host writes, including credentials split across output chunks.
+
+### Workspace preparation inputs
+
+`agent/workspace.json` (and the corresponding file in each evaluation directory)
+records public workspace preparation inputs: repository path, generated directory,
+test visibility, and test globs. It contains no private patches or credentials.
 
 ### `agent/baseline.txt`
 
@@ -269,8 +281,9 @@ The artifact inventory and compliance decision.
 | `empty` | Whether no allowed files were captured |
 | `sha256` | Hash of the canonical `files` mapping |
 
-Before evaluation, Oracle Bench verifies the manifest checksum and every captured
-file's checksum. It rejects silent modification of the frozen artifact.
+Before evaluation, Oracle Bench verifies the manifest checksum, every captured
+file's checksum, and that the bundle contains no unmanifested files. It rejects
+silent modification of the frozen artifact.
 
 ## Evaluation directories
 

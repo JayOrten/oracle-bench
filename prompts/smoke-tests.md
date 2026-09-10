@@ -6,3 +6,12 @@ and write 2–4 focused pytest tests in a single new file. Avoid network-depende
 tests and broad repository exploration. Write the tests promptly, run them once,
 and finish with a short summary. Failing assertions are acceptable; do not change
 expected behavior merely to make the tests pass.
+
+Place new tests and fixtures under `${generated_dir}/`. Do not edit existing files
+outside that directory.
+
+The project Python is `${project_python}`. Run the generated tests with:
+
+```sh
+${project_python} -m pytest -o addopts= ${generated_dir}
+```

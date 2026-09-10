@@ -7,7 +7,7 @@ import sys
 
 import pytest
 
-from oracle_bench.artifacts import SCRIPTS
+from oracle_bench.artifacts import CONTAINER_HELPERS
 from oracle_bench.io import read_json
 from oracle_bench.runners.pytest import incomplete_result, pair_results
 
@@ -31,7 +31,7 @@ def execute(tmp_path, source, tests, *, modules=None, extra=None):
     settings = tmp_path / "runner.json"
     settings.write_text(json.dumps(config))
     proc = subprocess.run(
-        [sys.executable, str(SCRIPTS / "pytest_runner.py"), str(settings)],
+        [sys.executable, str(CONTAINER_HELPERS / "pytest_runner.py"), str(settings)],
         capture_output=True,
         text=True,
         timeout=30,

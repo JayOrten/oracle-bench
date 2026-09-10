@@ -6,6 +6,6 @@ def require_credentials(config):
     harness.require_credentials(config)
 
 
-def generate(docker, container, run_dir):
-    harness = claude if docker.config.agent.harness == "claude" else codex
-    return harness.generate(docker, container, run_dir)
+def generate(sandbox, config, run_dir):
+    harness = claude if config.agent.harness == "claude" else codex
+    return harness.generate(sandbox, config, run_dir)

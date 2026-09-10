@@ -4,7 +4,7 @@ import sys
 
 import pytest
 
-from oracle_bench.artifacts import SCRIPTS, changed_files, verify_bundle
+from oracle_bench.artifacts import CONTAINER_HELPERS, changed_files, verify_bundle
 from oracle_bench.io import digest, read_json, write_json
 
 
@@ -40,6 +40,21 @@ def test_bundle_tampering_is_rejected(tmp_path):
         verify_bundle(tmp_path)
 
 
+def test_unmanifested_files_are_not_transferred_to_evaluation(tmp_path):
+    root = tmp_path / "generated/files"
+    root.mkdir(parents=True)
+    (root / "extra.py").write_text("unexpected code")
+    write_json(
+        tmp_path / "generated/manifest.json",
+        {
+            "files": {},
+            "sha256": digest(b"{}"),
+        },
+    )
+    with pytest.raises(ValueError, match="unmanifested"):
+        verify_bundle(tmp_path)
+
+
 def test_snapshot_captures_untracked_files_and_symlinks_without_following_them(tmp_path):
     root = tmp_path / "repo"
     root.mkdir()
@@ -49,7 +64,13 @@ def test_snapshot_captures_untracked_files_and_symlinks_without_following_them(t
     (root / "__pycache__" / "ignored.pyc").write_bytes(b"cache")
     output = tmp_path / "snapshot.json"
     subprocess.run(
-        [sys.executable, str(SCRIPTS / "workspace.py"), "snapshot", str(root), str(output)],
+        [
+            sys.executable,
+            str(CONTAINER_HELPERS / "workspace.py"),
+            "snapshot",
+            str(root),
+            str(output),
+        ],
         check=True,
     )
     result = read_json(output)
@@ -75,7 +96,7 @@ def test_capture_diff_includes_agent_commits_and_untracked_files(tmp_path):
     subprocess.run(
         [
             sys.executable,
-            str(SCRIPTS / "workspace.py"),
+            str(CONTAINER_HELPERS / "workspace.py"),
             "diff",
             str(tmp_path),
             str(output),

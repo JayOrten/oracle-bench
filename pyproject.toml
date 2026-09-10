@@ -7,7 +7,12 @@ name = "oracle-bench"
 version = "0.1.0"
 description = "Paired-version evaluation of agent-generated unit tests"
 requires-python = ">=3.11"
-dependencies = ["PyYAML>=6,<7", "python-dotenv>=1,<2"]
+dependencies = [
+    "PyYAML>=6,<7",
+    "docker>=7.1,<8",
+    "pydantic>=2.10,<3",
+    "python-dotenv>=1,<2",
+]
 
 [project.optional-dependencies]
 dataset = ["datasets>=3,<4"]
@@ -20,7 +25,12 @@ oracle-bench = "oracle_bench.cli:main"
 where = ["src"]
 
 [tool.setuptools.package-data]
-oracle_bench = ["scripts/*.py"]
+oracle_bench = [
+    "container_helpers/*.py",
+    "docker/*.Dockerfile",
+    "docker/agents/*.Dockerfile",
+    "docker/*.md",
+]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

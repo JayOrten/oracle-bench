@@ -2,19 +2,76 @@
 
 import json
 import os
+import shutil
+import uuid
 from pathlib import Path
 
+import docker
 import pytest
 import yaml
 
 from oracle_bench.config import load_config
-from oracle_bench.containers import Docker
+from oracle_bench.container import Profile, open_sandbox
+from oracle_bench.container.images import ASSETS, build_image
 from oracle_bench.evaluate import run_version
 from oracle_bench.io import digest, read_json, write_json
 from oracle_bench.run import reevaluate
 from oracle_bench.runners.pytest import pair_results
 
 pytestmark = pytest.mark.docker
+
+
+def test_local_sdk_build_exec_and_copy(tmp_path):
+    """Opt-in image/API smoke check using only a previously prepared runtime."""
+    saved = os.environ.get("ORACLE_BENCH_SMOKE_RUN")
+    if not saved:
+        pytest.skip("Set ORACLE_BENCH_SMOKE_RUN to use a local prepared runtime")
+    saved = Path(saved).resolve()
+    config = load_config(saved / "config.resolved.yaml", resolved=True)
+    parent = read_json(saved / "runtime.json")["image"]
+    context = tmp_path / "context"
+    context.mkdir()
+    shutil.copyfile(ASSETS / "docker/smoke.Dockerfile", context / "smoke.Dockerfile")
+    shutil.copytree(
+        ASSETS / "container_helpers",
+        context / "container_helpers",
+        ignore=shutil.ignore_patterns("__pycache__"),
+    )
+    with docker.from_env() as client:
+        with (tmp_path / "build.log").open("w") as log:
+            image = build_image(
+                client,
+                context,
+                "smoke.Dockerfile",
+                {"BASE_IMAGE": parent, "SMOKE_ID": uuid.uuid4().hex},
+                config.runtime.platform,
+                log,
+            )
+        try:
+            with open_sandbox(
+                client, image.id, config, Profile.EVALUATION, tmp_path / "log"
+            ) as sandbox:
+                prompt = tmp_path / "prompt"
+                prompt.write_text("fixture input")
+                result = sandbox.run(
+                    [
+                        config.runtime.python,
+                        "-c",
+                        "import sys; print(sys.stdin.read()); print('stderr', file=sys.stderr)",
+                    ],
+                    stdin=prompt,
+                    stdout=tmp_path / "stdout",
+                    stderr=tmp_path / "stderr",
+                )
+                assert result.exit_code == 0
+                assert (tmp_path / "stdout").read_text().strip() == "fixture input"
+                assert (tmp_path / "stderr").read_text().strip() == "stderr"
+                sandbox.upload(prompt, "/tmp/oracle-copy")
+                sandbox.download("/tmp/oracle-copy", tmp_path / "copied")
+                assert (tmp_path / "copied").read_bytes() == prompt.read_bytes()
+        finally:
+            client.images.remove(image.id)
+
 
 # Deliberately handwritten evaluator probes, not benchmark predictions.
 PROBES = """import socket
@@ -46,7 +103,7 @@ def test_fail_on_both():
 
 
 @pytest.mark.parametrize("visibility", ["keep", "hide"])
-def test_real_requests_pair_and_artifact_copy(tmp_path, visibility, monkeypatch):
+def test_real_requests_pair_and_artifact_copy(tmp_path, visibility, monkeypatch, request):
     saved = os.environ.get("ORACLE_BENCH_SMOKE_RUN")
     if not saved:
         pytest.skip("Set ORACLE_BENCH_SMOKE_RUN to a run with a prepared Requests smoke image")
@@ -56,8 +113,8 @@ def test_real_requests_pair_and_artifact_copy(tmp_path, visibility, monkeypatch)
     instance = read_json(saved / "instance.json")
     assert instance["instance_id"] == "psf__requests-2148"
     image = read_json(saved / "runtime.json")["image"]
-    docker = Docker(config)
-    docker.check()
+    client = docker.from_env()
+    request.addfinalizer(client.close)
     path = tmp_path / "generated" / "files" / config.task.generated_dir / "test_probes.py"
     path.parent.mkdir(parents=True)
     path.write_text(PROBES)
@@ -77,8 +134,8 @@ def test_real_requests_pair_and_artifact_copy(tmp_path, visibility, monkeypatch)
             "forbidden_changes": [],
         },
     )
-    buggy = run_version(docker, image, instance, tmp_path, "buggy")
-    golden = run_version(docker, image, instance, tmp_path, "golden")
+    buggy = run_version(client, config, image, instance, tmp_path, "buggy")
+    golden = run_version(client, config, image, instance, tmp_path, "golden")
     result = pair_results(buggy, golden)
     assert buggy["status"] == golden["status"] == "completed", (buggy, golden)
     assert [cell["count"] for cell in result["matrix"].values()] == [1, 1, 1, 1]

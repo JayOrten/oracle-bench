@@ -5,15 +5,19 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 import yaml
+from docker.errors import ImageNotFound
 
 from oracle_bench.artifacts import capture, snapshot
 from oracle_bench.config import RunConfig, load_config, validate_resolved_config
-from oracle_bench.containers import Docker, prepare_workspace
+from oracle_bench.container import Profile, docker_client, open_sandbox
+from oracle_bench.container.images import prepare_image
 from oracle_bench.datasets import resolve_source
 from oracle_bench.evaluate import check_reference, evaluate
 from oracle_bench.harnesses import generate, require_credentials
 from oracle_bench.io import read_json, write_json
+from oracle_bench.prompts import render_prompt
 from oracle_bench.report import report
+from oracle_bench.workspace import RepositoryWorkspace
 
 
 def status(run_dir: Path, stage: str, state="running", **details):
@@ -41,56 +45,58 @@ def completion_state(result: dict) -> str:
 
 def run(config: RunConfig) -> Path:
     require_credentials(config)
-    prompt = Path(config.task.prompt).read_text()
+    prompt_template = Path(config.task.prompt).read_text()
     run_id = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ") + "-" + uuid.uuid4().hex[:8]
     run_dir = Path(config.output) / run_id
     run_dir.mkdir(parents=True)
+
     stage = "resolve"
     try:
+        # Verify dataset source adapter exists
         status(run_dir, stage)
         instance, config.runtime = resolve_source(config.source)
         validate_resolved_config(config)
-        runtime = config.require_runtime()
         # Freeze both the expanded configuration and exact delivered prompt in the run.
         config.task.prompt = str(run_dir / "prompt.txt")
         (run_dir / "config.resolved.yaml").write_text(
             yaml.safe_dump(config.to_dict(), sort_keys=False)
         )
-        context = (
-            f"\n\nPlace new tests and fixtures under `{config.task.generated_dir}/`. "
-            "Do not edit existing files outside that directory.\n"
-            f"The project Python is `{runtime.python}`. "
-            f"Run tests with `python -m pytest -o addopts= {config.task.generated_dir}`.\n"
-        )
-        (run_dir / "prompt.txt").write_text(prompt.rstrip() + context)
+        (run_dir / "prompt.txt").write_text(render_prompt(prompt_template, config))
         write_json(run_dir / "instance.json", instance)
-        docker = Docker(config)
-        docker.check()
-        stage = "build"
-        status(run_dir, stage)
-        image = docker.prepare_image(run_dir)
-        write_json(run_dir / "runtime.json", {"image": image})
-        stage = "reference"
-        status(run_dir, stage)
-        check_reference(docker, image, instance, run_dir)
-        stage = "generate"
-        status(run_dir, stage)
-        log = run_dir / "agent" / "setup.log"
-        with docker.container(image, log, network=True) as container:
-            prepare_workspace(docker, container, instance, log)
-            before = snapshot(docker, container, run_dir / "agent" / "before.json", log)
-            docker.shell(container, "git rev-parse HEAD > /tmp/oracle-baseline.txt", log, 30)
-            docker.get(
-                container, "/tmp/oracle-baseline.txt", run_dir / "agent" / "baseline.txt", log
-            )
-            baseline = (run_dir / "agent" / "baseline.txt").read_text().strip()
-            generate(docker, container, run_dir)
-            stage = "capture"
+        with docker_client() as client:
+            # Preapre task image
+            stage = "build"
             status(run_dir, stage)
-            capture(docker, container, run_dir, before, baseline)
-        stage = "evaluate"
-        status(run_dir, stage)
-        result = evaluate(docker, image, instance, run_dir)
+            image = prepare_image(client, config, run_dir)
+            write_json(run_dir / "runtime.json", {"image": image})
+
+            # Check that a fail->pass pair exists
+            # NOTE: in the future this will probably need to be changed to accomodate other
+            # datasets
+            stage = "reference"
+            status(run_dir, stage)
+            check_reference(client, config, image, instance, run_dir)
+
+            # Generate tests in the sandbox with the correct harness
+            stage = "generate"
+            status(run_dir, stage)
+            log = run_dir / "agent" / "setup.log"
+            with open_sandbox(client, image, config, Profile.GENERATION, log) as sandbox:
+                workspace = RepositoryWorkspace(sandbox, config)
+                workspace.prepare(instance["base_commit"], run_dir / "agent")
+                before = snapshot(sandbox, run_dir / "agent" / "before.json", log)
+                baseline = workspace.baseline(run_dir / "agent" / "baseline.txt")
+                generate(sandbox, config, run_dir)
+
+                # Capture changes made
+                stage = "capture"
+                status(run_dir, stage)
+                capture(sandbox, config, run_dir, before, baseline)
+
+            # Run evaluation on the generated tests
+            stage = "evaluate"
+            status(run_dir, stage)
+            result = evaluate(client, config, image, instance, run_dir)
         report(run_dir)
         status(run_dir, "finished", completion_state(result))
     except KeyboardInterrupt:
@@ -104,14 +110,17 @@ def run(config: RunConfig) -> Path:
 
 def reevaluate(run_dir: Path) -> Path:
     config = load_config(run_dir / "config.resolved.yaml", resolved=True)
-    docker = Docker(config)
-    docker.check()
     image = read_json(run_dir / "runtime.json")["image"]
-    if docker.inspect_image(image) is None:
-        raise RuntimeError("Saved runtime image is missing. Restore it before reevaluation.")
     status(run_dir, "evaluate")
     try:
-        result = evaluate(docker, image, read_json(run_dir / "instance.json"), run_dir)
+        with docker_client() as client:
+            try:
+                client.images.get(image)
+            except ImageNotFound:
+                raise RuntimeError(
+                    "Saved runtime image is missing. Restore it before reevaluation."
+                ) from None
+            result = evaluate(client, config, image, read_json(run_dir / "instance.json"), run_dir)
         path = report(run_dir)
         status(run_dir, "finished", completion_state(result))
         return path

@@ -4,6 +4,7 @@
 
 Requires Python 3.11+, [uv](https://docs.astral.sh/uv/), Docker with a running
 Linux daemon, and a credential for the provider selected in the configuration.
+The host CLI currently runs on Unix (Linux/macOS) to enforce pull/build deadlines.
 
 Copy the local secrets file and add your API keys:
 
@@ -23,6 +24,8 @@ uv run oracle-bench run configs/smoke-claude.yaml
 ## About
 
 Oracle Bench tests how well coding agents generate unit tests when the code they see already contains a bug. An agent receives a buggy repository and a request to write tests, without being given the issue description or fix. The benchmark then runs the same generated tests against buggy and fixed (golden) versions, collecting paired pass/fail outcomes and coverage.
+
+80% of this repo is just coordinating containers and managing data in and out of them.
 
 ## Architecture / pipeline
 
@@ -76,13 +79,13 @@ Choose a sample configuration, or copy one and edit it:
 
 The YAML interface defines:
 
-| Section       | Controls                                                                    |
-| ------------- | --------------------------------------------------------------------------- |
-| `source`      | Source adapter and instance ID                                               |
-| `agent`       | Agent harness, provider, model, and generation limits                       |
-| `task`        | Prompt file, generated-test directory, and `existing_tests: keep` or `hide` |
-| `limits`      | Setup/evaluation timeouts and container CPU/memory limits                   |
-| `output`      | Run-directory location                                                      |
+| Section  | Controls                                                                    |
+| -------- | --------------------------------------------------------------------------- |
+| `source` | Source adapter and instance ID                                              |
+| `agent`  | Agent harness, provider, model, and generation limits                       |
+| `task`   | Prompt file, generated-test directory, and `existing_tests: keep` or `hide` |
+| `limits` | Setup/evaluation timeouts and container CPU/memory limits                   |
+| `output` | Run-directory location                                                      |
 
 See the [complete configuration reference](docs/configuration.md) for every
 setting, default, validation rule, and harness-specific behavior.
@@ -110,7 +113,12 @@ behavior.
 
 ### Development
 
-The package lives in `src/oracle_bench/`: `cli.py` and `config.py` define the interface, `run.py` orchestrates the pipeline, `containers.py` handles Docker, `datasets/` resolves tasks, `harnesses/` launches agents, and `runners/`, `evaluate.py`, and `report.py` handle scoring and reporting.
+The package lives in `src/oracle_bench/`: `cli.py` and `config.py` define the interface,
+`run.py` orchestrates the pipeline, `container/` integrates the Docker Python SDK,
+`docker/` contains image recipes, and `workspace.py` prepares repositories.
+`datasets/` resolves tasks, `harnesses/` launches agents, and `runners/`,
+`evaluate.py`, and `report.py` handle scoring and reporting. See
+[container development](docs/containers.md) for the API and standalone image builds.
 
 ## Tests
 

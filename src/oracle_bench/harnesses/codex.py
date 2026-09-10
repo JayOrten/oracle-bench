@@ -2,11 +2,10 @@ from __future__ import annotations
 
 import json
 import os
-import shlex
 from dataclasses import asdict
 from pathlib import Path
 
-from oracle_bench.containers import Docker
+from oracle_bench.harnesses.launch import launch
 from oracle_bench.io import write_json
 
 
@@ -51,14 +50,11 @@ def parse_trace(path: Path) -> dict:
     }
 
 
-def generate(docker: Docker, container: str, run_dir: Path):
-    config = docker.config
+def generate(sandbox, config, run_dir: Path):
     runtime = config.require_runtime()
     require_credentials(config)
     directory = run_dir / "agent"
     directory.mkdir(exist_ok=True)
-    log = directory / "launch.log"
-    docker.put(container, run_dir / "prompt.txt", "/tmp/oracle-prompt.txt", log)
     argv = [
         "codex",
         "exec",
@@ -90,35 +86,18 @@ def generate(docker: Docker, container: str, run_dir: Path):
             "model_providers.openrouter.stream_max_retries=0",
         ]:
             argv[2:2] = ["--config", setting]
-    # Docker provides isolation. Never invoke these flags in a host-side agent process.
-    write_json(directory / "command.json", argv)
-    script = (
-        "mkdir -p /tmp/oracle-agent /home/oracle/.codex\n"
-        "codex --version > /tmp/oracle-agent/version.txt\n"
-        f"{shlex.join(argv)} < /tmp/oracle-prompt.txt "
-        "> /tmp/oracle-agent/trace.jsonl 2> /tmp/oracle-agent/stderr.log"
+    credential_name = (
+        "OPENROUTER_API_KEY" if config.agent.provider == "openrouter" else "CODEX_API_KEY"
     )
-    key = os.environ[config.agent.credential_env]
-    outcome = docker.shell(
-        container,
-        script,
-        log,
-        config.agent.wall_seconds,
-        user="10001:10001",
-        environment={
-            (
-                "OPENROUTER_API_KEY" if config.agent.provider == "openrouter" else "CODEX_API_KEY"
-            ): key,
-            "CODEX_HOME": "/home/oracle/.codex",
-            "HOME": "/home/oracle",
-        },
-        check=False,
+    outcome = launch(
+        sandbox,
+        config,
+        run_dir,
+        argv,
+        {"CODEX_HOME": "/home/oracle/.codex"},
+        credential_name,
+        final_file=True,
     )
-    for name in ["trace.jsonl", "stderr.log", "final.txt", "version.txt"]:
-        target = directory / name
-        docker.get(container, "/tmp/oracle-agent/" + name, target, log, check=False)
-        if target.exists():
-            target.write_text(target.read_text(errors="replace").replace(key, "[REDACTED]"))
     summary = {**asdict(outcome), **parse_trace(directory / "trace.jsonl")}
     summary["status"] = (
         "timeout"

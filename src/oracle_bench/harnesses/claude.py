@@ -2,10 +2,10 @@ from __future__ import annotations
 
 import json
 import os
-import shlex
 from dataclasses import asdict
 from pathlib import Path
 
+from oracle_bench.harnesses.launch import launch
 from oracle_bench.io import write_json
 
 
@@ -48,13 +48,10 @@ def parse_trace(path: Path) -> dict:
     }
 
 
-def generate(docker, container: str, run_dir: Path):
-    config = docker.config
+def generate(sandbox, config, run_dir: Path):
     require_credentials(config)
     directory = run_dir / "agent"
     directory.mkdir(exist_ok=True)
-    log = directory / "launch.log"
-    docker.put(container, run_dir / "prompt.txt", "/tmp/oracle-prompt.txt", log)
     argv = [
         "claude",
         "--print",
@@ -74,36 +71,14 @@ def generate(docker, container: str, run_dir: Path):
     ]
     if not config.agent.multi_agent:
         argv += ["--tools", "Bash,Read,Write,Edit,Glob,Grep"]
-    # Permission bypass is confined to the non-root agent inside Docker.
-    write_json(directory / "command.json", argv)
-    script = (
-        "mkdir -p /tmp/oracle-agent /home/oracle/.claude\n"
-        "claude --version > /tmp/oracle-agent/version.txt\n"
-        f"{shlex.join(argv)} < /tmp/oracle-prompt.txt "
-        "> /tmp/oracle-agent/trace.jsonl 2> /tmp/oracle-agent/stderr.log"
+    outcome = launch(
+        sandbox,
+        config,
+        run_dir,
+        argv,
+        {"CLAUDE_CONFIG_DIR": "/home/oracle/.claude", "DISABLE_AUTOUPDATER": "1"},
+        config.agent.credential_env,
     )
-    key = os.environ[config.agent.credential_env]
-    outcome = docker.shell(
-        container,
-        script,
-        log,
-        config.agent.wall_seconds,
-        user="10001:10001",
-        environment={
-            (
-                "ANTHROPIC_API_KEY" if config.agent.auth == "api_key" else "CLAUDE_CODE_OAUTH_TOKEN"
-            ): key,
-            "CLAUDE_CONFIG_DIR": "/home/oracle/.claude",
-            "HOME": "/home/oracle",
-            "DISABLE_AUTOUPDATER": "1",
-        },
-        check=False,
-    )
-    for name in ["trace.jsonl", "stderr.log", "version.txt"]:
-        target = directory / name
-        docker.get(container, "/tmp/oracle-agent/" + name, target, log, check=False)
-        if target.exists():
-            target.write_text(target.read_text(errors="replace").replace(key, "[REDACTED]"))
     summary = {**asdict(outcome), **parse_trace(directory / "trace.jsonl")}
     (directory / "final.txt").write_text(summary.pop("final_text"))
     summary["status"] = (

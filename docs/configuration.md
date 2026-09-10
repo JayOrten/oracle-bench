@@ -44,6 +44,12 @@ task:
 Paths in the input file are resolved relative to that file, not the shell's
 current directory.
 
+Configuration uses Pydantic schemas: unknown fields and incorrect scalar types
+are rejected at loading time. Harness defaults are resolved with the agent schema;
+host path resolution is a separate step. Runtime layout checks occur when source
+adapter data meets the experiment configuration. The schema version remains 2
+and existing saved configuration files can still be loaded.
+
 ## Resolution model
 
 The input file contains experiment choices. Source adapters and Oracle Bench's
@@ -224,9 +230,15 @@ Codex credentials are selected from its provider.
 - **Type:** host path
 - **Required:** yes
 
-Public prompt given to the agent. Oracle Bench appends the generated-test
-directory, repository Python, and test command, then freezes the exact delivered
-text as `prompt.txt`.
+Public prompt template given to the agent. Prompt files own all agent-facing
+instructions and may use these resolved environment variables:
+
+- `${generated_dir}`: repository-relative directory where new tests are allowed.
+- `${project_python}`: absolute path to the resolved project Python.
+- `${workdir}`: repository root inside the container.
+
+Oracle Bench substitutes those variables and freezes the exact delivered text as
+`prompt.txt`. Use `$$` when the prompt needs a literal dollar sign.
 
 ### `task.existing_tests`
 

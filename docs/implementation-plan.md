@@ -1,5 +1,10 @@
 # Oracle Bench implementation plan
 
+The current container and configuration cleanup is planned in
+[container-revision-plan.md](container-revision-plan.md). That revision keeps
+Stage 1 scope and adopts the Docker Python SDK, checked-in Dockerfiles, and a
+smaller, more readable application interface.
+
 This plan incorporates the notes at the end of [spec.md](spec.md). It supersedes the sequencing proposed in [spec-feedback.md](spec-feedback.md), which remains useful background. No benchmark code is implemented by this document.
 
 The first milestone is a complete run: give an agent a buggy repository, ask it to generate tests, run its tests against buggy and golden code, and save coverage plus the pass/fail matrix. Existing tests can be kept or hidden as an experimental setting. Then run more instances, inspect the failures, and decide what deserves deeper investigation.
