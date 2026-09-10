@@ -15,7 +15,15 @@ def launch(sandbox, config, run_dir, argv, environment, credential_name, *, fina
     environment = {**environment, credential_name: key, "HOME": "/home/oracle"}
     write_json(directory / "command.json", argv)
     sandbox.run(
-        ["mkdir", "-p", "/tmp/oracle-agent", "/home/oracle/.codex", "/home/oracle/.claude"],
+        [
+            "mkdir",
+            "-p",
+            "/tmp/oracle-agent",
+            "/home/oracle/.codex",
+            "/home/oracle/.claude",
+            "/home/oracle/.config/opencode",
+            "/home/oracle/.local/share/opencode",
+        ],
         user=ORACLE_USER,
         log=log,
     )

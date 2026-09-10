@@ -80,10 +80,14 @@ def generate(sandbox, config, run_dir: Path):
             'model_provider="openrouter"',
             'model_providers.openrouter.name="OpenRouter"',
             'model_providers.openrouter.base_url="https://openrouter.ai/api/v1"',
-            'model_providers.openrouter.env_key="OPENROUTER_API_KEY"',
             'model_providers.openrouter.wire_api="responses"',
             "model_providers.openrouter.request_max_retries=0",
             "model_providers.openrouter.stream_max_retries=0",
+        ]:
+            argv[2:2] = ["--config", setting]
+        for setting in [
+            'model_providers.openrouter.auth.command="sh"',
+            'model_providers.openrouter.auth.args=["-c", "echo $OPENROUTER_API_KEY"]',
         ]:
             argv[2:2] = ["--config", setting]
     credential_name = (

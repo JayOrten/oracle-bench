@@ -186,7 +186,7 @@ a model call.
 
 ### `agent/trace.jsonl`
 
-Raw newline-delimited events emitted by Codex or Claude Code. Event shapes depend
+Raw newline-delimited events emitted by Codex, Claude Code, or OpenCode. Event shapes depend
 on the pinned CLI version. This is the authoritative low-level transcript used to
 extract completion, errors, usage, cost, and `session.log`.
 

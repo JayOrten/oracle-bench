@@ -71,13 +71,21 @@ def generate(sandbox, config, run_dir: Path):
     ]
     if not config.agent.multi_agent:
         argv += ["--tools", "Bash,Read,Write,Edit,Glob,Grep"]
+    environment = {"CLAUDE_CONFIG_DIR": "/home/oracle/.claude", "DISABLE_AUTOUPDATER": "1"}
+    credential_name = config.agent.credential_env
+    if config.agent.provider == "openrouter":
+        environment.update(
+            ANTHROPIC_BASE_URL="https://openrouter.ai/api",
+            ANTHROPIC_API_KEY="",
+        )
+        credential_name = "ANTHROPIC_AUTH_TOKEN"
     outcome = launch(
         sandbox,
         config,
         run_dir,
         argv,
-        {"CLAUDE_CONFIG_DIR": "/home/oracle/.claude", "DISABLE_AUTOUPDATER": "1"},
-        config.agent.credential_env,
+        environment,
+        credential_name,
     )
     summary = {**asdict(outcome), **parse_trace(directory / "trace.jsonl")}
     (directory / "final.txt").write_text(summary.pop("final_text"))

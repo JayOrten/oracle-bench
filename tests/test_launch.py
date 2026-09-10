@@ -8,7 +8,7 @@ import pytest
 
 from oracle_bench.config import RuntimeConfig, load_config
 from oracle_bench.container import CommandResult
-from oracle_bench.harnesses import claude, codex
+from oracle_bench.harnesses import claude, codex, opencode
 from oracle_bench.harnesses.launch import launch
 
 
@@ -19,6 +19,8 @@ from oracle_bench.harnesses.launch import launch
         (codex, "openrouter", "api_key", "OPENROUTER_API_KEY", "OPENROUTER_API_KEY"),
         (claude, "anthropic", "api_key", "ANTHROPIC_API_KEY", "ANTHROPIC_API_KEY"),
         (claude, "anthropic", "oauth", "CLAUDE_CODE_OAUTH_TOKEN", "CLAUDE_CODE_OAUTH_TOKEN"),
+        (claude, "openrouter", "api_key", "OPENROUTER_API_KEY", "ANTHROPIC_AUTH_TOKEN"),
+        (opencode, "openrouter", "api_key", "OPENROUTER_API_KEY", "OPENROUTER_API_KEY"),
     ],
 )
 def test_launch_routes_only_selected_credential(
@@ -31,7 +33,7 @@ def test_launch_routes_only_selected_credential(
     target,
 ):
     config = load_config(Path(__file__).parents[1] / "configs/smoke.yaml")
-    config.agent.harness = "codex" if harness is codex else "claude"
+    config.agent.harness = harness.__name__.rsplit(".", 1)[-1]
     config.agent.provider = provider
     config.agent.auth = auth
     config.agent.multi_agent = False
@@ -58,11 +60,24 @@ def test_launch_routes_only_selected_credential(
                 if provider == "openrouter":
                     assert 'model_provider="openrouter"' in argv
                 trace = {"type": "turn.completed"}
-            else:
+            elif harness is claude:
                 assert argv[argv.index("--max-turns") + 1] == "10"
                 assert argv[argv.index("--max-budget-usd") + 1] == "0.25"
                 assert "Bash,Read,Write,Edit,Glob,Grep" in argv
                 trace = {"type": "result", "subtype": "success", "total_cost_usd": 0.01}
+                if provider == "openrouter":
+                    assert environment["ANTHROPIC_BASE_URL"] == "https://openrouter.ai/api"
+                    assert environment["ANTHROPIC_API_KEY"] == ""
+            else:
+                assert argv[:2] == ["opencode", "run"]
+                assert argv[argv.index("--model") + 1] == f"openrouter/{config.agent.model}"
+                assert json.loads(environment["OPENCODE_CONFIG_CONTENT"])["permission"] == {
+                    "task": "deny"
+                }
+                trace = {
+                    "type": "step_finish",
+                    "part": {"reason": "stop", "cost": 0, "tokens": {"input": 1, "output": 1}},
+                }
             kwargs["stdout"].write_text(json.dumps(trace))
         return CommandResult(0, 1)
 

@@ -20,6 +20,9 @@ output: ../../batches
 ```
 
 Run it with `oracle-bench batch <manifest>`. Paths are relative to the manifest.
+`configs/batches/initial-nex.yaml` mirrors the ten-task initial Haiku batch with
+OpenCode and the free `nex-agi/nex-n2.5-pro:free` OpenRouter model. It has no
+turn limit; the per-job wall-time remains the runaway-process bound.
 All job configurations are validated and hashed before execution. The initial batch
 runner is sequential, isolates job failures, writes aggregate JSON and Markdown after
 every job, and can continue with `oracle-bench batch --resume <batch-directory>`.
@@ -170,14 +173,19 @@ The resolved record, golden repair, and reference tests are saved privately in
 
 This section selects the agent being evaluated. Supported combinations are:
 
-| `harness` | `provider` | Default credential |
+| `harness` | `provider` | Credential |
 |---|---|---|
 | `codex` | `openai` | `OPENAI_API_KEY` |
 | `codex` | `openrouter` | `OPENROUTER_API_KEY` |
 | `claude` | `anthropic` | `CLAUDE_CODE_OAUTH_TOKEN` or `ANTHROPIC_API_KEY` |
+| `claude` | `openrouter` | `OPENROUTER_API_KEY` |
+| `opencode` | `openrouter` | `OPENROUTER_API_KEY` |
 
-Credential names are derived from the provider and authentication mode. Secret
-values belong in the environment or gitignored `.env`, never in YAML.
+Credential names are derived from the provider and authentication mode. Claude
+Code uses OpenRouter's Anthropic-compatible endpoint, Codex uses its
+Responses-compatible endpoint, and OpenCode uses its built-in OpenRouter
+provider. Secret values belong in the environment or gitignored `.env`, never
+in YAML.
 
 ### `agent.model`
 
@@ -189,24 +197,26 @@ exact model identity matters.
 
 ### `agent.harness`
 
-- **Type:** `codex` or `claude`
+- **Type:** `codex`, `claude`, or `opencode`
 - **Default:** `codex`
 
-Agent CLI launched inside the generation container.
+Agent CLI launched inside the generation container. OpenCode currently supports
+OpenRouter only in Oracle Bench.
 
 ### `agent.provider`
 
 - **Type:** `openai`, `openrouter`, or `anthropic`
-- **Default:** `openai` for Codex; `anthropic` for Claude
+- **Default:** `openai` for Codex; `anthropic` for Claude; `openrouter` for OpenCode
 
-Only Codex with OpenAI/OpenRouter and Claude with Anthropic are supported.
+Codex supports OpenAI/OpenRouter, Claude supports Anthropic/OpenRouter, and
+OpenCode supports OpenRouter.
 
 ### `agent.version`
 
 - **Type:** pinned package version
 - **Default:** harness-specific tested version
 
-Advanced override for the installed Codex or Claude Code package. Because CLI
+Advanced override for the installed Codex, Claude Code, or OpenCode package. Because CLI
 behavior can affect benchmark results, the exact resolved version is preserved.
 
 ### `agent.multi_agent`
@@ -231,7 +241,9 @@ after a timeout when possible.
 - **Applies to:** Claude
 
 Passed to Claude Code as `--max-budget-usd`. It is a per-process CLI limit, not an
-account billing cap. Codex ignores it.
+account billing cap. Codex and OpenCode ignore it. When Claude Code uses
+OpenRouter, this is Claude Code's local cost estimate and may differ from the
+amount OpenRouter bills; use an OpenRouter key limit for a provider-enforced cap.
 
 ### `agent.max_turns`
 
@@ -359,5 +371,12 @@ buggy/golden matrix by itself.
 - [`configs/smoke.yaml`](../configs/smoke.yaml): Codex with OpenAI.
 - [`configs/smoke-claude.yaml`](../configs/smoke-claude.yaml): Claude Code with
   Anthropic.
+- [`configs/smoke-claude-openrouter.yaml`](../configs/smoke-claude-openrouter.yaml):
+  Claude Code with an inexpensive Anthropic model through OpenRouter.
 - [`configs/smoke-openrouter.yaml`](../configs/smoke-openrouter.yaml): Codex with
   OpenRouter.
+- [`configs/smoke-opencode-openrouter.yaml`](../configs/smoke-opencode-openrouter.yaml):
+  OpenCode with a free OpenRouter agentic model.
+- [`configs/batches/openrouter-three-harnesses.yaml`](../configs/batches/openrouter-three-harnesses.yaml):
+  one localized Requests task each for Opus/Claude Code, GPT-5.6 Sol/Codex, and
+  Nex-N2.5 Pro/OpenCode, all routed through OpenRouter.

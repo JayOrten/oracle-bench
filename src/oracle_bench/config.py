@@ -30,6 +30,7 @@ SWEBENCH_DATASETS = {"lite": "princeton-nlp/SWE-bench_Lite"}
 SWEBENCH_DATASET_REVISION = "6ec7bb89b9342f664a54a6e0a6ea6501d3437cc2"
 CODEX_VERSION = "0.153.4"
 CLAUDE_VERSION = "2.1.263"
+OPENCODE_VERSION = "1.18.30"
 NODE_IMAGE = "node:22.14.0-bookworm-slim"
 PYTEST_VERSION = "7.4.4"
 COVERAGE_VERSION = "7.6.1"
@@ -75,7 +76,7 @@ class SourceConfig(ConfigModel):
 
 class AgentConfig(ConfigModel):
     model: NonBlank
-    harness: Literal["codex", "claude"] = "codex"
+    harness: Literal["codex", "claude", "opencode"] = "codex"
     provider: Literal["openai", "openrouter", "anthropic"] | None = None
     version: Version | None = None
     multi_agent: Annotated[bool, Field(strict=True)] = True
@@ -90,20 +91,29 @@ class AgentConfig(ConfigModel):
         if self.harness == "claude":
             self.provider = self.provider or "anthropic"
             self.version = self.version or CLAUDE_VERSION
-            providers = {"anthropic"}
+            providers = {"anthropic", "openrouter"}
+        elif self.harness == "opencode":
+            self.provider = self.provider or "openrouter"
+            self.version = self.version or OPENCODE_VERSION
+            providers = {"openrouter"}
         else:
             self.provider = self.provider or "openai"
             self.version = self.version or CODEX_VERSION
             providers = {"openai", "openrouter"}
         if self.provider not in providers:
-            raise ValueError("Use codex with openai/openrouter, or claude with anthropic")
+            raise ValueError(
+                "Use codex with openai/openrouter, claude with anthropic/openrouter, "
+                "or opencode with openrouter"
+            )
         return self
 
     @property
     def credential_env(self) -> str:
+        if self.provider == "openrouter":
+            return "OPENROUTER_API_KEY"
         if self.harness == "claude":
             return "ANTHROPIC_API_KEY" if self.auth == "api_key" else "CLAUDE_CODE_OAUTH_TOKEN"
-        return "OPENROUTER_API_KEY" if self.provider == "openrouter" else "OPENAI_API_KEY"
+        return "OPENAI_API_KEY"
 
 
 class TaskConfig(ConfigModel):

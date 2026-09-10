@@ -1,11 +1,11 @@
-from oracle_bench.harnesses import claude, codex
+from oracle_bench.harnesses import claude, codex, opencode
+
+HARNESSES = {"claude": claude, "codex": codex, "opencode": opencode}
 
 
 def require_credentials(config):
-    harness = claude if config.agent.harness == "claude" else codex
-    harness.require_credentials(config)
+    HARNESSES[config.agent.harness].require_credentials(config)
 
 
 def generate(sandbox, config, run_dir):
-    harness = claude if config.agent.harness == "claude" else codex
-    return harness.generate(sandbox, config, run_dir)
+    return HARNESSES[config.agent.harness].generate(sandbox, config, run_dir)

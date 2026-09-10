@@ -80,15 +80,17 @@ Choose a sample configuration, or copy one and edit it:
 | Config                                                 | Harness / provider             | Credential           |
 | ------------------------------------------------------ | ------------------------------ | -------------------- |
 | [smoke-claude.yaml](configs/smoke-claude.yaml)         | Claude Code / Anthropic, Haiku | `ANTHROPIC_API_KEY`  |
+| [smoke-claude-openrouter.yaml](configs/smoke-claude-openrouter.yaml) | Claude Code / OpenRouter, Haiku 4.5 | `OPENROUTER_API_KEY` |
 | [smoke.yaml](configs/smoke.yaml)                       | Codex / OpenAI                 | `OPENAI_API_KEY`     |
 | [smoke-openrouter.yaml](configs/smoke-openrouter.yaml) | Codex / OpenRouter, free model | `OPENROUTER_API_KEY` |
+| [smoke-opencode-openrouter.yaml](configs/smoke-opencode-openrouter.yaml) | OpenCode / OpenRouter, free agentic model | `OPENROUTER_API_KEY` |
 
 The YAML interface defines:
 
 | Section  | Controls                                                                    |
 | -------- | --------------------------------------------------------------------------- |
 | `source` | Source adapter and instance ID                                              |
-| `agent`  | Agent harness, provider, model, and generation limits                       |
+| `agent`  | Claude Code, Codex, or OpenCode harness; provider, model, and limits         |
 | `task`   | Repository/localized scope, prompt, generated directory, and test visibility |
 | `limits` | Setup/evaluation timeouts and container CPU/memory limits                   |
 | `output` | Run-directory location                                                      |

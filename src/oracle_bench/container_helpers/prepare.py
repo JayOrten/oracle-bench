@@ -1,4 +1,6 @@
-"""Finalize a disposable repository workspace after rebuilding (Python 3.9+)."""
+"""Finalize a disposable repository workspace after rebuilding (Python 3.8+)."""
+
+from __future__ import annotations
 
 import json
 import os

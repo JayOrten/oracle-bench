@@ -1,0 +1,16 @@
+source:
+  instance: psf__requests-2148
+
+agent:
+  harness: opencode
+  provider: openrouter
+  model: nex-agi/nex-n2.5-pro:free
+  multi_agent: false
+  wall_seconds: 300
+
+task:
+  prompt: ../prompts/smoke-tests.md
+  scope: repository
+  existing_tests: hide_all
+
+output: ../runs

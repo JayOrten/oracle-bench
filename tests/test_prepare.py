@@ -1,6 +1,10 @@
 from oracle_bench.container_helpers.prepare import remove_existing_tests
 
 
+def test_helper_annotations_are_not_evaluated_by_old_repository_python():
+    assert remove_existing_tests.__annotations__["patterns"] == "list[str]"
+
+
 def test_remove_existing_tests_expands_files_directories_and_nested_globs(tmp_path):
     production = tmp_path / "package" / "module.py"
     nested_test = tmp_path / "package" / "feature" / "tests" / "test_feature.py"

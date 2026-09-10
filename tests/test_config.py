@@ -43,6 +43,35 @@ def test_small_config_resolves_harness_defaults():
 
 
 @pytest.mark.parametrize(
+    "harness,provider,credential",
+    [
+        ("claude", "openrouter", "OPENROUTER_API_KEY"),
+        ("codex", "openrouter", "OPENROUTER_API_KEY"),
+        ("opencode", "openrouter", "OPENROUTER_API_KEY"),
+    ],
+)
+def test_openrouter_is_supported_by_every_harness(tmp_path, harness, provider, credential):
+    raw = yaml.safe_load(SAMPLE.read_text())
+    raw["agent"].update(harness=harness, provider=provider)
+    path = tmp_path / "config.yaml"
+    path.write_text(yaml.safe_dump(raw))
+    config = load_config(path)
+
+    assert config.agent.provider == provider
+    assert config.agent.credential_env == credential
+
+
+def test_opencode_rejects_non_openrouter_provider(tmp_path):
+    raw = yaml.safe_load(SAMPLE.read_text())
+    raw["agent"].update(harness="opencode", provider="openai")
+    path = tmp_path / "config.yaml"
+    path.write_text(yaml.safe_dump(raw))
+
+    with pytest.raises(ValueError, match="opencode with openrouter"):
+        load_config(path)
+
+
+@pytest.mark.parametrize(
     "section,key,value",
     [
         ("task", "existing_tests", "sometimes"),
