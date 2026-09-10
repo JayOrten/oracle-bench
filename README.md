@@ -19,6 +19,9 @@ Run from the repository root:
 uv sync --extra dataset --extra dev
 
 uv run oracle-bench run configs/smoke-claude.yaml
+
+# Run an explicit, resumable set of experiments and aggregate their results.
+uv run oracle-bench batch configs/batches/initial-haiku.yaml
 ```
 
 ## About
@@ -61,6 +64,9 @@ uv run oracle-bench evaluate runs/<run-id>
 
 # Rebuild the report and readable session log from saved data.
 uv run oracle-bench report runs/<run-id>
+
+# Continue pending or failed jobs without repeating completed jobs.
+uv run oracle-bench batch --resume batches/<batch-id>
 
 uv run oracle-bench --help
 ```

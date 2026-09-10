@@ -380,3 +380,12 @@ Several files are expected to be empty or absent in normal circumstances:
 
 Interpret absence together with `status.json`, the relevant `execution.json`, and
 the closest stage log.
+
+# Batch artifacts
+
+`oracle-bench batch` writes a batch directory containing the original manifest,
+the resolved and checksum-locked job list, batch status, `summary.json`, and
+`report.md`. The summary preserves each job's state, run-directory link, paired
+matrix counts, coverage, duration, and available cost. Its headline bug-detection
+rate counts compliant instances with at least one fail-on-buggy/pass-on-golden
+test, and reports both attempted and completed denominators explicitly.

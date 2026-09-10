@@ -44,6 +44,10 @@ def runtime_for(record: dict) -> RuntimeConfig:
         source_roots=[source_root],
         import_modules=[import_module],
         existing_test_globs=existing_test_globs,
+        # Official instance images already contain an installed checkout. Patches to
+        # Python sources are visible through that editable install; rerunning a generic
+        # pip build can require build-only dependencies absent from the final image.
+        rebuild=":",
     )
 
 

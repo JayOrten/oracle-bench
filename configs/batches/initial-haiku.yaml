@@ -1,0 +1,19 @@
+name: initial-haiku-10-repositories
+
+jobs:
+  - config: ../initial-haiku/astropy.yaml
+  - config: ../initial-haiku/matplotlib.yaml
+  - config: ../initial-haiku/seaborn.yaml
+  - config: ../initial-haiku/flask.yaml
+  - config: ../initial-haiku/requests.yaml
+  - config: ../initial-haiku/xarray.yaml
+  - config: ../initial-haiku/pylint.yaml
+  - config: ../initial-haiku/pytest.yaml
+  - config: ../initial-haiku/scikit-learn.yaml
+  - config: ../initial-haiku/sphinx.yaml
+
+execution:
+  concurrency: 1
+  continue_on_error: true
+
+output: ../../batches

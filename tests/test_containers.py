@@ -13,7 +13,7 @@ import pytest
 from docker.errors import APIError, ImageNotFound, NotFound
 
 from oracle_bench.config import RuntimeConfig, load_config
-from oracle_bench.container import Profile, Sandbox, open_sandbox
+from oracle_bench.container import Profile, Sandbox, docker_client, open_sandbox
 from oracle_bench.container.deadline import setup_deadline
 from oracle_bench.container.files import download, upload
 from oracle_bench.container.images import build_image
@@ -120,6 +120,20 @@ def test_failed_start_is_cleaned_up_without_masking_failure(config, tmp_path):
     assert "cleanup also failed" in error.value.__notes__[0]
 
 
+def test_docker_client_checks_daemon_and_closes_connection(monkeypatch):
+    client = Mock()
+    client.info.return_value = {"OSType": "linux"}
+    from_env = Mock(return_value=client)
+    monkeypatch.setattr("oracle_bench.container.sandbox.docker.from_env", from_env)
+
+    with docker_client() as opened:
+        assert opened is client
+
+    from_env.assert_called_once_with(timeout=60)
+    client.info.assert_called_once_with()
+    client.close.assert_called_once_with()
+
+
 def test_optional_output_only_suppresses_missing_files(config, tmp_path):
     container = Mock()
     sandbox = Sandbox(container, config.runtime, tmp_path / "log")
@@ -141,9 +155,8 @@ def test_workspace_preserves_preparation_order(config, tmp_path, visibility, ref
     workspace.prepare("a" * 40, tmp_path, reference=reference)
     calls = sandbox.run.call_args_list
     assert calls[0].args[0][:3] == ["git", "reset", "--hard"]
-    assert calls[1].args[0] == ["git", "clean", "-fdx"]
-    assert calls[2].args[0][:2] == ["/bin/bash", "-c"]
-    assert calls[3].args[0][1] == "/helpers/prepare.py"
+    assert calls[1].args[0][:2] == ["/bin/bash", "-c"]
+    assert calls[2].args[0][1] == "/helpers/prepare.py"
     assert json.loads((tmp_path / "workspace.json").read_text())["hide"] == hide
 
 

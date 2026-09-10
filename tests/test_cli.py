@@ -37,3 +37,15 @@ def test_offline_commands_do_not_load_credentials(tmp_path, monkeypatch, command
     monkeypatch.setattr(cli, "report", lambda path: tmp_path)
     monkeypatch.setattr(cli, "read_json", lambda path: {"state": "completed"})
     assert cli.main([command, str(tmp_path)]) == 0
+
+
+def test_batch_loads_credentials_and_returns_batch_status(tmp_path, monkeypatch):
+    monkeypatch.chdir(tmp_path)
+    (tmp_path / ".env").write_text("ANTHROPIC_API_KEY=test-value\n")
+    batch_dir = tmp_path / "batches" / "batch-id"
+    write_status = batch_dir / "status.json"
+    write_status.parent.mkdir(parents=True)
+    write_status.write_text('{"state": "completed"}')
+    monkeypatch.setattr(cli, "run_batch", lambda path, resume: batch_dir)
+
+    assert cli.main(["batch", "batch.yaml"]) == 0

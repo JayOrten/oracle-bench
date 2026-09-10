@@ -14,9 +14,13 @@ class RepositoryWorkspace:
         self.setup_timeout = config.limits.setup_seconds
 
     def prepare(self, base_commit: str, directory: Path, *, reference=False):
-        """Build before hiding tests: some projects use test assets during install."""
+        """Restore tracked code while retaining artifacts supplied by the runtime image.
+
+        Every sandbox starts from a fresh image, so untracked files cannot come from a
+        previous agent. SWE-bench images intentionally contain ignored compiled modules
+        and editable-install metadata that ``git clean -fdx`` would destroy.
+        """
         self.sandbox.run(["git", "reset", "--hard", base_commit], timeout=self.setup_timeout)
-        self.sandbox.run(["git", "clean", "-fdx"], timeout=self.setup_timeout)
         self.rebuild()
         settings = directory / "workspace.json"
         write_json(

@@ -192,11 +192,14 @@ def open_sandbox(client, image: str, config, profile: Profile, log: Path):
 @contextmanager
 def docker_client():
     """Own the SDK connection at the host workflow boundary."""
+    client = None
     try:
         client = docker.from_env(timeout=60)
-        with client:
-            if client.info()["OSType"] != "linux":
-                raise RuntimeError("A Linux Docker daemon is required")
-            yield client
+        if client.info()["OSType"] != "linux":
+            raise RuntimeError("A Linux Docker daemon is required")
+        yield client
     except DockerException:
         raise RuntimeError("Docker operation failed; check the daemon and stage log") from None
+    finally:
+        if client is not None:
+            client.close()

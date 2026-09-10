@@ -6,6 +6,24 @@ Oracle Bench runs one benchmark instance from a YAML file:
 uv run oracle-bench run configs/smoke.yaml
 ```
 
+Multiple independent configurations can be coordinated by a batch manifest:
+
+```yaml
+name: initial-haiku
+jobs:
+  - config: ../initial-haiku/astropy.yaml
+  - config: ../initial-haiku/flask.yaml
+execution:
+  concurrency: 1
+  continue_on_error: true
+output: ../../batches
+```
+
+Run it with `oracle-bench batch <manifest>`. Paths are relative to the manifest.
+All job configurations are validated and hashed before execution. The initial batch
+runner is sequential, isolates job failures, writes aggregate JSON and Markdown after
+every job, and can continue with `oracle-bench batch --resume <batch-directory>`.
+
 The input interface has five top-level sections: `source`, `agent`, `task`,
 `limits`, and `output`. Only `source.instance`, `agent.model`, and `task.prompt`
 are required. Unknown settings are rejected, including the removed `dataset`,
