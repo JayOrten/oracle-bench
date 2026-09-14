@@ -166,7 +166,10 @@ def open_sandbox(client, image: str, config, profile: Profile, log: Path):
         mem_limit=limits.memory,
         nano_cpus=int(limits.cpus * 1_000_000_000),
         security_opt=["no-new-privileges"],
-        network_mode="bridge" if profile is Profile.GENERATION else "none",
+        # Repository tests may legitimately depend on external services. Keep
+        # every lifecycle profile on Docker's ordinary outbound bridge network
+        # so reference and final evaluation match the generation environment.
+        network_mode="bridge",
         labels={"oracle-bench.profile": profile.value},
         use_config_proxy=False,
     )

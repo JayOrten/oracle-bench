@@ -1,12 +1,13 @@
 import json
 
 from oracle_bench.harnesses.transcript import render_session
+from oracle_bench.paths import RunPaths
 
 
 def test_session_preserves_messages_tools_errors_and_unknown_events(tmp_path):
-    agent = tmp_path / "agent"
-    agent.mkdir()
-    (tmp_path / "prompt.txt").write_text("Generate tests")
+    paths = RunPaths.create(tmp_path)
+    agent = paths.generation
+    paths.prompt.write_text("Generate tests")
     events = [
         {
             "type": "assistant",
@@ -64,4 +65,5 @@ def test_session_preserves_messages_tools_errors_and_unknown_events(tmp_path):
 
 
 def test_missing_trace_is_explicit(tmp_path):
+    RunPaths.create(tmp_path)
     assert "No trace captured" in render_session(tmp_path).read_text()

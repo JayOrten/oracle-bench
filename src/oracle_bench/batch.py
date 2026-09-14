@@ -13,6 +13,7 @@ from pydantic import Field, model_validator
 
 from oracle_bench.config import ConfigModel, NonBlank, load_config
 from oracle_bench.io import digest, read_json, write_json
+from oracle_bench.paths import RunPaths
 from oracle_bench.run import run
 
 MATRIX_KEYS = (
@@ -115,7 +116,7 @@ def _summarize_job(job: dict) -> dict:
     }
     if not job["run_dir"]:
         return summary
-    result_path = Path(job["run_dir"]) / "results.json"
+    result_path = RunPaths.open(Path(job["run_dir"])).results
     if not result_path.is_file():
         return summary
     result = read_json(result_path)

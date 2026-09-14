@@ -8,6 +8,7 @@ from docker.errors import ImageNotFound
 
 from oracle_bench.container.deadline import setup_deadline
 from oracle_bench.io import digest, write_json
+from oracle_bench.paths import RunPaths
 
 ASSETS = Path(__file__).parents[1]
 
@@ -107,7 +108,7 @@ def runtime_arguments(config, source, agent) -> dict[str, str]:
 def prepare_image(client, config, run_dir: Path) -> str:
     """Resolve parents, build the harness, then extend the repository image."""
     runtime = config.require_runtime()
-    build = run_dir / "build"
+    build = RunPaths.open(run_dir).build
     agent_context, runtime_context = prepare_contexts(build, config.agent.harness)
     provenance = {}
 

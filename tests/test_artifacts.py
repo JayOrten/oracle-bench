@@ -6,6 +6,7 @@ import pytest
 
 from oracle_bench.artifacts import CONTAINER_HELPERS, changed_files, verify_bundle
 from oracle_bench.io import digest, read_json, write_json
+from oracle_bench.paths import RunPaths
 
 
 def entry(data, kind="file"):
@@ -26,12 +27,13 @@ def test_only_new_regular_files_under_generated_directory_are_allowed():
 
 
 def test_bundle_tampering_is_rejected(tmp_path):
-    path = tmp_path / "generated" / "files" / "oracle_tests" / "test_new.py"
+    paths = RunPaths.create(tmp_path)
+    path = paths.submission / "files" / "oracle_tests" / "test_new.py"
     path.parent.mkdir(parents=True)
     path.write_text("def test_a(): pass\n")
     files = {"oracle_tests/test_new.py": {"sha256": digest(path.read_bytes()), "mode": 0o644}}
     write_json(
-        tmp_path / "generated" / "manifest.json",
+        paths.submission / "manifest.json",
         {"files": files, "sha256": digest(json.dumps(files, sort_keys=True).encode())},
     )
     assert verify_bundle(tmp_path)["files"] == files
@@ -41,11 +43,12 @@ def test_bundle_tampering_is_rejected(tmp_path):
 
 
 def test_unmanifested_files_are_not_transferred_to_evaluation(tmp_path):
-    root = tmp_path / "generated/files"
+    paths = RunPaths.create(tmp_path)
+    root = paths.submission / "files"
     root.mkdir(parents=True)
     (root / "extra.py").write_text("unexpected code")
     write_json(
-        tmp_path / "generated/manifest.json",
+        paths.submission / "manifest.json",
         {
             "files": {},
             "sha256": digest(b"{}"),

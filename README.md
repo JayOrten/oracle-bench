@@ -47,7 +47,7 @@ flowchart TD
     Results --> Report["JSON results and Markdown report"]
 ```
 
-The private regression check must pass before generation starts. The agent runs as a non-root user with the selected credential; the host Docker socket and private run artifacts are not mounted. Generation has network access, while evaluation does not. Git-history sanitization and internet-use auditing are not implemented yet.
+The private regression check must pass before generation starts. The agent runs as a non-root user with the selected credential; the host Docker socket and private run artifacts are not mounted. Generation, reference, and evaluation containers have outbound network access so repository tests run under a consistent environment. Git-history sanitization and internet-use auditing are not implemented yet.
 
 Only new tests and fixtures under `oracle_tests/` are evaluated. Changes outside that directory are recorded as violations and make the results diagnostic. Existing repository tests can remain visible or be hidden through configuration.
 
@@ -102,19 +102,23 @@ File paths are relative to the YAML file. The SWE-bench adapter derives the
 prepared image, repository runtime, existing-test paths, coverage settings, and
 private reference targets from the instance. Localized tasks disclose only the
 affected production file or enclosing symbol derived from the private repair.
-`hide_all` removes the adapter's known test paths during generation and final
-evaluation. The private reference check retains the original tests.
+`hide_all` removes explicitly declared test files and collectable test modules
+inside adapter-declared test directories during generation and final evaluation.
+It retains non-test support modules because some projects import runners or
+helpers from their test packages at runtime. The private reference check retains
+all original tests.
 
 ### Results
 
 | Artifact in `runs/<run-id>/`                   | Contents                                                  |
 | ---------------------------------------------- | --------------------------------------------------------- |
-| `report.md` / `results.json`                   | Paired outcomes, coverage, and run status                 |
-| `agent/session.log`                            | Readable prompt, messages, tool calls/results, and errors |
-| `agent/trace.jsonl` / `agent/result.json`      | Raw agent events and reported usage/cost                  |
-| `generated/files/` / `generated/manifest.json` | Captured tests, hashes, and violations                    |
-| `buggy/` / `golden/`                           | Per-test results, coverage, and execution logs            |
-| `config.resolved.yaml` / `runtime.json`        | Saved configuration and exact runtime image               |
+| `report.md`                                    | Human-readable run summary and artifact links             |
+| `inputs/`                                      | Frozen prompt, resolved config, and private instance       |
+| `image-build/`                                 | Runtime image, build inputs, provenance, and logs          |
+| `reference-check/`                             | Private fail-on-buggy/pass-on-golden validation            |
+| `generation/`                                  | Agent command, transcript, raw events, and workspace diff |
+| `submission/`                                  | Captured generated tests, hashes, and violations           |
+| `evaluation/`                                  | Paired result plus buggy and golden executions             |
 
 See the [complete results and artifacts reference](docs/results.md) for the full
 directory layout, JSON fields, logs, evaluation artifacts, and reevaluation

@@ -7,6 +7,7 @@ from pathlib import Path
 
 from oracle_bench.harnesses.launch import launch
 from oracle_bench.io import write_json
+from oracle_bench.paths import RunPaths
 
 
 def require_credentials(config):
@@ -50,7 +51,7 @@ def parse_trace(path: Path) -> dict:
 
 def generate(sandbox, config, run_dir: Path):
     require_credentials(config)
-    directory = run_dir / "agent"
+    directory = RunPaths.open(run_dir).generation
     directory.mkdir(exist_ok=True)
     argv = [
         "claude",

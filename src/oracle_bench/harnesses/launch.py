@@ -5,10 +5,12 @@ import os
 from oracle_bench.container import ORACLE_USER
 from oracle_bench.container.lifecycle import preserve_failure
 from oracle_bench.io import write_json
+from oracle_bench.paths import RunPaths
 
 
 def launch(sandbox, config, run_dir, argv, environment, credential_name, *, final_file=False):
-    directory = run_dir / "agent"
+    paths = RunPaths.open(run_dir)
+    directory = paths.generation
     directory.mkdir(exist_ok=True)
     log = directory / "launch.log"
     key = os.environ[config.agent.credential_env]
@@ -40,7 +42,7 @@ def launch(sandbox, config, run_dir, argv, environment, credential_name, *, fina
             timeout=config.agent.wall_seconds,
             user=ORACLE_USER,
             environment=environment,
-            stdin=run_dir / "prompt.txt",
+            stdin=paths.prompt,
             stdout=directory / "trace.jsonl",
             stderr=directory / "stderr.log",
             log=log,

@@ -1,17 +1,18 @@
 from oracle_bench.evaluate import archive_previous_evaluation
 from oracle_bench.harnesses.codex import parse_trace
+from oracle_bench.paths import RunPaths
 from oracle_bench.run import completion_state
 
 
 def test_reevaluation_archives_results_but_preserves_generated_tests(tmp_path):
-    (tmp_path / "buggy").mkdir()
-    (tmp_path / "buggy" / "tests.json").write_text("old")
-    (tmp_path / "generated").mkdir()
-    (tmp_path / "generated" / "manifest.json").write_text("keep")
+    paths = RunPaths.create(tmp_path)
+    (paths.evaluation / "buggy").mkdir()
+    (paths.evaluation / "buggy" / "tests.json").write_text("old")
+    (paths.submission / "manifest.json").write_text("keep")
     archive_previous_evaluation(tmp_path)
-    assert not (tmp_path / "buggy").exists()
-    assert next((tmp_path / "evaluations").glob("*/buggy/tests.json")).read_text() == "old"
-    assert (tmp_path / "generated" / "manifest.json").read_text() == "keep"
+    assert not (paths.evaluation / "buggy").exists()
+    assert next(paths.evaluation_history.glob("*/buggy/tests.json")).read_text() == "old"
+    assert (paths.submission / "manifest.json").read_text() == "keep"
 
 
 def test_trace_usage_is_reported_without_inventing_cost(tmp_path):

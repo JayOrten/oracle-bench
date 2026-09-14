@@ -300,9 +300,11 @@ test generation is meaningful.
 
 Whether existing repository tests remain visible to the agent and available in
 the final evaluation workspace. Evaluation still executes only generated tests.
-`hide_all` removes repository-specific test paths supplied by the SWE-bench
-adapter; generated tests therefore cannot reuse their fixtures or helpers. Private
-reference validation always retains existing tests. The former value `hide` is
+`hide_all` removes explicitly declared test files and pytest-style test modules
+under repository-specific test directories supplied by the SWE-bench adapter.
+Package initializers, fixtures, runners, helpers, and data remain because some
+projects import that support code at runtime. Private reference validation always
+retains all existing tests. The former value `hide` is
 accepted as a backward-compatible alias for older configurations.
 
 ### `task.generated_dir`

@@ -103,7 +103,7 @@ def test_security_profiles_and_cleanup(config, tmp_path, profile):
         with open_sandbox(client, "image", config, profile, tmp_path / "log"):
             raise KeyboardInterrupt
     options = client.containers.create.call_args.kwargs
-    assert options["network_mode"] == ("bridge" if profile is Profile.GENERATION else "none")
+    assert options["network_mode"] == "bridge"
     assert options["security_opt"] == ["no-new-privileges"]
     assert "volumes" not in options and "mounts" not in options
     container.remove.assert_called_once_with(force=True)

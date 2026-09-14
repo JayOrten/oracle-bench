@@ -6,6 +6,7 @@ from pathlib import Path, PurePosixPath
 from oracle_bench.config import repo_path
 from oracle_bench.container import Sandbox
 from oracle_bench.io import digest, read_json, write_json
+from oracle_bench.paths import RunPaths
 
 CONTAINER_HELPERS = Path(__file__).parent / "container_helpers"
 
@@ -45,11 +46,11 @@ def snapshot(sandbox: Sandbox, target: Path, log: Path):
 
 def capture(sandbox: Sandbox, config, run_dir: Path, before: dict, baseline: str):
     runtime = config.require_runtime()
-    log = run_dir / "agent" / "capture.log"
-    after = snapshot(sandbox, run_dir / "agent" / "after.json", log)
+    paths = RunPaths.open(run_dir)
+    log = paths.generation / "capture.log"
+    after = snapshot(sandbox, paths.generation / "after.json", log)
     allowed, forbidden = changed_files(before, after, config.task.generated_dir)
-    generated = run_dir / "generated"
-    generated.mkdir()
+    generated = paths.submission
     sandbox.run(
         [
             runtime.python,
@@ -65,7 +66,7 @@ def capture(sandbox: Sandbox, config, run_dir: Path, before: dict, baseline: str
     )
     sandbox.download(
         "/tmp/oracle-workspace.diff",
-        run_dir / "agent" / "workspace.diff",
+        paths.generation / "workspace.diff",
         required=False,
     )
     files = {}
@@ -90,10 +91,11 @@ def capture(sandbox: Sandbox, config, run_dir: Path, before: dict, baseline: str
 
 def verify_bundle(run_dir: Path) -> dict:
     """Validate the external bundle before transferring it to either code version."""
-    manifest = read_json(run_dir / "generated" / "manifest.json")
+    generated = RunPaths.open(run_dir).submission
+    manifest = read_json(generated / "manifest.json")
     if digest(json.dumps(manifest["files"], sort_keys=True).encode()) != manifest["sha256"]:
         raise ValueError("Generated manifest checksum mismatch")
-    root = run_dir / "generated" / "files"
+    root = generated / "files"
     entries = {
         path.relative_to(root).as_posix()
         for path in root.rglob("*")

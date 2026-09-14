@@ -23,8 +23,8 @@ helpers. Dataset records, repair patches, private reference tests, generated
 tests, credentials, and the host run directory must never enter an image build.
 
 Credentials and task-specific patches are supplied only to the appropriate
-disposable containers. Evaluation and reference containers run without network
-access.
+disposable containers. Generation, evaluation, and reference containers use
+Docker's outbound bridge network so legitimate network-dependent tests can run.
 
 ## Project image requirements
 

@@ -39,8 +39,9 @@ with docker_client() as client:
         workspace.prepare(base_commit, evaluation_dir)
 ```
 
-Generation enables networking; evaluation and reference profiles disable it.
-The SDK receives resource limits and `no-new-privileges`, and no host mounts.
+Generation, evaluation, and reference profiles use Docker's outbound bridge
+network so repository tests see a consistent environment. The SDK receives
+resource limits and `no-new-privileges`, and no host mounts.
 Container creation and start are separate so a failed start still gets cleanup.
 The client and each container have explicit owners through context managers.
 

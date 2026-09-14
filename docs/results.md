@@ -9,14 +9,14 @@ submission, reference check, paired evaluations, and report.
 
 ```text
 runs/<run-id>/
-├── config.resolved.yaml
-├── instance.json
-├── prompt.txt
-├── runtime.json
 ├── status.json
 ├── report.md
-├── results.json
-├── build/
+├── inputs/
+│   ├── config.resolved.yaml
+│   ├── instance.json
+│   └── prompt.txt
+├── image-build/
+│   ├── runtime.json
 │   ├── agent/agent.Dockerfile
 │   ├── runtime/runtime.Dockerfile
 │   ├── runtime/container_helpers/*.py
@@ -25,11 +25,11 @@ runs/<run-id>/
 │   ├── runtime.inputs.json
 │   ├── images.json
 │   └── output.log (when a pull or build runs)
-├── reference/
+├── reference-check/
 │   ├── results.json
 │   ├── buggy/<execution artifacts>
 │   └── golden/<execution artifacts>
-├── agent/
+├── generation/
 │   ├── command.json
 │   ├── version.txt
 │   ├── trace.jsonl
@@ -44,12 +44,17 @@ runs/<run-id>/
 │   ├── before.json
 │   ├── after.json
 │   └── workspace.diff
-├── generated/
+├── submission/
 │   ├── manifest.json
 │   └── files/<generated test paths>
-├── buggy/<execution artifacts>
-├── golden/<execution artifacts>
-└── evaluations/<archived reevaluations>/
+├── ground-truth/
+│   ├── issue.md
+│   └── fix.patch
+├── evaluation/
+│   ├── results.json
+│   ├── buggy/<execution artifacts>
+│   └── golden/<execution artifacts>
+└── evaluation-history/<archived reevaluations>/
 ```
 
 A run that stops early contains only the files produced before the failure. For
@@ -60,14 +65,20 @@ Consult `status.json` and the last stage log when expected files are absent.
 
 ### `report.md`
 
-The human-readable summary. It shows agent and evaluation completion states,
-submission compliance, the paired pass/fail matrix, non-binary outcomes, coverage,
-important artifact links, agent duration, and provider-reported usage and cost.
+The human-readable summary. It identifies whether test generation covered the
+whole repository or a calculated localized target, then shows agent and evaluation
+completion states, submission compliance, the paired pass/fail matrix, non-binary
+outcomes, coverage, important artifact links, agent duration, and
+provider-reported usage and cost.
+
+The ground-truth section links the original issue and exact buggy-to-golden fix
+for manual analysis. These private artifacts are written on the host and are not
+mounted or copied into the generation container.
 
 `oracle-bench report runs/<run-id>` regenerates this file and
-`agent/session.log` from saved data. It does not execute tests or call a model.
+`generation/session.log` from saved data. It does not execute tests or call a model.
 
-### `results.json`
+### `evaluation/results.json`
 
 The machine-readable aggregate for the generated tests.
 
@@ -75,7 +86,7 @@ The machine-readable aggregate for the generated tests.
 |---|---|
 | `schema_version` | Result schema version, currently `1` |
 | `instance_id` | Dataset instance evaluated |
-| `agent` | Copy of `agent/result.json` |
+| `agent` | Copy of `generation/result.json` |
 | `artifact_sha256` | Checksum over the generated-file manifest entries |
 | `submission_compliant` | Whether the agent made only permitted changes |
 | `forbidden_changes` | Paths changed outside the allowed submission policy |
@@ -117,7 +128,7 @@ and a failed state.
 
 ## Inputs and reproducibility
 
-### `config.resolved.yaml`
+### `inputs/config.resolved.yaml`
 
 The schema-versioned run lock. It expands the small input configuration with the
 source adapter's repository `runtime`, Oracle Bench's pinned `toolchain`, agent
@@ -125,31 +136,31 @@ defaults, dataset revision, and absolute host paths. During a run, `task.prompt`
 points to this attempt's frozen `prompt.txt`. Credentials and credential values
 are not stored. See the [configuration reference](configuration.md).
 
-### `instance.json`
+### `inputs/instance.json`
 
 The resolved dataset record and provenance. It includes the base commit, golden
 repair patch, private reference-test patch and IDs, source dataset metadata, a
 record hash, and the original record. This is private evaluator data that may
 reveal the defect and repair; it must not be exposed to the generation agent.
 
-### `prompt.txt`
+### `inputs/prompt.txt`
 
 The exact prompt delivered to the agent after resolving its environment
 variables. Agent-facing instructions remain in the selected prompt template.
 For localized tasks this contains the sanitized production path or enclosing
 symbol, but no private patch text, changed line numbers, or expected behavior.
 
-### `runtime.json`
+### `image-build/runtime.json`
 
 The exact locally built Docker image ID used by the run. Reevaluation requires
 this image to remain available. Its source images are detailed in
-`build/images.json`.
+`image-build/images.json`.
 
-## `build/`
+## `image-build/`
 
 ### Build contexts and inputs
 
-`build/agent/` and `build/runtime/` contain copies of the checked-in Dockerfiles
+`image-build/agent/` and `image-build/runtime/` contain copies of the checked-in Dockerfiles
 and, for the runtime, public Python helpers. These directories are isolated build
 contexts containing only approved assets. Host run data and credentials do not
 enter either context. The runtime recipe copies the harness from its reusable
@@ -159,22 +170,20 @@ image and extends the prepared repository image.
 before any pull. `agent.inputs.json` and `runtime.inputs.json` record non-secret
 arguments, platform, recipe name, and SHA-256 hashes of all context files before
 their builds. Cache tags depend on these inputs, including helper contents.
-Earlier runs retain their original `build/Dockerfile` and `.dockerignore` layout.
-
-### `build/images.json`
+### `image-build/images.json`
 
 Configured references and resolved IDs or digests for the repository, Node,
 harness, and final runtime images. This record is updated as each image becomes
 available, so interrupted builds can contain only the completed stages.
 
-### `build/output.log`
+### `image-build/output.log`
 
 Raw SDK JSON events from pulls and builds, including build failure evidence.
 It may be empty when all images are cached.
 
-## `agent/`
+## `generation/`
 
-### `agent/session.log`
+### `generation/session.log`
 
 The readable agent transcript generated from `trace.jsonl`: prompt, agent
 messages, exposed tool calls and results, errors, standard error, and the harness
@@ -184,27 +193,27 @@ It cannot include hidden reasoning that the provider did not expose. Tool output
 may already be truncated by the CLI. `oracle-bench report` can rebuild it without
 a model call.
 
-### `agent/trace.jsonl`
+### `generation/trace.jsonl`
 
 Raw newline-delimited events emitted by Codex, Claude Code, or OpenCode. Event shapes depend
 on the pinned CLI version. This is the authoritative low-level transcript used to
 extract completion, errors, usage, cost, and `session.log`.
 
-### `agent/command.json`
+### `generation/command.json`
 
 The exact agent CLI argument vector, including model, isolation flags, provider
 overrides, and configured budget or turn limit. Credential values are absent.
 
-### `agent/version.txt`
+### `generation/version.txt`
 
 Output of `codex --version` or `claude --version` inside the container.
 
-### `agent/final.txt`
+### `generation/final.txt`
 
 The agent's final natural-language response. It may be empty when generation
 fails or times out.
 
-### `agent/result.json`
+### `generation/result.json`
 
 Normalized generation metadata.
 
@@ -239,17 +248,17 @@ redacted before host writes, including credentials split across output chunks.
 
 ### Workspace preparation inputs
 
-`agent/workspace.json` (and the corresponding file in each evaluation directory)
+`generation/workspace.json` (and the corresponding file in each evaluation directory)
 records public workspace preparation inputs: repository path, generated directory,
 test visibility, and test globs. It contains no private patches or credentials.
 
-### `agent/baseline.txt`
+### `generation/baseline.txt`
 
 The Git commit created immediately before generation. It includes the selected
 existing-test visibility and empty generated-test directory and anchors the final
 workspace diff.
 
-### `agent/before.json` and `agent/after.json`
+### `generation/before.json` and `generation/after.json`
 
 Complete filesystem metadata snapshots before and after generation. Every
 repository-relative path maps to its entry kind, Unix mode, size, and SHA-256.
@@ -257,22 +266,22 @@ Their comparison determines allowed files and forbidden changes independently of
 Git status. These can be large, but contain metadata rather than every file's
 contents.
 
-### `agent/workspace.diff`
+### `generation/workspace.diff`
 
 The complete Git-oriented diff from `baseline.txt` through the final agent state,
 including staged, unstaged, and untracked changes. Use it to inspect policy
 violations and production edits.
 
-## `generated/`
+## `submission/`
 
-### `generated/files/`
+### `submission/files/`
 
 The frozen submission. Each allowed new regular file is copied here while
 preserving its repository-relative path. Evaluations copy these exact files into
 fresh buggy and golden workspaces. The directory may be absent for an empty
 submission.
 
-### `generated/manifest.json`
+### `submission/manifest.json`
 
 The artifact inventory and compliance decision.
 
@@ -289,10 +298,17 @@ Before evaluation, Oracle Bench verifies the manifest checksum, every captured
 file's checksum, and that the bundle contains no unmanifested files. It rejects
 silent modification of the frozen artifact.
 
+## `ground-truth/`
+
+`issue.md` contains the SWE-bench problem statement in readable form.
+`fix.patch` is the exact golden patch applied to transform the buggy checkout.
+Both are private evaluator evidence retained for human analysis; neither is
+available inside the generation container.
+
 ## Evaluation directories
 
-`buggy/`, `golden/`, `reference/buggy/`, and `reference/golden/` use the same
-layout. The top-level pair evaluates generated tests; the `reference/` pair checks
+`evaluation/buggy/`, `evaluation/golden/`, `reference-check/buggy/`, and
+`reference-check/golden/` use the same layout. The evaluation pair evaluates generated tests; the reference pair checks
 the private developer regression before generation. Golden directories also have
 `repair.patch`; reference directories have `reference.patch`.
 
@@ -344,10 +360,10 @@ a reason. Coverage failure does not discard test results.
 Start with `output.log` when `tests.json` reports a runner or infrastructure
 failure.
 
-## `reference/results.json`
+## `reference-check/results.json`
 
 The paired private-regression result. It has the same matrix shape as the paired
-portion of `results.json`. Generation begins only when
+portion of `evaluation/results.json`. Generation begins only when
 `has_fail_on_buggy_pass_on_golden` is true, verifying the base commit, repair,
 private test, and environment before model spending.
 
@@ -359,13 +375,13 @@ Running:
 uv run oracle-bench evaluate runs/<run-id>
 ```
 
-moves the current `buggy/`, `golden/`, `results.json`, and `report.md` into
-`evaluations/<UTC timestamp>/`, verifies the frozen manifest, and evaluates it in
+moves the current contents of `evaluation/` into
+`evaluation-history/<UTC timestamp>/`, verifies the frozen manifest, and evaluates it in
 fresh containers. Generation evidence, provenance, runtime identity, and frozen
 tests remain unchanged. Earlier reevaluations therefore remain available for
 comparison.
 
-`agent/session.log` is regenerated from the original trace when the new report is
+`generation/session.log` is regenerated from the original trace when the new report is
 rendered. It is generation evidence rather than an evaluation result and is not
 archived.
 
@@ -373,13 +389,13 @@ archived.
 
 Several files are expected to be empty or absent in normal circumstances:
 
-- `agent/launch.log`, `agent/capture.log`, and sometimes `agent/stderr.log` are
+- `generation/launch.log`, `generation/capture.log`, and sometimes `generation/stderr.log` are
   empty when normally silent commands succeed;
-- `build/output.log` may be minimal or absent when the runtime is cached;
-- `agent/final.txt` may be empty after an agent failure;
-- `generated/files/` may be absent for an empty submission;
+- `image-build/output.log` may be minimal or absent when the runtime is cached;
+- `generation/final.txt` may be empty after an agent failure;
+- `submission/files/` may be absent for an empty submission;
 - raw and binary coverage files may be absent when coverage fails;
-- `results.json` and `report.md` are absent if the pipeline stops before final
+- `evaluation/results.json` and `report.md` are absent if the pipeline stops before final
   evaluation.
 
 Interpret absence together with `status.json`, the relevant `execution.json`, and

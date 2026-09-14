@@ -13,8 +13,10 @@ from oracle_bench.container import Profile, docker_client, open_sandbox
 from oracle_bench.container.images import prepare_image
 from oracle_bench.datasets import resolve_source
 from oracle_bench.evaluate import check_reference, evaluate
+from oracle_bench.ground_truth import write_ground_truth
 from oracle_bench.harnesses import generate, require_credentials
 from oracle_bench.io import read_json, write_json
+from oracle_bench.paths import RunPaths
 from oracle_bench.prompts import render_prompt
 from oracle_bench.report import report
 from oracle_bench.workspace import RepositoryWorkspace
@@ -49,6 +51,7 @@ def run(config: RunConfig) -> Path:
     run_id = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ") + "-" + uuid.uuid4().hex[:8]
     run_dir = Path(config.output) / run_id
     run_dir.mkdir(parents=True)
+    paths = RunPaths.create(run_dir)
 
     stage = "resolve"
     try:
@@ -57,19 +60,18 @@ def run(config: RunConfig) -> Path:
         instance, config.runtime = resolve_source(config.source)
         validate_resolved_config(config)
         # Freeze both the expanded configuration and exact delivered prompt in the run.
-        config.task.prompt = str(run_dir / "prompt.txt")
-        (run_dir / "config.resolved.yaml").write_text(
-            yaml.safe_dump(config.to_dict(), sort_keys=False)
-        )
+        config.task.prompt = str(paths.prompt)
+        paths.config.write_text(yaml.safe_dump(config.to_dict(), sort_keys=False))
         test_target = instance["test_target"] if config.task.scope == "localized" else None
-        (run_dir / "prompt.txt").write_text(render_prompt(prompt_template, config, test_target))
-        write_json(run_dir / "instance.json", instance)
+        paths.prompt.write_text(render_prompt(prompt_template, config, test_target))
+        write_json(paths.instance, instance)
+        write_ground_truth(paths, instance)
         with docker_client() as client:
             # Preapre task image
             stage = "build"
             status(run_dir, stage)
             image = prepare_image(client, config, run_dir)
-            write_json(run_dir / "runtime.json", {"image": image})
+            write_json(paths.runtime, {"image": image})
 
             # Check that a fail->pass pair exists
             # NOTE: in the future this will probably need to be changed to accomodate other
@@ -81,12 +83,12 @@ def run(config: RunConfig) -> Path:
             # Generate tests in the sandbox with the correct harness
             stage = "generate"
             status(run_dir, stage)
-            log = run_dir / "agent" / "setup.log"
+            log = paths.generation / "setup.log"
             with open_sandbox(client, image, config, Profile.GENERATION, log) as sandbox:
                 workspace = RepositoryWorkspace(sandbox, config)
-                workspace.prepare(instance["base_commit"], run_dir / "agent")
-                before = snapshot(sandbox, run_dir / "agent" / "before.json", log)
-                baseline = workspace.baseline(run_dir / "agent" / "baseline.txt")
+                workspace.prepare(instance["base_commit"], paths.generation)
+                before = snapshot(sandbox, paths.generation / "before.json", log)
+                baseline = workspace.baseline(paths.generation / "baseline.txt")
                 generate(sandbox, config, run_dir)
 
                 # Capture changes made
@@ -110,8 +112,9 @@ def run(config: RunConfig) -> Path:
 
 
 def reevaluate(run_dir: Path) -> Path:
-    config = load_config(run_dir / "config.resolved.yaml", resolved=True)
-    image = read_json(run_dir / "runtime.json")["image"]
+    paths = RunPaths.open(run_dir)
+    config = load_config(paths.config, resolved=True)
+    image = read_json(paths.runtime)["image"]
     status(run_dir, "evaluate")
     try:
         with docker_client() as client:
@@ -121,7 +124,7 @@ def reevaluate(run_dir: Path) -> Path:
                 raise RuntimeError(
                     "Saved runtime image is missing. Restore it before reevaluation."
                 ) from None
-            result = evaluate(client, config, image, read_json(run_dir / "instance.json"), run_dir)
+            result = evaluate(client, config, image, read_json(paths.instance), run_dir)
         path = report(run_dir)
         status(run_dir, "finished", completion_state(result))
         return path

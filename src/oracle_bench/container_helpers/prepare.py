@@ -4,10 +4,11 @@ from __future__ import annotations
 
 import json
 import os
-import shutil
 import subprocess
 import sys
 from pathlib import Path
+
+TEST_MODULE_PATTERNS = ("test_*.py", "*_test.py", "tests.py")
 
 
 def git(*args):
@@ -15,14 +16,23 @@ def git(*args):
 
 
 def remove_existing_tests(root: Path, patterns: list[str]) -> None:
-    """Remove every adapter-declared test path, including nested test trees."""
+    """Remove tests without deleting runtime support kept in test packages.
+
+    A matched file is an explicit adapter declaration and is removed directly.
+    For a matched directory, remove Python modules pytest would collect by its
+    default naming rules.  Package initializers, runners, fixtures, helpers, and
+    test data can be part of a project's runtime import surface and must remain.
+    """
     paths = {path for pattern in patterns for path in root.glob(pattern)}
-    # Remove children before parents when adapter patterns happen to overlap.
-    for path in sorted(paths, key=lambda item: len(item.parts), reverse=True):
+    test_modules = set()
+    for path in paths:
         if path.is_symlink() or path.is_file():
-            path.unlink()
+            test_modules.add(path)
         elif path.is_dir():
-            shutil.rmtree(path)
+            for module_pattern in TEST_MODULE_PATTERNS:
+                test_modules.update(path.rglob(module_pattern))
+    for path in sorted(test_modules):
+        path.unlink()
 
 
 def prepare(settings):
@@ -36,7 +46,7 @@ def prepare(settings):
     git("config", "user.name", "OracleBench")
     git("config", "--global", "--add", "safe.directory", str(root))
     git("add", "-A")
-    git("commit", "--allow-empty", "-m", "Oracle Bench workspace")
+    git("commit", "--quiet", "--allow-empty", "-m", "Oracle Bench workspace")
     subprocess.run(["chown", "-R", "10001:10001", str(root)], check=True)
 
 

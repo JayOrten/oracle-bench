@@ -3,13 +3,16 @@
 import json
 from pathlib import Path
 
+from oracle_bench.paths import RunPaths
+
 
 def _text(value):
     return value if isinstance(value, str) else json.dumps(value, indent=2, ensure_ascii=False)
 
 
 def render_session(run_dir: Path) -> Path:
-    directory = run_dir / "agent"
+    paths = RunPaths.open(run_dir)
+    directory = paths.generation
     directory.mkdir(exist_ok=True)
     lines = [
         "AGENT SESSION",
@@ -17,7 +20,7 @@ def render_session(run_dir: Path) -> Path:
         "Only output exposed by the CLI is available. Tool output may be truncated by the CLI.",
         "",
     ]
-    prompt = run_dir / "prompt.txt"
+    prompt = paths.prompt
     if prompt.exists():
         lines += ["=== PROMPT ===", prompt.read_text(), ""]
     trace = directory / "trace.jsonl"

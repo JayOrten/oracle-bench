@@ -3,6 +3,7 @@ from pathlib import Path
 
 from oracle_bench.harnesses.transcript import render_session
 from oracle_bench.io import read_json
+from oracle_bench.paths import RunPaths
 
 LABELS = {
     "pass_on_both": "Pass on both",
@@ -13,12 +14,20 @@ LABELS = {
 
 
 def report(run_dir: Path) -> Path:
-    results = read_json(run_dir / "results.json")
+    paths = RunPaths.open(run_dir)
+    results = read_json(paths.results)
     render_session(run_dir)
     lines = [
         f"# Oracle Bench: {results['instance_id']}",
         "",
-        f"Existing repository tests visible to agent: "
+        "Test-generation scope: "
+        + (
+            "**calculated localized target**."
+            if results["task_scope"] == "localized"
+            else "**whole repository**."
+        ),
+        "",
+        f"Existing repository test modules visible to agent: "
         f"**{'yes' if results['existing_tests'] == 'keep' else 'no'}**. "
         f"Agent: **{results['agent']['status']}**.",
         "",
@@ -26,8 +35,8 @@ def report(run_dir: Path) -> Path:
         f"Golden execution: **{results['golden_status']}**.",
         "",
     ]
-    if results.get("test_target"):
-        lines += [f"Localized test target: **{results['test_target']}**.", ""]
+    if results["task_scope"] == "localized":
+        lines += [f"Calculated target: **{results['test_target']}**.", ""]
     if results["diagnostic_only"]:
         lines += [
             "**Diagnostic only:** the agent changed files outside its allowed test artifact.",
@@ -49,6 +58,14 @@ def report(run_dir: Path) -> Path:
         "Pass on both means the test did not distinguish these versions. "
         "It does not by itself establish an incorrect oracle.",
         "",
+        "## Ground truth",
+        "",
+        "Private dataset evidence, retained for manual analysis and never exposed "
+        "to the generation agent:",
+        "",
+        "- [Original issue](ground-truth/issue.md)",
+        "- [Buggy-to-golden fix diff](ground-truth/fix.patch)",
+        "",
         "## Generated-test line coverage",
         "",
         "| Version | Covered / executable lines | Coverage |",
@@ -66,14 +83,14 @@ def report(run_dir: Path) -> Path:
         "",
         "## Artifacts",
         "",
-        "- [Paired outcomes and test IDs](results.json)",
-        "- [Frozen test manifest](generated/manifest.json)",
-        "- [Image provenance](build/images.json)",
-        "- [Readable agent session](agent/session.log)",
-        "- [Raw agent events](agent/trace.jsonl)",
-        "- [Workspace diff](agent/workspace.diff)",
-        "- [Buggy results](buggy/tests.json) · [log](buggy/output.log)",
-        "- [Golden results](golden/tests.json) · [log](golden/output.log)",
+        "- [Paired outcomes and test IDs](evaluation/results.json)",
+        "- [Frozen test manifest](submission/manifest.json)",
+        "- [Image provenance](image-build/images.json)",
+        "- [Readable agent session](generation/session.log)",
+        "- [Raw agent events](generation/trace.jsonl)",
+        "- [Workspace diff](generation/workspace.diff)",
+        "- [Buggy results](evaluation/buggy/tests.json) · [log](evaluation/buggy/output.log)",
+        "- [Golden results](evaluation/golden/tests.json) · [log](evaluation/golden/output.log)",
         "",
         "## Limits of this exploratory run",
         "",
@@ -84,7 +101,7 @@ def report(run_dir: Path) -> Path:
         + (
             "Because existing tests were visible, generated tests may reuse their fixtures."
             if results["existing_tests"] == "keep"
-            else "Existing test paths were removed from both final evaluation workspaces."
+            else "Existing test modules were removed from both final evaluation workspaces."
         ),
         "",
         f"Agent wall time: {results['agent'].get('duration_seconds', 0):.1f}s. "
@@ -96,6 +113,6 @@ def report(run_dir: Path) -> Path:
         ),
         "",
     ]
-    path = run_dir / "report.md"
+    path = paths.report
     path.write_text("\n".join(lines))
     return path

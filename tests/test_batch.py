@@ -4,6 +4,7 @@ import yaml
 
 from oracle_bench.batch import load_batch_config, run_batch
 from oracle_bench.io import read_json, write_json
+from oracle_bench.paths import RunPaths
 
 
 def write_run_config(path: Path, instance: str) -> None:
@@ -32,6 +33,7 @@ def write_batch_config(path: Path, jobs: list[str]) -> None:
 
 
 def fake_result(run_dir: Path, instance: str, detected: bool = False) -> None:
+    paths = RunPaths.create(run_dir)
     matrix = {
         "pass_on_both": {"count": 2, "test_ids": []},
         "fail_on_buggy_pass_on_golden": {
@@ -42,7 +44,7 @@ def fake_result(run_dir: Path, instance: str, detected: bool = False) -> None:
         "fail_on_both": {"count": 0, "test_ids": []},
     }
     write_json(
-        run_dir / "results.json",
+        paths.results,
         {
             "instance_id": instance,
             "submission_compliant": True,

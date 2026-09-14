@@ -95,8 +95,8 @@ and a small execution result where benchmark status requires it. Keep container
 IDs and SDK transport details inside this module.
 
 Centralize generation, reference, and evaluation policies. Generation permits
-networking and runs the agent as oracle; reference and evaluation disable
-networking. Setup privileges are explicit. No profile mounts the Docker socket
+networking and runs the agent as oracle; reference and evaluation use the same
+outbound bridge network. Setup privileges are explicit. No profile mounts the Docker socket
 or the complete host run directory. Resource limits are applied consistently.
 
 Use argv for ordinary commands. Put reusable multiline operations in checked-in

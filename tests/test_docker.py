@@ -15,6 +15,7 @@ from oracle_bench.container import Profile, open_sandbox
 from oracle_bench.container.images import ASSETS, build_image
 from oracle_bench.evaluate import run_version
 from oracle_bench.io import digest, read_json, write_json
+from oracle_bench.paths import RunPaths
 from oracle_bench.run import reevaluate
 from oracle_bench.runners.pytest import pair_results
 
@@ -27,8 +28,9 @@ def test_local_sdk_build_exec_and_copy(tmp_path):
     if not saved:
         pytest.skip("Set ORACLE_BENCH_SMOKE_RUN to use a local prepared runtime")
     saved = Path(saved).resolve()
-    config = load_config(saved / "config.resolved.yaml", resolved=True)
-    parent = read_json(saved / "runtime.json")["image"]
+    saved_paths = RunPaths.open(saved)
+    config = load_config(saved_paths.config, resolved=True)
+    parent = read_json(saved_paths.runtime)["image"]
     context = tmp_path / "context"
     context.mkdir()
     shutil.copyfile(ASSETS / "docker/smoke.Dockerfile", context / "smoke.Dockerfile")
@@ -111,14 +113,16 @@ def test_real_requests_pair_and_artifact_copy(tmp_path, visibility, monkeypatch,
     if not saved:
         pytest.skip("Set ORACLE_BENCH_SMOKE_RUN to a run with a prepared Requests smoke image")
     saved = Path(saved).resolve()
-    config = load_config(saved / "config.resolved.yaml", resolved=True)
+    saved_paths = RunPaths.open(saved)
+    config = load_config(saved_paths.config, resolved=True)
     config.task.existing_tests = visibility
-    instance = read_json(saved / "instance.json")
+    instance = read_json(saved_paths.instance)
     assert instance["instance_id"] == "psf__requests-2148"
-    image = read_json(saved / "runtime.json")["image"]
+    image = read_json(saved_paths.runtime)["image"]
     client = docker.from_env()
     request.addfinalizer(client.close)
-    path = tmp_path / "generated" / "files" / config.task.generated_dir / "test_probes.py"
+    paths = RunPaths.create(tmp_path)
+    path = paths.submission / "files" / config.task.generated_dir / "test_probes.py"
     path.parent.mkdir(parents=True)
     path.write_text(PROBES)
     files = {
@@ -128,7 +132,7 @@ def test_real_requests_pair_and_artifact_copy(tmp_path, visibility, monkeypatch,
         }
     }
     write_json(
-        tmp_path / "generated" / "manifest.json",
+        paths.submission / "manifest.json",
         {
             "files": files,
             "sha256": digest(json.dumps(files, sort_keys=True).encode()),
@@ -143,7 +147,7 @@ def test_real_requests_pair_and_artifact_copy(tmp_path, visibility, monkeypatch,
     assert buggy["status"] == golden["status"] == "completed", (buggy, golden)
     assert [cell["count"] for cell in result["matrix"].values()] == [1, 1, 1, 1]
     for version in ["buggy", "golden"]:
-        coverage = read_json(tmp_path / version / "coverage.json")
+        coverage = read_json(paths.evaluation / version / "coverage.json")
         assert coverage["status"] == "available"
         assert coverage["covered_lines"] > 0
         assert coverage["executable_lines"] >= coverage["covered_lines"]
@@ -151,11 +155,11 @@ def test_real_requests_pair_and_artifact_copy(tmp_path, visibility, monkeypatch,
         # Replay a saved artifact through the public reevaluation path, with no credentials.
         monkeypatch.delenv("OPENAI_API_KEY", raising=False)
         monkeypatch.delenv("CODEX_API_KEY", raising=False)
-        (tmp_path / "config.resolved.yaml").write_text(yaml.safe_dump(config.to_dict()))
-        write_json(tmp_path / "instance.json", instance)
-        write_json(tmp_path / "runtime.json", {"image": image})
+        paths.config.write_text(yaml.safe_dump(config.to_dict()))
+        write_json(paths.instance, instance)
+        write_json(paths.runtime, {"image": image})
         write_json(
-            tmp_path / "agent" / "result.json",
+            paths.generation / "result.json",
             {
                 "status": "not_run_handwritten_probe",
                 "duration_seconds": 0,
@@ -164,9 +168,6 @@ def test_real_requests_pair_and_artifact_copy(tmp_path, visibility, monkeypatch,
         )
         report = reevaluate(tmp_path)
         assert report.is_file()
-        replay = read_json(tmp_path / "results.json")
+        replay = read_json(paths.results)
         assert replay["matrix"] == result["matrix"]
-        assert (
-            replay["artifact_sha256"]
-            == read_json(tmp_path / "generated" / "manifest.json")["sha256"]
-        )
+        assert replay["artifact_sha256"] == read_json(paths.submission / "manifest.json")["sha256"]

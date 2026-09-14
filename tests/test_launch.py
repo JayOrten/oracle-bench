@@ -10,6 +10,7 @@ from oracle_bench.config import RuntimeConfig, load_config
 from oracle_bench.container import CommandResult
 from oracle_bench.harnesses import claude, codex, opencode
 from oracle_bench.harnesses.launch import launch
+from oracle_bench.paths import RunPaths
 
 
 @pytest.mark.parametrize(
@@ -32,6 +33,7 @@ def test_launch_routes_only_selected_credential(
     credential,
     target,
 ):
+    paths = RunPaths.create(tmp_path)
     config = load_config(Path(__file__).parents[1] / "configs/smoke.yaml")
     config.agent.harness = harness.__name__.rsplit(".", 1)[-1]
     config.agent.provider = provider
@@ -85,11 +87,12 @@ def test_launch_routes_only_selected_credential(
     result = harness.generate(sandbox, config, tmp_path)
     assert result["status"] == "completed"
     sandbox.stop_background_processes.assert_called_once()
-    for artifact in (tmp_path / "agent").iterdir():
+    for artifact in paths.generation.iterdir():
         assert "credential-fixture" not in artifact.read_text()
 
 
 def test_interruption_remains_visible_when_collection_fails(tmp_path, monkeypatch):
+    RunPaths.create(tmp_path)
     config = load_config(Path(__file__).parents[1] / "configs/smoke.yaml")
     monkeypatch.setenv(config.agent.credential_env, "credential-fixture")
     sandbox = Mock()
