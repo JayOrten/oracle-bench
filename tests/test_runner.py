@@ -60,6 +60,33 @@ def test_both_fail(): assert subject.answer() == 3
         buggy["tests"]["oracle_tests/test_subject.py::test_finds_bug"]["phases"][1]["phase"]
         == "call"
     )
+    failure = buggy["tests"]["oracle_tests/test_subject.py::test_finds_bug"]["failure"]
+    assert failure["kind"] == "assertion"
+    assert failure["exception_type"] == "builtins.AssertionError"
+    assert paired["failure_kinds"] == {
+        "buggy": {"assertion": 2, "exception": 0, "unknown": 0},
+        "golden": {"assertion": 2, "exception": 0, "unknown": 0},
+    }
+
+
+def test_call_exceptions_are_distinguished_from_assertion_failures(tmp_path):
+    tests = """def test_assertion(): assert False, 'wrong value'
+def test_exception(): raise ValueError('changed ground')
+"""
+    result, _, _ = execute(tmp_path, "x = 1\n", tests)
+
+    assertion = result["tests"]["oracle_tests/test_subject.py::test_assertion"]["failure"]
+    exception = result["tests"]["oracle_tests/test_subject.py::test_exception"]["failure"]
+    assert assertion == {
+        "kind": "assertion",
+        "exception_type": "builtins.AssertionError",
+        "message": "wrong value\nassert False",
+    }
+    assert exception == {
+        "kind": "exception",
+        "exception_type": "builtins.ValueError",
+        "message": "changed ground",
+    }
 
 
 @pytest.mark.parametrize(

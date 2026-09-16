@@ -33,10 +33,28 @@ def pair_results(buggy: dict, golden: dict) -> dict:
     matrix = {name: [] for name in labels.values()}
     other = []
     rows = []
+    failure_kinds = {
+        version: {kind: 0 for kind in ["assertion", "exception", "unknown"]}
+        for version in ["buggy", "golden"]
+    }
     for nodeid in sorted(buggy["tests"].keys() | golden["tests"].keys()):
-        b = buggy["tests"].get(nodeid, {}).get("outcome", "not_collected")
-        g = golden["tests"].get(nodeid, {}).get("outcome", "not_collected")
+        buggy_case = buggy["tests"].get(nodeid, {})
+        golden_case = golden["tests"].get(nodeid, {})
+        b = buggy_case.get("outcome", "not_collected")
+        g = golden_case.get("outcome", "not_collected")
         row = {"test_id": nodeid, "buggy": b, "golden": g}
+        for version, case, outcome in [
+            ("buggy", buggy_case, b),
+            ("golden", golden_case, g),
+        ]:
+            if outcome != "fail":
+                continue
+            failure = case.get("failure", {"kind": "unknown"})
+            kind = failure.get("kind", "unknown")
+            if kind not in failure_kinds[version]:
+                kind = "unknown"
+            row[version + "_failure"] = failure
+            failure_kinds[version][kind] += 1
         label = labels.get((b, g))
         if buggy["status"] != "completed" or golden["status"] != "completed":
             label = None
@@ -51,6 +69,7 @@ def pair_results(buggy: dict, golden: dict) -> dict:
         "matrix": {name: {"count": len(ids), "test_ids": ids} for name, ids in matrix.items()},
         "other_outcomes": other,
         "tests": rows,
+        "failure_kinds": failure_kinds,
         "buggy_status": buggy["status"],
         "golden_status": golden["status"],
         "has_fail_on_buggy_pass_on_golden": bool(matrix["fail_on_buggy_pass_on_golden"]),

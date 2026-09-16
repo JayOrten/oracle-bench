@@ -98,11 +98,14 @@ The machine-readable aggregate for the generated tests.
 | `matrix` | Counts and test IDs in each binary paired cell |
 | `tests` | One paired row per test ID |
 | `other_outcomes` | Tests excluded from the binary matrix |
+| `failure_kinds` | Assertion, other-exception, and unknown failure counts for each version |
 | `has_fail_on_buggy_pass_on_golden` | Whether a test distinguishes the pair in the expected direction |
 | `coverage` | Normalized coverage summaries for both versions |
 
-Each `tests` row contains `test_id`, `buggy`, `golden`, and `cell`. `cell` is null
-when either execution is incomplete or an outcome is not binary.
+Each `tests` row contains `test_id`, `buggy`, `golden`, and `cell`. Failed sides
+also include `buggy_failure` or `golden_failure` with a diagnostic kind, exception
+type, and message. `cell` is null when either execution is incomplete or an
+outcome is not binary.
 
 | Matrix key | Buggy | Golden | Meaning |
 |---|---|---|---|

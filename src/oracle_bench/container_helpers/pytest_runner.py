@@ -11,6 +11,8 @@ import sys
 import traceback
 from pathlib import Path
 
+import pytest
+
 
 def write(path, data):
     temporary = path.with_suffix(".tmp")
@@ -48,6 +50,22 @@ class Recorder:
             )
             self.save()
 
+    @pytest.hookimpl(hookwrapper=True)
+    def pytest_runtest_makereport(self, item, call):
+        """Attach structured exception evidence before the report is recorded."""
+        outcome = yield
+        report = outcome.get_result()
+        if call.excinfo is None:
+            return
+        exception_type = call.excinfo.type
+        value = call.excinfo.value
+        assertion_types = (AssertionError, pytest.fail.Exception)
+        report.oracle_failure = {
+            "kind": "assertion" if isinstance(value, assertion_types) else "exception",
+            "exception_type": exception_type.__module__ + "." + exception_type.__qualname__,
+            "message": str(value),
+        }
+
     def pytest_runtest_logreport(self, report):
         case = self.data["tests"].setdefault(report.nodeid, {"outcome": "not_run", "phases": []})
         phase = {
@@ -57,6 +75,8 @@ class Recorder:
         }
         if report.longrepr:
             phase["details"] = str(report.longrepr)
+        if hasattr(report, "oracle_failure"):
+            phase["failure"] = report.oracle_failure
         if hasattr(report, "wasxfail"):
             phase["expected_failure"] = str(report.wasxfail)
         case["phases"].append(phase)
@@ -69,6 +89,7 @@ class Recorder:
                 case["outcome"] = "xpass"
             else:
                 case["outcome"] = "fail"
+                case["failure"] = phase.get("failure", {"kind": "unknown"})
         elif report.skipped:
             case["outcome"] = "skip"
         elif report.when == "call" and case["outcome"] == "not_run":
@@ -129,8 +150,6 @@ print(json.dumps(origins))
         except Exception as exc:
             coverage_result = {"status": "unavailable", "reason": str(exc)}
             cov = None
-        import pytest
-
         os.environ.pop("PYTEST_ADDOPTS", None)
         # Run generated targets only; don't inherit a repository's default targets/addopts.
         arguments = ["-o", "addopts=", "-q", "--tb=short", *settings["targets"]]

@@ -30,6 +30,10 @@ def test_report_renders_run_metadata(tmp_path, cost, scope, target, expected_sco
         "diagnostic_only": False,
         "matrix": {key: {"count": 0} for key in LABELS},
         "other_outcomes": [],
+        "failure_kinds": {
+            "buggy": {"assertion": 2, "exception": 1, "unknown": 0},
+            "golden": {"assertion": 0, "exception": 1, "unknown": 0},
+        },
         "coverage": {},
     }
     paths = RunPaths.create(tmp_path)
@@ -44,3 +48,4 @@ def test_report_renders_run_metadata(tmp_path, cost, scope, target, expected_sco
     )
     assert "[Original issue](ground-truth/issue.md)" in text
     assert "[Buggy-to-golden fix diff](ground-truth/fix.patch)" in text
+    assert "| buggy | 2 | 1 | 0 |" in text

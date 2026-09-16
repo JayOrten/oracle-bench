@@ -58,6 +58,18 @@ def report(run_dir: Path) -> Path:
         "Pass on both means the test did not distinguish these versions. "
         "It does not by itself establish an incorrect oracle.",
         "",
+        "## Failure causes",
+        "",
+        "Call-phase failures are classified by the exception that escaped the test. "
+        "This is diagnostic and does not change matrix scoring.",
+        "",
+        "| Version | Assertion failures | Other exceptions | Unknown |",
+        "|---|---:|---:|---:|",
+        *[
+            f"| {version} | {counts['assertion']} | {counts['exception']} | {counts['unknown']} |"
+            for version, counts in results["failure_kinds"].items()
+        ],
+        "",
         "## Ground truth",
         "",
         "Private dataset evidence, retained for manual analysis and never exposed "
