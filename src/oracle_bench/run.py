@@ -109,7 +109,7 @@ def run(config: RunConfig) -> Path:
         with docker_client() as client:
             stage = "build"
             status(run_dir, stage)
-            image = prepare_image(client, config, paths)
+            image = prepare_image(client, config, paths.build)
             write_json(paths.runtime, {"image": image})
 
             # A pair that cannot distinguish its own revisions cannot score an

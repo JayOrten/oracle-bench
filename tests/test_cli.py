@@ -91,6 +91,19 @@ def test_judge_loads_credentials_and_uses_saved_run(tmp_path, monkeypatch):
     assert cli.main(["judge", str(tmp_path)]) == 0
 
 
+def test_classify_loads_credentials_and_uses_its_own_config(tmp_path, monkeypatch):
+    monkeypatch.chdir(tmp_path)
+    (tmp_path / ".env").write_text("OPENAI_API_KEY=classifier-fixture\n")
+    attempt = tmp_path / "classifications" / "instance" / "attempt"
+    attempt.mkdir(parents=True)
+    (attempt / "status.json").write_text('{"state": "completed"}\n')
+    config = object()
+    monkeypatch.setattr(cli, "load_classification_config", lambda path: config)
+    monkeypatch.setattr(cli, "classify", lambda loaded: attempt if loaded is config else None)
+
+    assert cli.main(["classify", "classification.yaml"]) == 0
+
+
 def test_human_workspace_commands_are_offline_and_dispatch_explicit_actions(tmp_path, monkeypatch):
     def unexpected_load(*args, **kwargs):
         pytest.fail("Human workspace commands must not load model credentials")

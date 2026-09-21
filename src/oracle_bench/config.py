@@ -25,8 +25,14 @@ Version = Annotated[str, Field(strict=True, pattern=r"^\d+\.\d+\.\d+(?:[a-zA-Z0-
 ImageReference = Annotated[str, Field(strict=True, pattern=r"^[A-Za-z0-9_./:@-]+$")]
 NonBlank = Annotated[str, Field(strict=True, pattern=r"\S")]
 
-SWEBENCH_DATASETS = {"lite": "princeton-nlp/SWE-bench_Lite"}
-SWEBENCH_DATASET_REVISION = "6ec7bb89b9342f664a54a6e0a6ea6501d3437cc2"
+SWEBENCH_DATASETS = {
+    "lite": "princeton-nlp/SWE-bench_Lite",
+    "verified": "princeton-nlp/SWE-bench_Verified",
+}
+SWEBENCH_DATASET_REVISIONS = {
+    "lite": "6ec7bb89b9342f664a54a6e0a6ea6501d3437cc2",
+    "verified": "c104f840cc67f8b6eec6f759ebc8b2693d585d4a",
+}
 # Every runtime image installs all three CLIs from one lockfile, so these pins
 # must stay equal to docker/package.json. Nothing selects a version per run.
 HARNESS_VERSIONS = {
@@ -81,14 +87,26 @@ ContainerPath = Annotated[str, AfterValidator(container_path)]
 class SourceConfig(ConfigModel):
     instance: NonBlank
     kind: Literal["swebench"] = "swebench"
-    dataset: Literal["lite"] = "lite"
-    revision: Annotated[str, Field(pattern=r"^[0-9a-f]{40}$")] = SWEBENCH_DATASET_REVISION
+    dataset: Literal["lite", "verified"] = "verified"
+    revision: Annotated[str, Field(pattern=r"^[0-9a-f]{40}$")] | None = None
     split: str = "test"
     record: str | None = None
 
     @property
     def dataset_name(self) -> str:
         return SWEBENCH_DATASETS[self.dataset]
+
+    @model_validator(mode="after")
+    def resolve_dataset_revision(self) -> SourceConfig:
+        self.revision = self.revision or SWEBENCH_DATASET_REVISIONS[self.dataset]
+        return self
+
+    @property
+    def dataset_revision(self) -> str:
+        """The immutable revision resolved during model validation."""
+        if self.revision is None:  # pragma: no cover - guarded by model validation
+            raise RuntimeError("Dataset revision was not resolved")
+        return self.revision
 
 
 class BudgetLimit(ConfigModel):
@@ -180,6 +198,12 @@ class JudgeConfig(HarnessConfig):
     multi_agent: Literal[False] = False  # pyright: ignore[reportIncompatibleVariableOverride]
 
 
+class ClassifierConfig(HarnessConfig):
+    """Settings for one repository-classification turn."""
+
+    multi_agent: Literal[False] = False  # pyright: ignore[reportIncompatibleVariableOverride]
+
+
 class TaskConfig(ConfigModel):
     prompt: str
     scope: Literal["localized", "repository"] = "repository"
@@ -255,6 +279,26 @@ class RunConfig(ConfigModel):
         return self.judge
 
 
+class ClassificationConfig(ConfigModel):
+    """Standalone settings for classifying one SWE-bench problem."""
+
+    source: SourceConfig
+    classifier: ClassifierConfig
+    rubric: NonBlank
+    limits: LimitsConfig = Field(default_factory=LimitsConfig)
+    output: str = "classifications"
+    runtime: RuntimeConfig | None = None
+    toolchain: ToolchainConfig = Field(default_factory=ToolchainConfig)
+
+    def to_dict(self) -> dict:
+        return self.model_dump()
+
+    def require_runtime(self) -> RuntimeConfig:
+        if self.runtime is None:
+            raise RuntimeError("The source adapter has not resolved the repository runtime")
+        return self.runtime
+
+
 def validate_resolved_config(config: RunConfig) -> None:
     """Make sure the agent's test directory is not inside the repo's source code.
 
@@ -299,4 +343,18 @@ def load_config(path: Path, *, resolved: bool = False) -> RunConfig:
         raise ValueError("Resolved configuration is missing runtime")
     if config.runtime is not None:
         validate_resolved_config(config)
+    return config
+
+
+def load_classification_config(path: Path, *, resolved: bool = False) -> ClassificationConfig:
+    """Parse standalone classification settings and resolve their host paths."""
+    raw = _read_settings(path, resolved)
+    config = ClassificationConfig.model_validate(raw)
+    base = path.resolve().parent
+    config.rubric = str((base / config.rubric).resolve())
+    config.output = str((base / config.output).resolve())
+    if config.source.record:
+        config.source.record = str((base / config.source.record).resolve())
+    if resolved and config.runtime is None:
+        raise ValueError("Resolved classification configuration is missing runtime")
     return config

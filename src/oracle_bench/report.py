@@ -9,6 +9,11 @@ from oracle_bench.judge.contracts import (
     read_judgment_state,
 )
 from oracle_bench.paths import RunPaths
+from oracle_bench.repo_classification.contracts import (
+    CLASSIFICATION_LABELS,
+    latest_classification,
+    read_classification_attempt,
+)
 from oracle_bench.results import (
     MATRIX_CELLS,
     VERSIONS,
@@ -22,6 +27,7 @@ def report(paths: RunPaths) -> Path:
     judgment = read_judgment_state(paths)
     judge_attempt = read_judge_attempt(paths.judge.result) if paths.judge.result.is_file() else None
     lines = _summary_lines(results)
+    lines.extend(_classification_lines(paths))
     lines.extend(_matrix_lines(results))
     lines.extend(_failure_lines(results))
     lines.extend(_ground_truth_lines(paths))
@@ -67,6 +73,54 @@ def _summary_lines(results: EvaluationResult) -> list[str]:
         message = error.get("message") or error.get("error", {}).get("message", "See agent logs")
         lines += [f"Agent message: {message}", ""]
     return lines
+
+
+def _classification_lines(paths: RunPaths) -> list[str]:
+    classification, attempt = latest_classification(paths)
+    status = classification["status"]
+    lines = ["## Task classification", "", f"Status: **{status}**.", ""]
+    attempt_result = attempt / "agent/result.json" if attempt is not None else None
+    if attempt_result is not None and attempt_result.is_file():
+        classifier = read_classification_attempt(attempt_result)
+        lines += [
+            f"Harness: `{classifier.harness}`. Provider: `{classifier.provider}`. "
+            f"Model: `{classifier.model}`. Limit: "
+            f"`{classifier.limit['kind']}={classifier.limit['value']}`.",
+            "",
+        ]
+    if status == "completed":
+        if classification["task_nature"] == "out_of_scope":
+            lines += [f"Task nature: `{classification['task_nature']}`.", ""]
+        else:
+            lines += [
+                "| Facet | Label |",
+                "|---|---|",
+                *[
+                    f"| {label} | `{_classification_value(classification[key])}` |"
+                    for key, label in CLASSIFICATION_LABELS.items()
+                ],
+                "",
+            ]
+        lines += ["Rationale:", "", *_blockquote(classification["rationale"]), ""]
+    elif status == "missing":
+        lines += ["No central classification has been saved for this problem.", ""]
+    else:
+        lines += [f"Reason: {classification['error']}", ""]
+    if attempt is not None:
+        evidence = [
+            ("Central classification", attempt / "classification.json"),
+            ("Raw classifier response", attempt / "classification.raw.txt"),
+            ("Frozen classifier rubric", attempt / "inputs/rubric.md"),
+            ("Classifier trace", attempt / "agent/trace.jsonl"),
+        ]
+        links = [f"- [{label}]({path.as_posix()})" for label, path in evidence if path.is_file()]
+        if links:
+            lines += ["Audit artifacts:", "", *links, ""]
+    return lines
+
+
+def _classification_value(value: object) -> str:
+    return ", ".join(value) if isinstance(value, list) else str(value)
 
 
 def _matrix_lines(results: EvaluationResult) -> list[str]:

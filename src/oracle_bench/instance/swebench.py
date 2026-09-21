@@ -146,7 +146,7 @@ def resolve(config: SourceConfig) -> tuple[InstanceRecord, RuntimeConfig]:
         # always gives rows we can loop over. The cast just tells the type checker.
         rows = cast(
             Iterable[dict],
-            load_dataset(config.dataset_name, split=config.split, revision=config.revision),
+            load_dataset(config.dataset_name, split=config.split, revision=config.dataset_revision),
         )
         matches = [row for row in rows if row["instance_id"] == config.instance]
         if len(matches) != 1:
@@ -181,7 +181,7 @@ def resolve(config: SourceConfig) -> tuple[InstanceRecord, RuntimeConfig]:
             kind=config.kind,
             dataset=config.dataset,
             name=config.dataset_name,
-            revision=config.revision,
+            revision=config.dataset_revision,
             split=config.split,
             upstream_revision=UPSTREAM_REVISION,
             record_sha256=digest(json.dumps(record, sort_keys=True).encode()),

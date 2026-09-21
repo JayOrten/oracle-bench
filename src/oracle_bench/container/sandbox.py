@@ -14,7 +14,7 @@ from docker.errors import DockerException, NotFound
 from docker.models.containers import Container
 from requests.exceptions import RequestException
 
-from oracle_bench.config import RunConfig, RuntimeConfig
+from oracle_bench.config import ClassificationConfig, RunConfig, RuntimeConfig
 from oracle_bench.container import files
 from oracle_bench.container.files import RedactedOutput
 from oracle_bench.container.lifecycle import execution_watchdog
@@ -29,6 +29,7 @@ class Profile(Enum):
     EVALUATION = "evaluation"
     REFERENCE = "reference"
     JUDGE = "judge"
+    CLASSIFICATION = "classification"
     HUMAN_JUDGE = "human-judge"
 
 
@@ -180,7 +181,11 @@ class Sandbox:
 
 @contextmanager
 def open_sandbox(
-    client: DockerClient, image: str, config: RunConfig, profile: Profile, log: Path
+    client: DockerClient,
+    image: str,
+    config: RunConfig | ClassificationConfig,
+    profile: Profile,
+    log: Path,
 ) -> Iterator[Sandbox]:
     """Create explicitly before starting, so failed starts are cleaned up too."""
     container = create_sandbox_container(client, image, config, profile)
@@ -206,7 +211,7 @@ def open_sandbox(
 def create_sandbox_container(
     client: DockerClient,
     image: str,
-    config: RunConfig,
+    config: RunConfig | ClassificationConfig,
     profile: Profile,
     *,
     name: str | None = None,

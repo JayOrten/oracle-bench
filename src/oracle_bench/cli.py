@@ -7,7 +7,7 @@ from pathlib import Path
 from dotenv import load_dotenv
 
 from oracle_bench.batch import run_batch
-from oracle_bench.config import RunConfig, load_config
+from oracle_bench.config import RunConfig, load_classification_config, load_config
 from oracle_bench.io import read_json
 from oracle_bench.judge.agreement import analyze_agreement
 from oracle_bench.judge.human import (
@@ -17,6 +17,7 @@ from oracle_bench.judge.human import (
 )
 from oracle_bench.judge.run import judge
 from oracle_bench.paths import RunPaths
+from oracle_bench.repo_classification.run import classify
 from oracle_bench.report import report
 from oracle_bench.run import reevaluate, run
 
@@ -61,6 +62,10 @@ def _build_parser() -> argparse.ArgumentParser:
     judge_parser = sub.add_parser("judge", help="Judge generated tests from a saved run")
     judge_parser.add_argument("run_dir", type=Path)
 
+    # Classify one SWE-bench problem independently of the generation pipeline.
+    classify_parser = sub.add_parser("classify", help="Classify one SWE-bench problem")
+    classify_parser.add_argument("config", type=Path)
+
     # Human judging workspaces, with their own create/collect/remove subcommands.
     workspace_parser = sub.add_parser(
         "judge-workspace", help="Create, collect, or remove a human judge workspace"
@@ -103,7 +108,7 @@ def _build_parser() -> argparse.ArgumentParser:
 
 def _dispatch(args: argparse.Namespace) -> int:
     # Only these reach a model, so only these need secrets from .env.
-    if args.command in {"run", "batch", "judge"}:
+    if args.command in {"run", "batch", "judge", "classify"}:
         load_dotenv(Path.cwd() / ".env", override=False, interpolate=False)
 
     if args.command == "run":
@@ -117,6 +122,8 @@ def _dispatch(args: argparse.Namespace) -> int:
         config, paths = _load_saved_run(args.run_dir)
         judge(config, paths)
         output = report(paths)
+    elif args.command == "classify":
+        output = classify(load_classification_config(args.config))
     elif args.command == "judge-workspace":
         if args.workspace_action == "create":
             config, paths = _load_saved_run(args.run_dir)
@@ -135,11 +142,11 @@ def _dispatch(args: argparse.Namespace) -> int:
     print(output)
 
     # The rest produce no run directory, so there is no status.json to grade.
-    if args.command not in {"run", "batch", "evaluate", "judge"}:
+    if args.command not in {"run", "batch", "evaluate", "judge", "classify"}:
         return 0
 
     # `run` and `batch` return the directory they created; the rest were given one.
-    run_dir = Path(output if args.command in {"run", "batch"} else args.run_dir)
+    run_dir = Path(output if args.command in {"run", "batch", "classify"} else args.run_dir)
     return 2 if read_json(run_dir / "status.json")["state"] == "completed_with_errors" else 0
 
 

@@ -7,6 +7,36 @@ submission, reference check, paired evaluations, and report.
 
 ## Directory layout
 
+Standalone task classifications use a parallel central store rather than the run
+directory:
+
+```text
+classifications/<instance-id>/<timestamp>-<id>/
+├── inputs/
+│   ├── config.resolved.yaml
+│   ├── instance.json
+│   └── rubric.md
+├── image-build/
+├── agent/
+├── workspace-spec.json
+├── classification.raw.txt
+├── classification.json
+└── status.json
+```
+
+Every invocation creates a new immutable attempt. Reports search the
+`classifications` directory beside their configured `runs` output, select the newest
+attempt for the exact SWE-bench `instance_id`, and verify its base commit and source
+record checksum. The central artifact is read in place and is not copied into a run.
+The newest failed or invalid attempt remains visible rather than falling back silently.
+
+`classification.json` contains immutable instance/rubric hashes and a normalized
+result. Completed in-scope results contain every rubric facet; out-of-scope results
+contain task nature and rationale only. `invalid_output`, `failed`, and `timed_out`
+are explicit result states. The raw final response, frozen rubric, harness trace,
+model provenance, image provenance, and workspace exposure manifest remain alongside
+it for audit.
+
 ```text
 runs/<run-id>/
 ├── status.json

@@ -221,3 +221,90 @@ def test_report_does_not_regenerate_the_generation_transcript(tmp_path):
     report(paths)
 
     assert session.read_text() == "frozen generation transcript\n"
+
+
+def test_report_renders_central_task_classification_and_provenance(tmp_path, monkeypatch):
+    paths = RunPaths.create(tmp_path / "run")
+    paths.results.write_text(json.dumps(report_results()))
+    attempt = tmp_path / "classifications/test-instance/attempt"
+    evidence = [
+        attempt / "classification.json",
+        attempt / "classification.raw.txt",
+        attempt / "inputs/rubric.md",
+        attempt / "agent/trace.jsonl",
+    ]
+    for path in evidence:
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text("evidence")
+    write_json(
+        attempt / "agent/result.json",
+        {
+            "status": "completed",
+            "duration_seconds": 2,
+            "usage": {"input_tokens": 10},
+            "cost_usd": 0.01,
+            "errors": [],
+            "harness": "codex",
+            "provider": "openrouter",
+            "model": "classifier-model",
+            "harness_version": "0.153.4",
+            "limit": {"kind": "wall_seconds", "value": 90},
+        },
+    )
+    classification = {
+        "status": "completed",
+        "task_nature": "behavioral_bug",
+        "defect_mechanisms": ["control_logic", "data_state"],
+        "primary_assertion_target": "return_value_or_status",
+        "required_test_setup": "sequence",
+        "code_only_oracle_availability": "repository_pattern",
+        "required_test_scope": "component",
+        "benchmark_quality": "usable",
+        "rationale": "A nearby implementation establishes the expected behavior.",
+    }
+    monkeypatch.setattr(
+        "oracle_bench.report.latest_classification", lambda run_paths: (classification, attempt)
+    )
+
+    text = report(paths).read_text()
+
+    assert "## Task classification" in text
+    assert "| Defect mechanisms | `control_logic, data_state` |" in text
+    assert "| Code-only oracle availability | `repository_pattern` |" in text
+    assert "> A nearby implementation establishes the expected behavior." in text
+    assert "Model: `classifier-model`" in text
+    assert "`wall_seconds=90`" in text
+    assert f"[Central classification]({attempt / 'classification.json'})" in text
+    assert f"[Frozen classifier rubric]({attempt / 'inputs/rubric.md'})" in text
+    assert f"[Classifier trace]({attempt / 'agent/trace.jsonl'})" in text
+
+
+@pytest.mark.parametrize(
+    ("classification", "expected"),
+    [
+        (
+            {
+                "status": "completed",
+                "task_nature": "out_of_scope",
+                "rationale": "This task adds a new feature.",
+            },
+            "Task nature: `out_of_scope`.",
+        ),
+        (
+            {"status": "invalid_artifact", "error": "latest attempt is incomplete"},
+            "Reason: latest attempt is incomplete",
+        ),
+    ],
+)
+def test_report_renders_out_of_scope_and_unsuccessful_classifications(
+    tmp_path, monkeypatch, classification, expected
+):
+    paths = RunPaths.create(tmp_path)
+    paths.results.write_text(json.dumps(report_results()))
+    monkeypatch.setattr(
+        "oracle_bench.report.latest_classification", lambda run_paths: (classification, None)
+    )
+
+    text = report(paths).read_text()
+
+    assert expected in text
