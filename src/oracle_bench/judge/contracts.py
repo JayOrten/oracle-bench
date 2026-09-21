@@ -24,11 +24,9 @@ from oracle_bench.results import HarnessResult, MatrixCellName
 RATER_ID = re.compile(r"^[A-Za-z0-9][A-Za-z0-9_-]{0,63}$")
 MAX_RATIONALE_LENGTH = 1_000
 JUDGMENT_LABELS = {
-    "issue_target_alignment": "Issue-target alignment",
-    "trigger_alignment": "Trigger alignment",
-    "oracle_alignment": "Oracle alignment",
-    "test_strategy": "Test strategy",
-    "final_verdict": "Final verdict",
+    "tests_issue": "Do the generated tests attempt to test the issue?",
+    "attempt_detail": "Attempt detail",
+    "no_attempt_reason": "No-attempt reason",
 }
 JUDGMENT_LABEL_KEYS = tuple(JUDGMENT_LABELS)
 
@@ -40,35 +38,20 @@ class JudgeModel(BaseModel):
 
 
 class JudgmentLabels(JudgeModel):
-    """The six fields requested from either an LLM or human rater."""
+    """Issue-attempt answer and the applicable detail for yes or no."""
 
-    issue_target_alignment: Literal["direct", "partial", "adjacent", "unrelated", "indeterminate"]
-    trigger_alignment: Literal[
-        "matches", "misses_required_condition", "wrong_path", "not_assessable"
-    ]
-    oracle_alignment: Literal[
-        "behaviorally_aligned",
-        "behaviorally_misaligned",
-        "implementation_coupled",
-        "no_clear_oracle",
-        "not_assessable",
-    ]
-    test_strategy: Literal[
-        "return_value_or_status",
-        "exception_behavior",
-        "state_or_artifact",
-        "external_interaction",
-        "resource_or_nondeterminism",
-        "implementation_inspection",
-        "no_meaningful_assertion",
-    ]
-    final_verdict: Literal[
-        "confirmed_issue_reproduction",
-        "issue_relevant_not_confirmed",
-        "issue_relevant_but_invalid",
-        "not_issue_relevant",
-        "unassessable",
-    ]
+    tests_issue: Literal["yes", "no", "unsure"]
+    attempt_detail: (
+        Literal[
+            "correct_assertion",
+            "wrong_assertion",
+            "no_issue_assertion",
+            "missing_required_condition",
+            "test_invalid_or_incomplete",
+        ]
+        | None
+    )
+    no_attempt_reason: Literal["nearby_behavior", "unrelated_behavior"] | None
     rationale: Annotated[str, Field(max_length=MAX_RATIONALE_LENGTH)]
 
     @field_validator("rationale")
@@ -79,25 +62,19 @@ class JudgmentLabels(JudgeModel):
         return value
 
     @model_validator(mode="after")
-    def labels_must_be_consistent(self) -> JudgmentLabels:
-        if self.final_verdict == "confirmed_issue_reproduction" and (
-            self.issue_target_alignment != "direct"
-            or self.oracle_alignment != "behaviorally_aligned"
+    def conditional_fields_match_answer(self) -> JudgmentLabels:
+        if self.tests_issue == "yes" and (
+            self.attempt_detail is None or self.no_attempt_reason is not None
         ):
-            raise ValueError(
-                "confirmed_issue_reproduction requires direct target alignment and a "
-                "behaviorally_aligned oracle"
-            )
-        if self.final_verdict == "not_issue_relevant" and self.issue_target_alignment not in {
-            "adjacent",
-            "unrelated",
-        }:
-            raise ValueError("not_issue_relevant requires adjacent or unrelated target alignment")
-        if self.final_verdict in {
-            "issue_relevant_not_confirmed",
-            "issue_relevant_but_invalid",
-        } and self.issue_target_alignment not in {"direct", "partial"}:
-            raise ValueError(f"{self.final_verdict} requires direct or partial target alignment")
+            raise ValueError("A yes answer requires attempt_detail and null no_attempt_reason")
+        if self.tests_issue == "no" and (
+            self.attempt_detail is not None or self.no_attempt_reason is None
+        ):
+            raise ValueError("A no answer requires null attempt_detail and no_attempt_reason")
+        if self.tests_issue == "unsure" and (
+            self.attempt_detail is not None or self.no_attempt_reason is not None
+        ):
+            raise ValueError("An unsure answer requires null conditional fields")
         return self
 
 
@@ -105,9 +82,28 @@ class CompletedJudgment(JudgmentLabels):
     status: Literal["completed"] = "completed"
 
 
+def complete_human_judgment(raw: str) -> CompletedJudgment:
+    """Validate a human rating without overriding the rater's answer."""
+    try:
+        draft = CompletedJudgment.model_validate(_normalize_conditional_nulls(json.loads(raw)))
+    except json.JSONDecodeError as error:
+        raise ValueError(f"Invalid judgment JSON: {error}") from error
+
+    if draft.rationale.startswith("REPLACE:"):
+        raise ValueError("Replace the rationale placeholder before collecting")
+    return draft
+
+
 class UnsuccessfulJudgment(JudgeModel):
     status: Literal["invalid_output", "failed", "timed_out"]
     error: Annotated[str, Field(min_length=1)]
+
+
+class SkippedJudgment(JudgeModel):
+    """A configured judge turn intentionally omitted because its input was invalid."""
+
+    status: Literal["skipped"] = "skipped"
+    reason: Annotated[str, Field(min_length=1)]
 
 
 class StaleJudgment(JudgeModel):
@@ -117,7 +113,7 @@ class StaleJudgment(JudgeModel):
 
 
 JudgmentResult = Annotated[
-    CompletedJudgment | UnsuccessfulJudgment | StaleJudgment,
+    CompletedJudgment | UnsuccessfulJudgment | SkippedJudgment | StaleJudgment,
     Field(discriminator="status"),
 ]
 
@@ -183,9 +179,10 @@ class Rating(JudgeModel):
         "invalid_output",
         "failed",
         "timed_out",
+        "skipped",
         "stale",
     ]
-    labels: dict[str, str] | None = None
+    labels: dict[str, str | None] | None = None
     provenance: HumanWorkspaceMetadata | None = None
 
 
@@ -240,20 +237,10 @@ _ACTIVE_JUDGMENT = TypeAdapter(
 _FENCED_JSON = re.compile(r"\A\s*```(?:json)?[ \t]*\r?\n(?P<body>.*?)\r?\n```\s*\Z", re.DOTALL)
 
 
-def parse_judgment(
-    raw: str, *, has_relevant_fail_to_pass: bool
-) -> CompletedJudgment | UnsuccessfulJudgment:
+def parse_judgment(raw: str) -> CompletedJudgment | UnsuccessfulJudgment:
     """Parse one bare or fenced JSON object into a stable normalized result."""
     try:
-        judgment = CompletedJudgment.model_validate(_extract_json(raw))
-        # Execution evidence outranks the rater's claim: nothing can be confirmed
-        # reproduced when no generated test actually failed on buggy and passed on golden.
-        if (
-            judgment.final_verdict == "confirmed_issue_reproduction"
-            and not has_relevant_fail_to_pass
-        ):
-            raise ValueError("confirmed_issue_reproduction requires a relevant F→P result")
-        return judgment
+        return CompletedJudgment.model_validate(_normalize_conditional_nulls(_extract_json(raw)))
     except (json.JSONDecodeError, ValidationError, ValueError) as error:
         return UnsuccessfulJudgment(status="invalid_output", error=str(error))
 
@@ -261,6 +248,11 @@ def parse_judgment(
 def failed_judgment(error: str, *, timed_out: bool = False) -> UnsuccessfulJudgment:
     """Represent harness failures without pretending a semantic result exists."""
     return UnsuccessfulJudgment(status="timed_out" if timed_out else "failed", error=error)
+
+
+def skipped_judgment(reason: str) -> SkippedJudgment:
+    """Represent a judge turn that was inapplicable and therefore never launched."""
+    return SkippedJudgment(reason=reason)
 
 
 def validate_judgment(value: object) -> JudgmentResult:
@@ -301,6 +293,9 @@ def mark_judgments_stale(paths: RunPaths) -> None:
         if value.get("status") == "stale":
             # Already stale from an earlier replacement; keep the original annotation.
             stale = StaleJudgment.model_validate(value)
+        elif value.get("status") == "skipped":
+            # Reevaluation cannot repair the generation result that prevented judging.
+            continue
         else:
             stale = StaleJudgment(
                 reason="Paired evaluation evidence changed after this judgment was produced.",
@@ -319,4 +314,13 @@ def _extract_json(raw: str) -> dict:
     value = json.loads(candidate)
     if not isinstance(value, dict):
         raise ValueError("Judgment output must be a JSON object")
+    return value
+
+
+def _normalize_conditional_nulls(value: object) -> object:
+    """Accept the exact string 'null' at input, but persist only JSON null."""
+    if isinstance(value, dict):
+        for field in ("attempt_detail", "no_attempt_reason"):
+            if value.get(field) == "null":
+                value[field] = None
     return value

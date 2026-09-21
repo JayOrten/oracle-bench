@@ -39,7 +39,7 @@ def test_sample_uses_repository_scope_with_existing_tests_hidden():
     assert config.task.hides_existing_tests
 
 
-def test_smoke_config_uses_budgeted_haiku_for_generation_and_judging():
+def test_smoke_config_uses_five_minute_limits_for_generation_and_judging():
     config = load_config(SAMPLE)
     assert config.source.dataset == "verified"
     assert config.source.revision == "c104f840cc67f8b6eec6f759ebc8b2693d585d4a"
@@ -47,8 +47,8 @@ def test_smoke_config_uses_budgeted_haiku_for_generation_and_judging():
     assert config.agent.provider == "openrouter"
     assert config.agent.model == "anthropic/claude-haiku-4.5"
     assert config.agent.credential_env == "OPENROUTER_API_KEY"
-    assert config.agent.limit.kind == "budget_usd"
-    assert config.agent.limit.value == 0.25
+    assert config.agent.limit.kind == "wall_seconds"
+    assert config.agent.limit.value == 300
     assert config.agent.multi_agent is False
     assert config.runtime is None
     assert config.judge is not None
@@ -56,43 +56,54 @@ def test_smoke_config_uses_budgeted_haiku_for_generation_and_judging():
     assert config.judge.provider == "openrouter"
     assert config.judge.model == "anthropic/claude-haiku-4.5"
     assert config.judge.credential_env == "OPENROUTER_API_KEY"
-    assert config.judge.limit.kind == "budget_usd"
-    assert config.judge.limit.value == 0.1
+    assert config.judge.limit.kind == "wall_seconds"
+    assert config.judge.limit.value == 300
 
 
-@pytest.mark.parametrize("kind,value", [("budget_usd", 0.1), ("turns", 3), ("wall_seconds", 30)])
-def test_claude_judge_accepts_exactly_one_supported_limit(tmp_path, kind, value):
+def test_agent_limit_defaults_to_five_minutes(tmp_path):
+    raw = yaml.safe_load(SAMPLE.read_text())
+    raw["agent"].pop("limit")
+    path = tmp_path / "config.yaml"
+    path.write_text(yaml.safe_dump(raw))
+
+    config = load_config(path)
+
+    assert config.agent.limit.model_dump() == {"kind": "wall_seconds", "value": 300.0}
+    assert config.agent.timeout_seconds == 300
+
+
+def test_claude_judge_accepts_wall_time_limit(tmp_path):
     raw = yaml.safe_load(SAMPLE.read_text())
     raw["judge"] = {
         "rubric": "rubric.md",
         "instructions": "instructions.md",
         "harness": "claude",
         "model": "judge-model",
-        "limit": {"kind": kind, "value": value},
+        "limit": {"kind": "wall_seconds", "value": 30},
     }
     path = tmp_path / "config.yaml"
     path.write_text(yaml.safe_dump(raw))
 
     config = load_config(path)
 
-    assert config.judge.limit.kind == kind
+    assert config.judge.limit.kind == "wall_seconds"
     assert config.judge.rubric == str((tmp_path / "rubric.md").resolve())
 
 
-@pytest.mark.parametrize("harness", ["codex", "opencode"])
-def test_judge_rejects_a_limit_the_harness_cannot_enforce(tmp_path, harness):
+@pytest.mark.parametrize("kind", ["tokens", "turns"])
+def test_judge_rejects_removed_limit_kinds(tmp_path, kind):
     raw = yaml.safe_load(SAMPLE.read_text())
     raw["judge"] = {
         "rubric": "rubric.md",
         "instructions": "instructions.md",
-        "harness": harness,
+        "harness": "claude",
         "model": "judge-model",
-        "limit": {"kind": "budget_usd", "value": 0.1},
+        "limit": {"kind": kind, "value": 1},
     }
     path = tmp_path / "config.yaml"
     path.write_text(yaml.safe_dump(raw))
 
-    with pytest.raises(ValueError, match="can enforce only wall_seconds"):
+    with pytest.raises(ValueError):
         load_config(path)
 
 
@@ -212,9 +223,6 @@ def test_resolved_toolchain_records_every_harness_version():
         ("task", "generated_dir", ".git/hooks"),
         ("source", "revision", "main"),
         ("source", "kind", "git"),
-        ("agent", "watchdog_seconds", 0),
-        ("agent", "watchdog_seconds", True),
-        ("agent", "watchdog_seconds", "300"),
         ("agent", "limit", {"kind": "turns", "value": 1.5}),
         ("agent", "limit", {"kind": "unbounded", "value": 1}),
         ("agent", "multi_agent", "false"),

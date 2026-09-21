@@ -106,7 +106,7 @@ def judge_stage(
             build_judge_workspace(
                 sandbox, config, paths, image, instance, evaluation, manifest=manifest
             )
-            _execute_judge_turn(sandbox, request, paths, evaluation)
+            _execute_judge_turn(sandbox, request, paths)
     except (RuntimeError, OSError, ValueError, DockerException) as error:
         # A judge failure is an annotation failure. It must never discard the completed
         # generation and evaluation evidence it describes. A judgment this attempt
@@ -137,9 +137,7 @@ def judge_stage(
     return validate_judgment(read_json(paths.judge.judgment))
 
 
-def _execute_judge_turn(
-    sandbox: Sandbox, request: AgentTurnRequest, paths: RunPaths, evaluation: EvaluationResult
-) -> None:
+def _execute_judge_turn(sandbox: Sandbox, request: AgentTurnRequest, paths: RunPaths) -> None:
     """Turn the harness result into a saved judgment.
 
     Harness failures are left to propagate, so judge_stage records them in one place.
@@ -149,9 +147,7 @@ def _execute_judge_turn(
     raw = final.read_text(errors="replace") if final.is_file() else ""
     paths.judge.judgment_raw.write_text(raw)
     if result["status"] == "completed":
-        judgment = parse_judgment(
-            raw, has_relevant_fail_to_pass=evaluation.has_fail_on_buggy_pass_on_golden
-        )
+        judgment = parse_judgment(raw)
     else:
         # Prefer the harness's own last error over a generic status line.
         errors = result["errors"]

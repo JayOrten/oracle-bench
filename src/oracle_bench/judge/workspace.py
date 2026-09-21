@@ -5,6 +5,7 @@ from __future__ import annotations
 import json
 import shlex
 from pathlib import Path
+from string import Template
 from tempfile import TemporaryDirectory
 from typing import Literal
 
@@ -25,6 +26,7 @@ JUDGE_ROOT = "/oracle-judge"
 HELPER = "/judge_workspace.py"
 # The judge compares these two checkouts of the same repository.
 VIEWS = (JUDGE_ROOT + "/buggy", JUDGE_ROOT + "/golden")
+INSTRUCTIONS_TEMPLATE = Path(__file__).resolve().parent / "templates/workspace-instructions.md"
 
 
 def build_judge_workspace(
@@ -58,7 +60,7 @@ def build_judge_workspace(
         #    directory so it never lands in the run.
         reference_patch = staging / "reference-tests.patch"
         metadata = staging / "metadata.json"
-        relevance = staging / "relevance.md"
+        instructions = staging / "instructions.md"
         submission_manifest = staging / "submission-manifest.json"
         original = instance.original_record
         reference_patch.write_text(instance.reference_test_patch)
@@ -74,7 +76,7 @@ def build_judge_workspace(
             },
         )
         write_json(submission_manifest, manifest)
-        relevance.write_text(_relevance_guide(instance, manifest, evaluation))
+        instructions.write_text(_workspace_instructions(instance, manifest, evaluation))
 
         # 2. Every file the judge may read, and where it lands in the container.
         #    Adding a row here is the only way to expose something new.
@@ -87,7 +89,7 @@ def build_judge_workspace(
             (fix, fix_in_container),
             (reference_patch, JUDGE_ROOT + "/instance/reference-tests.patch"),
             (metadata, JUDGE_ROOT + "/instance/metadata.json"),
-            (relevance, JUDGE_ROOT + "/evidence/relevance.md"),
+            (instructions, JUDGE_ROOT + "/instructions.md"),
             (submission_manifest, JUDGE_ROOT + "/evidence/submission-manifest.json"),
             (paths.generation / "workspace.diff", JUDGE_ROOT + "/evidence/workspace.diff"),
             (paths.results, JUDGE_ROOT + "/evidence/paired-results.json"),
@@ -222,29 +224,33 @@ def _patch_paths(patch: str) -> list[str]:
     return sorted(paths)
 
 
-def _relevance_guide(instance: InstanceRecord, manifest: dict, evaluation: EvaluationResult) -> str:
-    outcomes = [f"- `{row.test_id}`: `{row.cell or 'incomplete'}`" for row in evaluation.tests] or [
-        "- No paired generated-test results were recorded."
+def _workspace_instructions(
+    instance: InstanceRecord, manifest: dict, evaluation: EvaluationResult
+) -> str:
+    """Fill the checked-in guide with task-specific paths and execution results."""
+    outcome_rows = [
+        f"| `{row.test_id}` | `{row.buggy}` | `{row.golden}` | `{row.cell or 'incomplete'}` |"
+        for row in evaluation.tests
     ]
-    sections = [
-        "# Judge evidence guide",
-        "",
-        "This guide points to likely relevant evidence without assigning rubric labels.",
-        "",
-        "## Production files changed by the repair",
-        *[f"- `{path}`" for path in _patch_paths(instance.golden_patch)],
-        "",
-        "## Files changed by the reference-test patch",
-        *[f"- `{path}`" for path in _patch_paths(instance.reference_test_patch)],
-        "",
-        "## Generated submission files",
-        *[f"- `{path}`" for path in sorted(manifest["files"])],
-        "",
-        "## SWE-bench reference test IDs",
-        *[f"- `{test_id}`" for test_id in instance.reference_test_ids],
-        "",
-        "## Generated-test paired outcomes",
-        *outcomes,
-        "",
-    ]
-    return "\n".join(sections)
+    matrix_names = (
+        "fail_on_buggy_pass_on_golden",
+        "pass_on_both",
+        "fail_on_both",
+        "pass_on_buggy_fail_on_golden",
+    )
+    values = {
+        "repair_files": "\n".join(f"- `{path}`" for path in _patch_paths(instance.golden_patch)),
+        "reference_test_files": "\n".join(
+            f"- `{path}`" for path in _patch_paths(instance.reference_test_patch)
+        ),
+        "submission_files": "\n".join(f"- `{path}`" for path in sorted(manifest["files"])),
+        "reference_test_ids": "\n".join(
+            f"- `{test_id}`" for test_id in instance.reference_test_ids
+        ),
+        "matrix_totals": "\n".join(
+            f"- `{name}`: **{evaluation.matrix[name].count}**" for name in matrix_names
+        ),
+        "outcome_rows": "\n".join(outcome_rows or ["| — | — | — | — |"]),
+        "other_outcomes_count": str(len(evaluation.other_outcomes)),
+    }
+    return Template(INSTRUCTIONS_TEMPLATE.read_text()).substitute(values)

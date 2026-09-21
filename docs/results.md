@@ -114,7 +114,8 @@ repository-view construction method, reconstruction commands, and every exposed
 artifact. The separate
 `bundle-manifest.json` is the compact destination-to-SHA-256 inventory.
 
-The disposable container receives `/oracle-judge/buggy` and
+The disposable container receives `rubric.md` and the rendered `instructions.md`
+alongside `/oracle-judge/buggy` and
 `/oracle-judge/golden` repository views, the generated submission in both views,
 the issue and patches, and saved evaluation evidence. Oracle Bench verifies the
 submission bundle before transfer and checks every generated file again inside
@@ -150,8 +151,18 @@ VS Code. The common evidence is read-only; the non-root `oracle` user can write
 only `/oracle-judge/output/`. LLM responses and earlier human ratings are never
 uploaded into this container.
 
-Write the six rubric fields to `/oracle-judge/output/judgment.json`, then collect
-and validate them:
+Each run freezes the rubric used when it was created. Judgments from earlier
+rubrics do not satisfy the current contract; create a new run to use this rubric
+rather than mixing ratings across versions.
+
+Read `/oracle-judge/instructions.md` alongside `rubric.md`; it combines the
+human workflow, evidence-file guide, and task-specific outcome summary. The
+workspace opens with `/oracle-judge/output/judgment.json` already populated
+with placeholders for `tests_issue`, `attempt_detail`, `no_attempt_reason`, and
+`rationale`. Replace each with the appropriate rubric label, JSON `null`, or
+the string `"null"` for an inapplicable conditional field;
+then write a short rationale. The answer is the rater's own
+judgment; collection validates but does not derive or override it. Then collect it:
 
 ```sh
 uv run oracle-bench judge-workspace collect <container-name>
@@ -161,8 +172,8 @@ uv run oracle-bench judge-workspace remove <container-name>
 Invalid JSON or invalid labels do not stop or remove the workspace, allowing the
 rater to correct the draft. A valid rating is saved under
 `judge/human/<opaque-rater-id>/` with both the submitted JSON and normalized
-result. Its `provenance.json` records the hashes of the rubric, common workspace
-specification, and exact human instruction file. Collection refuses to overwrite
+result. Its `provenance.json` records the hashes of the rubric and common
+workspace specification, which includes `instructions.md`. Collection refuses to overwrite
 that result. To replace it deliberately,
 pass `--archive-existing`; Oracle Bench first moves the previous files under
 `judge/human-history/<opaque-rater-id>/<UTC timestamp>/`. The `remove` operation
@@ -179,8 +190,9 @@ The human-readable summary. It identifies whether test generation covered the
 whole repository or a calculated localized target, then shows agent and evaluation
 completion states, submission compliance, the paired pass/fail matrix, non-binary
 outcomes, coverage, and links to artifacts that exist. When judging is configured,
-it also shows judge status, harness and model provenance, all five rubric labels,
-the rationale, and audit links. Generation and judge duration, usage, and cost are
+it also shows judge status, harness and model provenance, the issue-attempt
+answer and its conditional detail, the rationale, and audit links. Generation
+and judge duration, usage, and cost are
 reported separately.
 
 The ground-truth section links the original issue and exact buggy-to-golden fix
@@ -199,14 +211,17 @@ fields are present.
 
 ### `judge/judgment.json`
 
-The normalized semantic annotation. A completed judgment contains `status`, the
-five rubric labels, and `rationale`. Other states are explicit:
+The normalized semantic annotation. A completed judgment contains `status`,
+`tests_issue`, `attempt_detail`, `no_attempt_reason`, and `rationale`. The
+conditional fields are saved as JSON `null` when inapplicable, even if the
+submitted response used the string `"null"`. The raw response is retained.
+Other states are explicit:
 
 | Status | Meaning |
 |---|---|
 | `invalid_output` | The final response was not one valid rubric JSON object |
 | `failed` | Harness or judge-workspace execution failed |
-| `timed_out` | The judge exceeded its selected wall limit or infrastructure watchdog |
+| `timed_out` | The judge exceeded its wall-time limit |
 | `stale` | Reevaluation replaced the execution evidence; the prior annotation is nested for audit |
 
 ### Judge model evidence
@@ -274,9 +289,12 @@ submission is part of the `generate` stage.
 The final state is `completed` only when the agent and both evaluations completed
 and the submission was compliant. `completed_with_errors` means the run retained
 results but one of those conditions failed. The independent `judge_status` is
-`disabled`, `completed`, `invalid_output`, `failed`, `timed_out`, `stale`, or
-`missing`; judge failure does not replace a completed evaluation state. An early
-exception records its stage and a failed state.
+`disabled`, `completed`, `invalid_output`, `failed`, `timed_out`, `skipped`,
+`stale`, or `missing`. A configured judge is `skipped` without a model call when
+generation produces no test files. Tests captured from a timed-out or otherwise
+incomplete generation are still evaluated and judged. Judge failure does not
+replace a completed evaluation state. An early exception records its stage and a
+failed state.
 
 ## Inputs and reproducibility
 
@@ -566,8 +584,8 @@ the closest stage log.
 the resolved and checksum-locked job list, batch status, `summary.json`, and
 `report.md`. The summary preserves each job's state, run-directory link, paired
 matrix counts, coverage, and generation measurements. When a run has judge
-artifacts, its job record also contains the judge status, five rubric labels,
-model provenance, token usage, duration, and cost. Runs without judge
+artifacts, its job record also contains the judge status, answer, conditional
+details, model provenance, token usage, duration, and cost. Runs without judge
 configuration are recorded as `disabled`; configured runs without a result are
 `missing`. Invalid, failed, timed-out, and stale judgments remain explicit and do
 not make an otherwise completed evaluation resumable.
@@ -579,8 +597,8 @@ not make an otherwise completed evaluation resumable.
 - `judge.valid_judgments`: jobs with a normalized `completed` judgment.
 
 `matrix_detection_rate` is the fraction of completed evaluations with a compliant
-fail-on-buggy/pass-on-golden result. `judge_confirmed_issue_reproduction_rate` is
-the fraction of valid judgments labeled `confirmed_issue_reproduction`. These
+fail-on-buggy/pass-on-golden result. `judge_tests_issue_yes_rate` is
+the fraction of valid judgments whose `tests_issue` answer is `yes`. These
 metrics answer different questions and are reported separately.
 `detection_rate_attempted` reports the same detections over every attempted job,
 matching SWE-bench's resolved/submitted denominator.
@@ -588,9 +606,8 @@ matching SWE-bench's resolved/submitted denominator.
 The `judge` object contains status counts, per-facet label frequencies, and these
 cross-tabs:
 
-- matrix detection by final verdict;
-- issue-target alignment by matrix detection;
-- oracle alignment by the presence or absence of each matrix cell.
+- matrix detection by the `tests_issue` answer;
+- attempt detail by the presence or absence of each matrix cell.
 
 Generation and judge costs are totaled separately as `generation_cost_usd` and
 `judge_cost_usd`, and `total_cost_usd` is their sum. Each is `null` when no
@@ -612,7 +629,8 @@ The command writes `agreement/report.md`, `agreement/summary.json`, and
 `agreement/calibration-sample.json` inside the batch directory. It never loads
 credentials, starts containers, or calls a model.
 
-Agreement is reported independently for all five rubric facets and separately
+Agreement is reported independently for the answer and both conditional fields,
+and separately
 for human–human and human–LLM comparisons. Each result contains its observation
 count, raw agreement, an observation-weighted mean of the per-rater-pair Cohen's
 kappas, a pooled confusion matrix, and individual disagreements. Each rater pair

@@ -29,7 +29,7 @@ def prepared_run(tmp_path):
         instructions="instructions.md",
         harness="claude",
         model="judge-model",
-        limit={"kind": "budget_usd", "value": 0.1},
+        limit={"kind": "wall_seconds", "value": 300},
     )
     paths.judge.rubric.write_text("# Rubric\n")
     (paths.ground_truth / "issue.md").write_text("# issue\n\nIncorrect result.\n")
@@ -134,6 +134,7 @@ def test_workspace_exposes_complete_hashed_bundle_and_identical_tests(tmp_path):
     assert spec.prepared_image.image_id == "sha256:" + "1" * 64
     destinations = {artifact.destination for artifact in spec.artifacts}
     assert JUDGE_ROOT + "/instance/issue.md" in destinations
+    assert JUDGE_ROOT + "/instructions.md" in destinations
     assert JUDGE_ROOT + "/evidence/paired-results.json" in destinations
     assert JUDGE_ROOT + "/buggy/oracle_tests/test_generated.py" in destinations
     assert JUDGE_ROOT + "/golden/oracle_tests/test_generated.py" in destinations
@@ -142,10 +143,15 @@ def test_workspace_exposes_complete_hashed_bundle_and_identical_tests(tmp_path):
     assert read_json(paths.judge.bundle_manifest)["artifacts"] == [
         artifact.model_dump(mode="json") for artifact in spec.artifacts
     ]
-    relevance = sandbox.uploaded[JUDGE_ROOT + "/evidence/relevance.md"].decode()
-    assert "package/core.py" in relevance
-    assert "tests/test_core.py::test_fixed" in relevance
-    assert "fail_on_buggy_pass_on_golden" in relevance
+    instructions = sandbox.uploaded[JUDGE_ROOT + "/instructions.md"].decode()
+    assert "## Reading order" in instructions
+    assert "## Human judgment" in instructions
+    assert "Fill `output/judgment.json`" in instructions
+    assert "package/core.py" in instructions
+    assert "tests/test_core.py::test_fixed" in instructions
+    assert "fail_on_buggy_pass_on_golden" in instructions
+    assert "`evidence/buggy-tests.json` and `evidence/golden-tests.json`" in instructions
+    assert "| `oracle_tests/test_generated.py::test_generated` | `fail` | `pass` |" in instructions
 
 
 def test_workspace_falls_back_to_explicit_repository_copies(tmp_path):

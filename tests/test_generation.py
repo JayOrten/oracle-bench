@@ -59,6 +59,17 @@ def test_unmanifested_files_are_not_transferred_to_evaluation(tmp_path):
         verify_bundle(RunPaths.open(tmp_path))
 
 
+def test_empty_bundle_has_a_real_files_directory(tmp_path):
+    paths = RunPaths.create(tmp_path)
+    (paths.submission / "files").mkdir(parents=True)
+    write_json(
+        paths.submission / "manifest.json",
+        {"files": {}, "empty": True, "sha256": digest(b"{}")},
+    )
+
+    assert verify_bundle(paths)["empty"] is True
+
+
 def test_snapshot_captures_untracked_files_and_symlinks_without_following_them(tmp_path):
     root = tmp_path / "repo"
     root.mkdir()

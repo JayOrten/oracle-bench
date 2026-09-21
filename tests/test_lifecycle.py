@@ -78,7 +78,7 @@ def configured_pipeline(tmp_path, with_judge):
             instructions=str(instructions),
             harness="claude",
             model="judge-model",
-            limit={"kind": "budget_usd", "value": 0.1},
+            limit={"kind": "wall_seconds", "value": 300},
         )
     runtime = RuntimeConfig(
         image="example/runtime",
@@ -106,7 +106,7 @@ def install_pipeline_fakes(monkeypatch, runtime, instance, judge_effect=None):
     monkeypatch.setattr(run_module, "docker_client", client_context)
     monkeypatch.setattr(run_module, "prepare_image", lambda *args: "example/runtime")
     monkeypatch.setattr(run_module, "check_reference", Mock())
-    monkeypatch.setattr(run_module, "generate_submission", Mock())
+    monkeypatch.setattr(run_module, "generate_submission", Mock(return_value={"empty": False}))
     result = EvaluationResult.model_validate(evaluation_result())
     monkeypatch.setattr(run_module, "evaluate", lambda *args: result)
 
@@ -116,7 +116,7 @@ def install_pipeline_fakes(monkeypatch, runtime, instance, judge_effect=None):
     def judge_sandbox(*args, **kwargs):
         yield Mock(helpers="/opt/oracle-bench/container-helpers")
 
-    def judge_effectively(sandbox, request, paths, evaluation):
+    def judge_effectively(sandbox, request, paths):
         if judge_effect is not None:
             raise judge_effect
         write_json(paths.judge.judgment, completed_judgment())
@@ -209,6 +209,40 @@ def test_judge_failure_preserves_completed_evaluation(tmp_path, monkeypatch):
     assert read_json(RunPaths.open(run_dir).judge.judgment)["status"] == "failed"
 
 
+def test_empty_generation_skips_configured_judge(tmp_path, monkeypatch):
+    config, runtime, instance = configured_pipeline(tmp_path, True)
+    judge_call = install_pipeline_fakes(monkeypatch, runtime, instance)
+    monkeypatch.setattr(run_module, "generate_submission", Mock(return_value={"empty": True}))
+    failed = EvaluationResult.model_validate(
+        evaluation_result(
+            agent={"status": "failed"}, buggy_status="no_tests", golden_status="no_tests"
+        )
+    )
+    monkeypatch.setattr(run_module, "evaluate", lambda *args: failed)
+
+    run_dir = run_module.run(config)
+
+    paths = RunPaths.open(run_dir)
+    assert read_json(paths.status)["judge_status"] == "skipped"
+    assert read_json(paths.judge.judgment) == {
+        "status": "skipped",
+        "reason": "No generated test files were captured; no judge turn was run.",
+    }
+    judge_call.assert_not_called()
+
+
+def test_timed_out_generation_with_captured_tests_is_judged(tmp_path, monkeypatch):
+    config, runtime, instance = configured_pipeline(tmp_path, True)
+    judge_call = install_pipeline_fakes(monkeypatch, runtime, instance)
+    timed_out = EvaluationResult.model_validate(evaluation_result(agent={"status": "timeout"}))
+    monkeypatch.setattr(run_module, "evaluate", lambda *args: timed_out)
+
+    run_dir = run_module.run(config)
+
+    assert read_json(run_dir / "status.json")["judge_status"] == "completed"
+    judge_call.assert_called_once()
+
+
 def test_missing_judge_credential_fails_before_paid_generation(tmp_path, monkeypatch):
     config, runtime, instance = configured_pipeline(tmp_path, True)
     install_pipeline_fakes(monkeypatch, runtime, instance)
@@ -272,7 +306,7 @@ def test_reevaluation_marks_existing_judgment_stale_without_calling_a_model(tmp_
 
     judgment = read_json(paths.judge.judgment)
     assert judgment["status"] == "stale"
-    assert judgment["previous_judgment"]["final_verdict"] == "confirmed_issue_reproduction"
+    assert judgment["previous_judgment"]["tests_issue"] == "yes"
     assert read_json(human_judgment)["status"] == "stale"
     assert read_json(run_dir / "status.json")["judge_status"] == "stale"
     judge_call.assert_not_called()

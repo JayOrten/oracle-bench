@@ -26,7 +26,7 @@ from oracle_bench.results import read_evaluation_result
 
 # Strata taken directly from the paired matrix.
 MATRIX_STRATA = ("fail_on_buggy_pass_on_golden", "fail_on_both", "pass_on_both")
-# Strata derived from execution state and the existing LLM verdict.
+# Strata derived from execution state and the LLM's issue-tested answer.
 DERIVED_STRATA = ("invalid", "unrelated")
 CALIBRATION_STRATA = MATRIX_STRATA + DERIVED_STRATA
 
@@ -262,8 +262,9 @@ def _agreement_for_facet(observations: list[dict], facet: str) -> dict:
     disagreements = []
     matches = 0
     for observation in observations:
-        left = observation["left"][facet]
-        right = observation["right"][facet]
+        # Keep JSON null distinct from every rubric label in confusion tables.
+        left = observation["left"][facet] if observation["left"][facet] is not None else "null"
+        right = observation["right"][facet] if observation["right"][facet] is not None else "null"
         confusion[left][right] += 1
         left_counts[left] += 1
         right_counts[right] += 1
@@ -312,16 +313,15 @@ def _calibration_sample(instances: list[RunRatings], sample_per_stratum: int) ->
         for stratum in MATRIX_STRATA:
             if matrix.get(stratum, 0) > 0:
                 candidates[stratum].append(instance)
-        verdict = (instance.ratings.llm.labels or {}).get("final_verdict")
+        issue_tested = (instance.ratings.llm.labels or {}).get("tests_issue")
         evaluation = instance.evaluation
         if (
             evaluation.submission_compliant is False
             or evaluation.buggy_status != "completed"
             or evaluation.golden_status != "completed"
-            or verdict == "issue_relevant_but_invalid"
         ):
             candidates["invalid"].append(instance)
-        if verdict == "not_issue_relevant":
+        if issue_tested == "no":
             candidates["unrelated"].append(instance)
 
     strata = {}

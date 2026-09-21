@@ -26,11 +26,11 @@ def report(paths: RunPaths) -> Path:
     results = read_evaluation_result(paths.results)
     judgment = read_judgment_state(paths)
     judge_attempt = read_judge_attempt(paths.judge.result) if paths.judge.result.is_file() else None
-    lines = _summary_lines(results)
+    lines = _summary_lines(results, judgment)
     lines.extend(_classification_lines(paths))
+    lines.extend(_ground_truth_lines(paths))
     lines.extend(_matrix_lines(results))
     lines.extend(_failure_lines(results))
-    lines.extend(_ground_truth_lines(paths))
     lines.extend(_coverage_lines(results))
     lines.extend(_judge_lines(paths, judgment, judge_attempt))
     lines.extend(_artifact_lines(paths))
@@ -40,7 +40,7 @@ def report(paths: RunPaths) -> Path:
     return paths.report
 
 
-def _summary_lines(results: EvaluationResult) -> list[str]:
+def _summary_lines(results: EvaluationResult, judgment: dict) -> list[str]:
     scope = (
         "**calculated localized target**."
         if results.task_scope == "localized"
@@ -49,14 +49,19 @@ def _summary_lines(results: EvaluationResult) -> list[str]:
     lines = [
         f"# Oracle Bench: {results.instance_id}",
         "",
+        "## Run summary",
+        "",
+        f"Overall result: **{_overall_state(results)}**.",
+        "",
+        f"Generation: **{results.agent.status}**. "
+        f"Buggy evaluation: **{results.buggy_status}**. "
+        f"Golden evaluation: **{results.golden_status}**. "
+        f"Generated-test judgment: **{judgment['status']}**.",
+        "",
         "Test-generation scope: " + scope,
         "",
         f"Existing repository test modules visible to agent: "
-        f"**{'yes' if results.existing_tests == 'keep' else 'no'}**. "
-        f"Agent: **{results.agent.status}**.",
-        "",
-        f"Buggy execution: **{results.buggy_status}**. "
-        f"Golden execution: **{results.golden_status}**.",
+        f"**{'yes' if results.existing_tests == 'keep' else 'no'}**.",
         "",
     ]
     if results.task_scope == "localized":
@@ -72,7 +77,23 @@ def _summary_lines(results: EvaluationResult) -> list[str]:
         error = results.agent.errors[-1]
         message = error.get("message") or error.get("error", {}).get("message", "See agent logs")
         lines += [f"Agent message: {message}", ""]
+    if results.agent.status != "completed":
+        lines += [
+            f"Why this run completed with errors: generation ended with "
+            f"**{results.agent.status}**. Any test files captured before it stopped were "
+            "still evaluated.",
+            "",
+        ]
     return lines
+
+
+def _overall_state(results: EvaluationResult) -> str:
+    complete = (
+        results.agent.status == "completed"
+        and results.both_completed
+        and results.submission_compliant
+    )
+    return "completed" if complete else "completed with errors"
 
 
 def _classification_lines(paths: RunPaths) -> list[str]:
@@ -106,16 +127,6 @@ def _classification_lines(paths: RunPaths) -> list[str]:
         lines += ["No central classification has been saved for this problem.", ""]
     else:
         lines += [f"Reason: {classification['error']}", ""]
-    if attempt is not None:
-        evidence = [
-            ("Central classification", attempt / "classification.json"),
-            ("Raw classifier response", attempt / "classification.raw.txt"),
-            ("Frozen classifier rubric", attempt / "inputs/rubric.md"),
-            ("Classifier trace", attempt / "agent/trace.jsonl"),
-        ]
-        links = [f"- [{label}]({path.as_posix()})" for label, path in evidence if path.is_file()]
-        if links:
-            lines += ["Audit artifacts:", "", *links, ""]
     return lines
 
 
@@ -125,6 +136,13 @@ def _classification_value(value: object) -> str:
 
 def _matrix_lines(results: EvaluationResult) -> list[str]:
     return [
+        "## Generated-test results",
+        "",
+        "These outcomes describe the tests written by the generation agent, run "
+        "unchanged against the buggy and golden repository versions.",
+        "",
+        "### Paired outcomes",
+        "",
         "| Outcome | Tests |",
         "|---|---:|",
         *[f"| {cell.label} | {results.matrix[cell].count} |" for cell in MATRIX_CELLS],
@@ -139,7 +157,7 @@ def _matrix_lines(results: EvaluationResult) -> list[str]:
 
 def _failure_lines(results: EvaluationResult) -> list[str]:
     return [
-        "## Failure causes",
+        "### Failure causes",
         "",
         "Call-phase failures are classified by the exception that escaped the test. "
         "This is diagnostic and does not change matrix scoring.",
@@ -177,7 +195,7 @@ def _ground_truth_lines(paths: RunPaths) -> list[str]:
 
 def _coverage_lines(results: EvaluationResult) -> list[str]:
     lines = [
-        "## Generated-test line coverage",
+        "### Line coverage",
         "",
         "| Version | Covered / executable lines | Coverage |",
         "|---|---:|---:|",
@@ -195,7 +213,7 @@ def _coverage_lines(results: EvaluationResult) -> list[str]:
 
 def _judge_lines(paths: RunPaths, judgment: dict, attempt: JudgeAttempt | None) -> list[str]:
     status = judgment["status"]
-    lines = ["## Generated-test judge", "", f"Status: **{status}**.", ""]
+    lines = ["## Generated-test judgment", "", f"Status: **{status}**.", ""]
     if attempt:
         lines += [
             f"Harness: `{attempt.harness}`. "
@@ -209,7 +227,10 @@ def _judge_lines(paths: RunPaths, judgment: dict, attempt: JudgeAttempt | None) 
         lines += [
             "| Facet | Label |",
             "|---|---|",
-            *[f"| {label} | `{judgment[key]}` |" for key, label in JUDGMENT_LABELS.items()],
+            *[
+                f"| {label} | `{judgment[key] if judgment[key] is not None else 'null'}` |"
+                for key, label in JUDGMENT_LABELS.items()
+            ],
             "",
             "Rationale:",
             "",
@@ -220,7 +241,9 @@ def _judge_lines(paths: RunPaths, judgment: dict, attempt: JudgeAttempt | None) 
         lines += [judgment["reason"], ""]
         previous = judgment.get("previous_judgment", {})
         if previous.get("status") == "completed":
-            lines += [f"Previous final verdict: `{previous['final_verdict']}`.", ""]
+            lines += [f"Previous issue-tested answer: `{previous['tests_issue']}`.", ""]
+    elif status == "skipped":
+        lines += [f"Reason: {judgment['reason']}", ""]
     elif status in {"invalid_output", "invalid_artifact", "failed", "timed_out"}:
         lines += [f"Reason: {judgment['error']}", ""]
     elif status == "missing":
@@ -228,25 +251,11 @@ def _judge_lines(paths: RunPaths, judgment: dict, attempt: JudgeAttempt | None) 
     else:
         lines += ["This run was not configured for generated-test judging.", ""]
 
-    evidence = _existing_links(
-        paths,
-        [
-            ("Normalized judgment", paths.judge.judgment),
-            ("Raw judge response", paths.judge.judgment_raw),
-            ("Exact judge prompt", paths.judge.prompt),
-            ("Frozen judge rubric", paths.judge.rubric),
-            ("Workspace specification", paths.judge.workspace_spec),
-            ("Judge trace", paths.judge.agent / "trace.jsonl"),
-            ("Judge stderr", paths.judge.agent / "stderr.log"),
-        ],
-    )
-    if evidence:
-        lines += ["Audit artifacts:", "", *evidence, ""]
     return lines
 
 
 def _artifact_lines(paths: RunPaths) -> list[str]:
-    links = _existing_links(
+    execution = _existing_links(
         paths,
         [
             ("Paired outcomes and test IDs", paths.results),
@@ -261,7 +270,46 @@ def _artifact_lines(paths: RunPaths) -> list[str]:
             ("Golden log", paths.evaluation / "golden/output.log"),
         ],
     )
-    return ["## Artifacts", "", *links, ""]
+    judgment = _existing_links(
+        paths,
+        [
+            ("Normalized judgment", paths.judge.judgment),
+            ("Raw judge response", paths.judge.judgment_raw),
+            ("Exact judge prompt", paths.judge.prompt),
+            ("Frozen judge rubric", paths.judge.rubric),
+            ("Judge workspace contents", paths.judge.workspace_spec),
+            ("Judge trace", paths.judge.agent / "trace.jsonl"),
+            ("Judge stderr", paths.judge.agent / "stderr.log"),
+        ],
+    )
+    _, attempt = latest_classification(paths)
+    classification = []
+    if attempt is not None:
+        classification = [
+            f"- [{label}]({path.as_posix()})"
+            for label, path in [
+                ("Classification result", attempt / "classification.json"),
+                ("Raw classifier response", attempt / "classification.raw.txt"),
+                ("Classifier rubric", attempt / "inputs/rubric.md"),
+                ("Classifier trace", attempt / "agent/trace.jsonl"),
+            ]
+            if path.is_file()
+        ]
+    lines = [
+        "## Supporting files",
+        "",
+        "These are the underlying machine-readable results, logs, prompts, and traces.",
+        "",
+        "### Generated tests and execution",
+        "",
+        *(execution or ["No execution files are available."]),
+        "",
+    ]
+    if classification:
+        lines += ["### Task classification", "", *classification, ""]
+    if judgment:
+        lines += ["### Generated-test judgment", "", *judgment, ""]
+    return lines
 
 
 def _limits_lines(results: EvaluationResult) -> list[str]:

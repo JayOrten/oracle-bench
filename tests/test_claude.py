@@ -10,8 +10,7 @@ from oracle_bench.harnesses.claude import parse_trace
     [
         ("success", False, True),
         ("success", True, False),
-        ("error_max_budget_usd", True, False),
-        ("error_max_turns", True, False),
+        ("error", True, False),
     ],
 )
 def test_claude_result_preserves_failure_and_cost(tmp_path, subtype, is_error, completed):
@@ -42,3 +41,20 @@ def test_incomplete_claude_trace_is_not_success(tmp_path):
     assert not result["turn_completed"]
     assert result["cost_usd"] is None
     assert result["unparsed_trace_lines"] == 1
+
+
+def test_claude_error_lists_render_as_plain_messages(tmp_path):
+    path = tmp_path / "trace.jsonl"
+    path.write_text(
+        json.dumps(
+            {
+                "type": "result",
+                "subtype": "error",
+                "is_error": True,
+                "errors": ["Provider request failed"],
+            }
+        )
+        + "\n"
+    )
+
+    assert parse_trace(path)["errors"] == [{"message": "Provider request failed"}]

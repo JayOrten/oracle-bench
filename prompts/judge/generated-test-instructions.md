@@ -2,6 +2,7 @@ You are evaluating one generated-test submission for a SWE-bench instance.
 
 Inspect these materials:
 
+- `$root/instructions.md` guides you through the workspace and summarizes the saved outcomes.
 - `$root/instance/` contains the issue, repair, reference-test patch, and metadata.
 - `$root/buggy/` contains the buggy repository and generated submission.
 - `$root/golden/` contains the repaired repository and the identical submission.
@@ -13,4 +14,3 @@ authoritative execution evidence. Return exactly one JSON object matching the ru
 output. Do not wrap it in a Markdown fence and do not include any other text.
 
 The rubric follows verbatim:
-

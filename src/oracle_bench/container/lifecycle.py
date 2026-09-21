@@ -56,7 +56,7 @@ def setup_deadline(seconds: float) -> Iterator[None]:
     """Interrupt even a silent pull/build stream and restore the caller's handler.
 
     The CLI runs on the main thread. Docker's streaming APIs can disable socket
-    timeouts, so their HTTP timeout alone cannot enforce our setup budget.
+    timeouts, so their HTTP timeout alone cannot enforce our setup deadline.
     """
 
     def expired(signum: int, frame: FrameType | None) -> NoReturn:

@@ -72,11 +72,9 @@ def fake_judgment(
     run_dir: Path,
     *,
     status: str = "completed",
-    target: str = "direct",
-    trigger: str = "matches",
-    oracle: str = "behaviorally_aligned",
-    strategy: str = "return_value_or_status",
-    verdict: str = "confirmed_issue_reproduction",
+    detail: str = "correct_assertion",
+    reason: str = "nearby_behavior",
+    answer: str = "yes",
     cost: float | None = 0.02,
 ) -> None:
     paths = RunPaths.open(run_dir)
@@ -85,11 +83,9 @@ def fake_judgment(
     if status == "completed":
         judgment = {
             "status": status,
-            "issue_target_alignment": target,
-            "trigger_alignment": trigger,
-            "oracle_alignment": oracle,
-            "test_strategy": strategy,
-            "final_verdict": verdict,
+            "tests_issue": answer,
+            "attempt_detail": detail if answer == "yes" else None,
+            "no_attempt_reason": reason if answer == "no" else None,
             "rationale": "Synthetic batch fixture.",
         }
     elif status == "stale":
@@ -190,21 +186,15 @@ def test_batch_aggregates_judge_labels_disagreements_and_costs(tmp_path):
             fake_result(run_dir, instance, detected=True)
             fake_judgment(
                 run_dir,
-                target="unrelated",
-                trigger="wrong_path",
-                oracle="behaviorally_misaligned",
-                strategy="implementation_inspection",
-                verdict="not_issue_relevant",
+                reason="unrelated_behavior",
+                answer="no",
             )
         elif instance == "relevant-fail-both":
             fake_result(run_dir, instance, matrix_overrides={"fail_on_both": 1})
             fake_judgment(
                 run_dir,
-                target="partial",
-                trigger="misses_required_condition",
-                oracle="no_clear_oracle",
-                strategy="no_meaningful_assertion",
-                verdict="issue_relevant_not_confirmed",
+                detail="no_issue_assertion",
+                answer="yes",
             )
         elif instance == "invalid":
             fake_result(run_dir, instance)
@@ -222,7 +212,7 @@ def test_batch_aggregates_judge_labels_disagreements_and_costs(tmp_path):
 
     assert summary["completed_evaluations"] == 5
     assert summary["matrix_detection_rate"] == 0.2
-    assert summary["judge_confirmed_issue_reproduction_rate"] == 0
+    assert summary["judge_tests_issue_yes_rate"] == 0.5
     assert summary["generation_cost_usd"] == 0.5
     assert summary["judge_cost_usd"] == 0.05
     assert summary["total_cost_usd"] == pytest.approx(0.55)
@@ -233,16 +223,16 @@ def test_batch_aggregates_judge_labels_disagreements_and_costs(tmp_path):
         "invalid_output": 1,
         "stale": 1,
     }
-    assert judge["matrix_detection_by_final_verdict"]["detected"] == {"not_issue_relevant": 1}
-    assert judge["oracle_alignment_by_matrix_cell_presence"]["fail_on_both"]["present"] == {
-        "no_clear_oracle": 1
+    assert judge["matrix_detection_by_tests_issue"]["detected"] == {"no": 1}
+    assert judge["attempt_detail_by_matrix_cell_presence"]["fail_on_both"]["present"] == {
+        "no_issue_assertion": 1
     }
+    assert judge["label_counts"]["no_attempt_reason"] == {"null": 1, "unrelated_behavior": 1}
     assert summary["jobs"][0]["judge"]["model"] == "judge-model"
     assert summary["jobs"][0]["judge"]["usage"]["input_tokens"] == 100
 
     report = (batch_dir / "report.md").read_text()
-    assert "Judge-confirmed issue reproductions" in report
-    assert "not_issue_relevant" in report
+    assert "Judge says tests attempt the issue" in report
 
 
 def test_failed_judgment_does_not_make_completed_batch_job_resumable(tmp_path):
@@ -267,41 +257,15 @@ def test_failed_judgment_does_not_make_completed_batch_job_resumable(tmp_path):
 
 def test_every_judge_label_is_counted_independently():
     labels = {
-        "issue_target_alignment": [
-            "direct",
-            "partial",
-            "adjacent",
-            "unrelated",
-            "indeterminate",
-        ],
-        "trigger_alignment": [
-            "matches",
-            "misses_required_condition",
-            "wrong_path",
-            "not_assessable",
-        ],
-        "oracle_alignment": [
-            "behaviorally_aligned",
-            "behaviorally_misaligned",
-            "implementation_coupled",
-            "no_clear_oracle",
-            "not_assessable",
-        ],
-        "test_strategy": [
-            "return_value_or_status",
-            "exception_behavior",
-            "state_or_artifact",
-            "external_interaction",
-            "resource_or_nondeterminism",
-            "implementation_inspection",
-            "no_meaningful_assertion",
-        ],
-        "final_verdict": [
-            "confirmed_issue_reproduction",
-            "issue_relevant_not_confirmed",
-            "issue_relevant_but_invalid",
-            "not_issue_relevant",
-            "unassessable",
+        "no_attempt_reason": ["nearby_behavior", "unrelated_behavior", None],
+        "tests_issue": ["yes", "no", "unsure"],
+        "attempt_detail": [
+            "correct_assertion",
+            "wrong_assertion",
+            "no_issue_assertion",
+            "missing_required_condition",
+            "test_invalid_or_incomplete",
+            None,
         ],
     }
     jobs = []
@@ -315,4 +279,6 @@ def test_every_judge_label_is_counted_independently():
     aggregation = _aggregate_judgments(jobs)
 
     for facet, values in labels.items():
-        assert set(aggregation["label_counts"][facet]) == set(values)
+        assert set(aggregation["label_counts"][facet]) == {
+            value if value is not None else "null" for value in values
+        }

@@ -77,11 +77,9 @@ def completed_judgment(**changes) -> dict:
     """A valid normalized judgment."""
     judgment = {
         "status": "completed",
-        "issue_target_alignment": "direct",
-        "trigger_alignment": "matches",
-        "oracle_alignment": "behaviorally_aligned",
-        "test_strategy": "return_value_or_status",
-        "final_verdict": "confirmed_issue_reproduction",
+        "no_attempt_reason": None,
+        "tests_issue": "yes",
+        "attempt_detail": "correct_assertion",
         "rationale": "The generated test reaches and checks the reported behavior.",
     }
     judgment.update(changes)

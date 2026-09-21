@@ -113,8 +113,8 @@ def write_summary(batch_dir: Path, name: str, jobs: list[dict]) -> dict:
         "matrix_detection_rate": (
             detected / completed_evaluations if completed_evaluations else None
         ),
-        "judge_confirmed_issue_reproduction_rate": (
-            judge_aggregation["confirmed"] / judge_aggregation["valid_judgments"]
+        "judge_tests_issue_yes_rate": (
+            judge_aggregation["tests_issue_yes"] / judge_aggregation["valid_judgments"]
             if judge_aggregation["valid_judgments"]
             else None
         ),
@@ -141,41 +141,33 @@ def _aggregate_judgments(jobs: list[dict]) -> dict:
     status_counts = Counter(job.get("judge", {}).get("status", "missing") for job in eligible)
     valid = [job for job in eligible if job.get("judge", {}).get("status") == "completed"]
     label_counts = {
-        key: dict(sorted(Counter(job["judge"][key] for job in valid).items()))
+        key: dict(sorted(Counter(job["judge"][key] or "null" for job in valid).items()))
         for key in JUDGMENT_LABEL_KEYS
     }
 
-    detection_by_verdict = _cross_tab(
+    detection_by_issue_answer = _cross_tab(
         valid,
         row=lambda job: "detected" if job.get("detected") else "not_detected",
-        column=lambda job: job["judge"]["final_verdict"],
+        column=lambda job: job["judge"]["tests_issue"],
     )
-    target_by_detection = _cross_tab(
-        valid,
-        row=lambda job: "detected" if job.get("detected") else "not_detected",
-        column=lambda job: job["judge"]["issue_target_alignment"],
-    )
-    oracle_by_matrix_presence = {
+    attempt_detail_by_matrix_presence = {
         matrix_key: _cross_tab(
             valid,
             row=lambda job, key=matrix_key: (
                 "present" if job.get("matrix", {}).get(key, 0) > 0 else "absent"
             ),
-            column=lambda job: job["judge"]["oracle_alignment"],
+            column=lambda job: job["judge"]["attempt_detail"] or "null",
         )
         for matrix_key in MATRIX_CELLS
     }
     return {
         "eligible_runs": len(eligible),
         "valid_judgments": len(valid),
-        "confirmed": sum(
-            job["judge"]["final_verdict"] == "confirmed_issue_reproduction" for job in valid
-        ),
+        "tests_issue_yes": sum(job["judge"]["tests_issue"] == "yes" for job in valid),
         "status_counts": dict(sorted(status_counts.items())),
         "label_counts": label_counts,
-        "matrix_detection_by_final_verdict": detection_by_verdict,
-        "issue_target_alignment_by_matrix_detection": target_by_detection,
-        "oracle_alignment_by_matrix_cell_presence": oracle_by_matrix_presence,
+        "matrix_detection_by_tests_issue": detection_by_issue_answer,
+        "attempt_detail_by_matrix_cell_presence": attempt_detail_by_matrix_presence,
     }
 
 
@@ -230,11 +222,11 @@ def _headline_lines(summary: dict) -> list[str]:
         "on buggy and passes on golden. Incomplete and diagnostic-only runs never count as "
         "detected.",
         "",
-        f"Judge-confirmed issue reproductions: **{summary['judge']['confirmed']}** of "
+        f"Judge says tests attempt the issue: **{summary['judge']['tests_issue_yes']}** of "
         f"**{summary['judge']['valid_judgments']}** valid judgments "
-        f"(**{_percent(summary['judge_confirmed_issue_reproduction_rate'])}**).",
+        f"(**{_percent(summary['judge_tests_issue_yes_rate'])}**).",
         "",
-        "| Instance | State | Matrix detection | Final verdict | Target | Oracle "
+        "| Instance | State | Matrix detection | Attempts issue? | Attempt detail | No-attempt reason "
         "| Generation cost | Judge cost |",
         "|---|---|---:|---|---|---|---:|---:|",
     ]
@@ -253,9 +245,9 @@ def _job_table_lines(jobs: list[dict]) -> list[str]:
         judge_cost = judge.get("cost_usd")
         lines.append(
             f"| {instance} | {job['state']} | {'yes' if job.get('detected') else 'no'} "
-            f"| {judge.get('final_verdict') or judge.get('status', 'missing')} "
-            f"| {judge.get('issue_target_alignment', '—')} "
-            f"| {judge.get('oracle_alignment', '—')} "
+            f"| {judge.get('tests_issue') or judge.get('status', 'missing')} "
+            f"| {judge.get('attempt_detail') or '—'} "
+            f"| {judge.get('no_attempt_reason') or '—'} "
             f"| {'—' if generation_cost is None else f'${generation_cost:.4f}'} "
             f"| {'—' if judge_cost is None else f'${judge_cost:.4f}'} |"
         )

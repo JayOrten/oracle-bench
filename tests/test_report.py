@@ -85,16 +85,14 @@ def report_results(**changes):
 def completed_judgment():
     return {
         "status": "completed",
-        "issue_target_alignment": "direct",
-        "trigger_alignment": "matches",
-        "oracle_alignment": "behaviorally_aligned",
-        "test_strategy": "exception_behavior",
-        "final_verdict": "confirmed_issue_reproduction",
+        "no_attempt_reason": None,
+        "tests_issue": "yes",
+        "attempt_detail": "correct_assertion",
         "rationale": "The generated assertion reaches the issue and distinguishes both revisions.",
     }
 
 
-def test_report_renders_completed_judge_with_provenance_cost_and_audit_links(tmp_path):
+def test_report_renders_completed_judge_with_provenance_cost_and_supporting_files(tmp_path):
     paths = RunPaths.create(tmp_path)
     paths.results.write_text(json.dumps(report_results()))
     paths.judge.judgment.write_text(json.dumps(completed_judgment()))
@@ -125,13 +123,14 @@ def test_report_renders_completed_judge_with_provenance_cost_and_audit_links(tmp
     text = report(paths).read_text()
 
     assert "Status: **completed**" in text
-    assert "| Issue-target alignment | `direct` |" in text
-    assert "| Final verdict | `confirmed_issue_reproduction` |" in text
+    assert "| Do the generated tests attempt to test the issue? | `yes` |" in text
+    assert "| Attempt detail | `correct_assertion` |" in text
+    assert "| No-attempt reason | `null` |" in text
     assert "> The generated assertion reaches the issue" in text
     assert "Model: `judge-model`" in text
     assert "Generation wall time: 4.0s" in text and "$0.1250" in text
     assert "Judge wall time: 3.0s" in text and "$0.0250" in text
-    assert "[Workspace specification](judge/workspace-spec.json)" in text
+    assert "[Judge workspace contents](judge/workspace-spec.json)" in text
     for target in re.findall(r"\[[^]]+\]\(([^)]+)\)", text):
         assert (tmp_path / target).is_file(), target
 
@@ -152,12 +151,16 @@ def test_report_renders_completed_judge_with_provenance_cost_and_audit_links(tmp
             "Reason: deadline",
         ),
         (
+            {"status": "skipped", "reason": "generation failed"},
+            "Reason: generation failed",
+        ),
+        (
             {
                 "status": "stale",
                 "reason": "Evaluation changed.",
                 "previous_judgment": completed_judgment(),
             },
-            "Previous final verdict: `confirmed_issue_reproduction`",
+            "Previous issue-tested answer: `yes`.",
         ),
     ],
 )
@@ -209,6 +212,23 @@ def test_report_derives_diagnostic_status_from_submission_compliance(tmp_path):
 
     assert "**Diagnostic only:**" in text
     assert "`src/application.py`" in text
+
+
+def test_report_explains_generation_timeout_and_labels_generated_test_results(tmp_path):
+    paths = RunPaths.create(tmp_path)
+    paths.results.write_text(
+        json.dumps(report_results(agent={"status": "timeout", "duration_seconds": 60}))
+    )
+
+    text = report(paths).read_text()
+
+    assert "Overall result: **completed with errors**" in text
+    assert "generation ended with **timeout**" in text
+    assert "Any test files captured before it stopped were still evaluated" in text
+    assert "## Generated-test results" in text
+    assert "These outcomes describe the tests written by the generation agent" in text
+    assert "## Supporting files" in text
+    assert "Audit artifacts" not in text
 
 
 def test_report_does_not_regenerate_the_generation_transcript(tmp_path):
@@ -274,8 +294,8 @@ def test_report_renders_central_task_classification_and_provenance(tmp_path, mon
     assert "> A nearby implementation establishes the expected behavior." in text
     assert "Model: `classifier-model`" in text
     assert "`wall_seconds=90`" in text
-    assert f"[Central classification]({attempt / 'classification.json'})" in text
-    assert f"[Frozen classifier rubric]({attempt / 'inputs/rubric.md'})" in text
+    assert f"[Classification result]({attempt / 'classification.json'})" in text
+    assert f"[Classifier rubric]({attempt / 'inputs/rubric.md'})" in text
     assert f"[Classifier trace]({attempt / 'agent/trace.jsonl'})" in text
 
 

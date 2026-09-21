@@ -23,9 +23,8 @@ from oracle_bench.container.sandbox import (
 from oracle_bench.io import digest, read_json, require_files, utc_stamp, write_json
 from oracle_bench.judge.contracts import (
     RATER_ID,
-    CompletedJudgment,
     HumanWorkspaceMetadata,
-    parse_judgment,
+    complete_human_judgment,
 )
 from oracle_bench.judge.workspace import JUDGE_ROOT, WorkspaceSpec, build_judge_workspace
 from oracle_bench.paths import RunPaths
@@ -33,6 +32,7 @@ from oracle_bench.results import read_evaluation_result, read_instance_record
 
 RUN_DIRECTORY_LABEL = "oracle-bench.run-directory"
 RATER_LABEL = "oracle-bench.rater"
+HUMAN_JUDGMENT_TEMPLATE = Path(__file__).resolve().parent / "templates/human-judgment.json"
 
 
 def create_human_workspace(config: RunConfig, paths: RunPaths, rater: str) -> str:
@@ -116,15 +116,10 @@ def collect_human_judgment(container_name: str, *, archive_existing: bool = Fals
                 ) from None
             raw = draft.read_text()
 
-    # The same parser as the LLM judge, so both kinds of rating obey one contract.
-    judgment = parse_judgment(
-        raw,
-        has_relevant_fail_to_pass=read_evaluation_result(
-            paths.results
-        ).has_fail_on_buggy_pass_on_golden,
-    )
-    if not isinstance(judgment, CompletedJudgment):
-        raise ValueError(f"Human judgment is invalid: {judgment.error}")
+    try:
+        judgment = complete_human_judgment(raw)
+    except ValueError as error:
+        raise ValueError(f"Human judgment is invalid: {error}") from error
 
     # The saved metadata names the rater, so a relabelled container cannot write
     # over somebody else's rating. This is also what checks the rater ID itself.
@@ -171,13 +166,17 @@ def _prepare_human_files(
     host_directory.mkdir(parents=True, exist_ok=True)
     workspace_file = host_directory / f"{container_name}.code-workspace"
     write_json(workspace_file, workspace)
+    draft_file = host_directory / f"{container_name}.judgment-template.json"
+    shutil.copyfile(HUMAN_JUDGMENT_TEMPLATE, draft_file)
     sandbox.upload(workspace_file, JUDGE_ROOT + "/human-judge.code-workspace")
+    sandbox.run(["mkdir", "-p", JUDGE_ROOT + "/output"])
+    sandbox.upload(draft_file, JUDGE_ROOT + "/output/judgment.json")
     # Worktrees share Git metadata with the image checkout. Freeze both so an
     # interactive editor cannot alter source files or the shared object store.
     sandbox.run(["chmod", "-R", "a-w", JUDGE_ROOT, sandbox.runtime.workdir])
-    sandbox.run(["mkdir", "-p", JUDGE_ROOT + "/output"])
-    sandbox.run(["chown", ORACLE_USER, JUDGE_ROOT + "/output"])
+    sandbox.run(["chown", "-R", ORACLE_USER, JUDGE_ROOT + "/output"])
     sandbox.run(["chmod", "700", JUDGE_ROOT + "/output"])
+    sandbox.run(["chmod", "600", JUDGE_ROOT + "/output/judgment.json"])
     metadata = HumanWorkspaceMetadata(
         container=container_name,
         rater=rater,

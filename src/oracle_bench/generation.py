@@ -81,6 +81,10 @@ def capture(
     after = snapshot(sandbox, paths.generation / "after.json", log)
     allowed, forbidden = changed_files(before, after, config.task.generated_dir)
     generated = paths.submission
+    # Keep the frozen bundle structurally complete even when the agent creates no
+    # tests. Downstream verification and diagnostics can then inspect an empty
+    # directory instead of failing because the bundle root never existed.
+    (generated / "files").mkdir(parents=True, exist_ok=True)
     sandbox.run(
         [
             runtime.python,
