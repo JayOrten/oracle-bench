@@ -7,6 +7,7 @@ from oracle_bench.config import (
     HARNESS_VERSIONS,
     AgentConfig,
     RuntimeConfig,
+    load_classification_config,
     load_config,
     validate_resolved_config,
 )
@@ -40,7 +41,8 @@ def test_sample_uses_repository_scope_with_existing_tests_hidden():
 
 def test_smoke_config_uses_budgeted_haiku_for_generation_and_judging():
     config = load_config(SAMPLE)
-    assert config.source.dataset == "lite"
+    assert config.source.dataset == "verified"
+    assert config.source.revision == "c104f840cc67f8b6eec6f759ebc8b2693d585d4a"
     assert config.agent.harness == "claude"
     assert config.agent.provider == "openrouter"
     assert config.agent.model == "anthropic/claude-haiku-4.5"
@@ -257,6 +259,27 @@ def test_generated_directory_is_checked_against_resolved_source_roots():
     )
     with pytest.raises(ValueError, match="outside production source roots"):
         validate_resolved_config(config)
+
+
+def test_classification_config_is_independent_and_resolves_paths():
+    path = Path(__file__).parents[1] / "configs/classification/example.yaml"
+
+    config = load_classification_config(path)
+
+    assert config.source.dataset == "verified"
+    assert config.classifier.multi_agent is False
+    assert config.rubric.endswith("/prompts/judge/task-classification-rubric.md")
+    assert config.output.endswith("/classifications")
+    assert config.runtime is None
+
+
+def test_each_swebench_dataset_resolves_its_own_pinned_revision(tmp_path):
+    path = config_file(tmp_path, "source", "dataset", "lite")
+
+    config = load_config(path)
+
+    assert config.source.dataset == "lite"
+    assert config.source.revision == "6ec7bb89b9342f664a54a6e0a6ea6501d3437cc2"
 
 
 def test_resolved_run_lock_can_be_reloaded(tmp_path):

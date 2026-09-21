@@ -2,7 +2,7 @@
 
 from pathlib import Path
 
-from oracle_bench.config import HarnessConfig, RunConfig
+from oracle_bench.config import ClassificationConfig, HarnessConfig, RunConfig
 from oracle_bench.container.sandbox import Sandbox
 from oracle_bench.harnesses import claude, codex, opencode
 from oracle_bench.harnesses.launch import AgentTurnRequest, require_credential
@@ -41,7 +41,7 @@ def provenance(request: AgentTurnRequest) -> dict:
 
 
 def turn_request(
-    config: RunConfig,
+    config: RunConfig | ClassificationConfig,
     harness: HarnessConfig,
     prompt: Path,
     working_directory: str,

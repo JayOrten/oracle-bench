@@ -27,7 +27,7 @@ All job configurations are validated and hashed before execution. The initial ba
 runner is sequential, isolates job failures, writes aggregate JSON and Markdown after
 every job, and can continue with `oracle-bench batch --resume <batch-directory>`.
 
-The input interface has six top-level sections: `source`, `agent`, optional
+The benchmark-run interface has six top-level sections: `source`, `agent`, optional
 `judge`, `task`, `limits`, and `output`. Only `source.instance`, `agent.model`,
 and `task.prompt` are required. Unknown settings are rejected, including the
 removed `dataset`, `environment`, and `harness` sections from the original
@@ -110,8 +110,7 @@ file.
 
 ## `source`
 
-The source selects the benchmark record. The current implementation supports one
-SWE-bench Lite instance per run.
+The source selects one SWE-bench Verified record by default.
 
 ### `source.instance`
 
@@ -134,16 +133,15 @@ kinds are not implemented yet.
 ### `source.dataset`
 
 - **Type:** dataset alias
-- **Default:** `lite`
+- **Default:** `verified`
 
-`lite` resolves to `princeton-nlp/SWE-bench_Lite`. Additional datasets will be
-added as tested aliases so each can carry its own pinned revision and runtime
-rules.
+`lite` resolves to `princeton-nlp/SWE-bench_Lite`; `verified` resolves to
+`princeton-nlp/SWE-bench_Verified`.
 
 ### `source.revision`
 
 - **Type:** 40-character commit SHA
-- **Default:** Oracle Bench's tested SWE-bench Lite revision
+- **Default:** Oracle Bench's pinned revision for the selected dataset
 
 Advanced reproducibility override for the Hugging Face dataset repository. This
 is not the buggy repository commit; `base_commit` comes from the selected record.
@@ -155,8 +153,8 @@ are saved with every run.
 - **Type:** string
 - **Default:** `test`
 
-Dataset split searched for `source.instance`. Ordinary SWE-bench Lite runs should
-use the default.
+Dataset split searched for `source.instance`. Ordinary SWE-bench Verified runs use
+the default.
 
 ### `source.record`
 
@@ -405,6 +403,27 @@ also need a prepared image, repository-owned container recipe, or explicit
 runtime manifest, plus a private reference witness. A single repository revision
 can support generation and coverage later, but cannot produce the paired
 buggy/golden matrix by itself.
+
+## Standalone task classification
+
+Task classification has its own YAML contract because it is a one-time annotation
+process, not a generation run. Invoke it with:
+
+```sh
+uv run oracle-bench classify configs/classification/example.yaml
+```
+
+Its top-level fields are `source`, `classifier`, `rubric`, `limits`, and `output`.
+`source` uses the schema above. `classifier` accepts the same harness, provider,
+authentication, model, stopping-limit, and watchdog settings as `judge`, and always
+sets `multi_agent: false`. `rubric` is the task-classification rubric path. `limits`
+controls image setup and container memory/CPU limits; evaluation time is unused.
+`output` defaults to `classifications`.
+
+The complete runnable example is
+[`configs/classification/example.yaml`](../configs/classification/example.yaml).
+Paths are resolved relative to that YAML file. Runtime and toolchain settings are
+generated and frozen in the attempt rather than accepted as input.
 
 ## Sample configurations
 

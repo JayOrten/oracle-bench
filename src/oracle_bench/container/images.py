@@ -10,10 +10,9 @@ from docker import DockerClient
 from docker.errors import ImageNotFound
 from docker.models.images import Image
 
-from oracle_bench.config import HARNESS_VERSIONS, RunConfig
+from oracle_bench.config import HARNESS_VERSIONS, ClassificationConfig, RunConfig
 from oracle_bench.container.lifecycle import setup_deadline
 from oracle_bench.io import digest, write_json
-from oracle_bench.paths import RunPaths
 
 
 def require_saved_image(client: DockerClient, image: str, action: str) -> None:
@@ -118,7 +117,9 @@ def prepare_contexts(build: Path) -> tuple[Path, Path]:
     return harness_context, runtime_context
 
 
-def runtime_arguments(config: RunConfig, source: Image, harnesses: Image) -> dict[str, str]:
+def runtime_arguments(
+    config: RunConfig | ClassificationConfig, source: Image, harnesses: Image
+) -> dict[str, str]:
     runtime = config.require_runtime()
     return {
         "HARNESS_IMAGE": image_id(harnesses),
@@ -130,14 +131,17 @@ def runtime_arguments(config: RunConfig, source: Image, harnesses: Image) -> dic
     }
 
 
-def prepare_image(client: DockerClient, config: RunConfig, paths: RunPaths) -> str:
+def prepare_image(
+    client: DockerClient,
+    config: RunConfig | ClassificationConfig,
+    build: Path,
+) -> str:
     """Build the one image every stage of the run uses, and return its ID.
 
     Four images are involved but only the last is returned: two pulled, then two
     built on top of them.
     """
     runtime = config.require_runtime()
-    build = paths.build
     harness_context, runtime_context = prepare_contexts(build)
     installed_harnesses = config.toolchain.installed_harnesses
     lock_sha256 = digest((harness_context / "package-lock.json").read_bytes())

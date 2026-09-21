@@ -25,6 +25,11 @@ uv run oracle-bench run configs/smoke.yaml
 
 Oracle Bench tests how well coding agents generate unit tests when the code they see already contains a bug. An agent receives a buggy repository and a request to write tests, without being given the issue description or fix. The benchmark then runs the same generated tests against buggy and fixed (golden) versions, collecting paired pass/fail outcomes and coverage.
 
+A separate one-time classification command annotates SWE-bench Verified problems by
+defect mechanism, test setup, oracle availability, scope, and benchmark quality.
+Benchmark reports automatically show the newest central classification for their
+instance when one is available.
+
 80% of this repo is just coordinating containers and managing data in and out of them.
 
 ## Architecture / pipeline
@@ -46,6 +51,7 @@ flowchart TD
     JudgeEnabled -- No --> Report["JSON results and Markdown report"]
     Judge --> Judgment["Validated judgment JSON"]
     Judgment --> Report
+    Classification["Standalone task classification"] -. newest matching instance .-> Report
 ```
 
 ## Usage
@@ -61,6 +67,9 @@ uv run oracle-bench evaluate runs/<run-id>
 
 # Run the configured semantic judge after paired evaluation.
 uv run oracle-bench judge runs/<run-id>
+
+# Classify one SWE-bench Verified problem independently of a benchmark run.
+uv run oracle-bench classify configs/classification/example.yaml
 
 # Compare saved human and LLM ratings and select a calibration sample.
 uv run oracle-bench agreement batches/<batch-id> --sample-per-stratum 8
@@ -127,6 +136,9 @@ setting, default, validation rule, and harness-specific behavior.
 | `submission/`                | Captured generated tests, hashes, and violations          |
 | `evaluation/`                | Paired result plus buggy and golden executions            |
 | `judge/`                     | Judge workspace manifest, model evidence, and judgment    |
+
+Standalone classifications are stored separately under
+`classifications/<instance-id>/<attempt-id>/`; they are not copied into run directories.
 
 See the [complete results and artifacts reference](docs/results.md) for the full
 directory layout, JSON fields, logs, evaluation artifacts, and reevaluation

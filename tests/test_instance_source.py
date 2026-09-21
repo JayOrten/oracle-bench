@@ -46,7 +46,7 @@ def test_local_record_resolves_instance_and_runtime(tmp_path):
     instance, runtime = resolve(config.source)
 
     assert instance.instance_id == record["instance_id"]
-    assert instance.source.dataset == "lite"
+    assert instance.source.dataset == "verified"
     assert instance.test_target == "requests/a.py (send)"
     assert runtime.image == image_for(record["instance_id"])
     assert runtime.source_roots == ["requests"]
