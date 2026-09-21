@@ -25,12 +25,29 @@ Version = Annotated[str, Field(strict=True, pattern=r"^\d+\.\d+\.\d+(?:[a-zA-Z0-
 ImageReference = Annotated[str, Field(strict=True, pattern=r"^[A-Za-z0-9_./:@-]+$")]
 NonBlank = Annotated[str, Field(strict=True, pattern=r"\S")]
 
-SCHEMA_VERSION = 2
 SWEBENCH_DATASETS = {"lite": "princeton-nlp/SWE-bench_Lite"}
 SWEBENCH_DATASET_REVISION = "6ec7bb89b9342f664a54a6e0a6ea6501d3437cc2"
-CODEX_VERSION = "0.153.4"
-CLAUDE_VERSION = "2.1.263"
-OPENCODE_VERSION = "1.18.30"
+# Every runtime image installs all three CLIs from one lockfile, so these pins
+# must stay equal to docker/package.json. Nothing selects a version per run.
+HARNESS_VERSIONS = {
+    "codex": "0.153.4",
+    "claude": "2.1.263",
+    "opencode": "1.18.30",
+}
+# First provider listed is the default. Everything goes through OpenRouter unless
+# a config asks for the other one.
+HARNESS_PROVIDERS = {
+    "codex": ("openrouter", "openai"),
+    "claude": ("openrouter", "anthropic"),
+    "opencode": ("openrouter",),
+}
+# Stopping policies each CLI enforces itself. Every harness supports wall time,
+# which the container deadline enforces rather than the CLI.
+HARNESS_LIMITS = {
+    "codex": ("wall_seconds",),
+    "claude": ("wall_seconds", "budget_usd", "turns"),
+    "opencode": ("wall_seconds",),
+}
 NODE_IMAGE = "node:22.14.0-bookworm-slim"
 PYTEST_VERSION = "7.4.4"
 COVERAGE_VERSION = "7.6.1"
@@ -74,35 +91,68 @@ class SourceConfig(ConfigModel):
         return SWEBENCH_DATASETS[self.dataset]
 
 
-class AgentConfig(ConfigModel):
+class BudgetLimit(ConfigModel):
+    kind: Literal["budget_usd"]
+    value: PositiveNumber
+
+
+class TurnLimit(ConfigModel):
+    kind: Literal["turns"]
+    value: Annotated[int, Field(strict=True, gt=0)]
+
+
+class WallTimeLimit(ConfigModel):
+    kind: Literal["wall_seconds"]
+    value: PositiveNumber
+
+
+StoppingLimit = Annotated[BudgetLimit | TurnLimit | WallTimeLimit, Field(discriminator="kind")]
+
+
+def default_limit() -> WallTimeLimit:
+    """Wall-clock is the default stopping policy: every harness can enforce it."""
+    return WallTimeLimit(kind="wall_seconds", value=900)
+
+
+class HarnessConfig(ConfigModel):
+    """One bounded agent turn: which model runs it and what stops it.
+
+    Exactly one stopping policy is the experiment's variable. The watchdog is
+    infrastructure protection and is reported only if it fires.
+    """
+
     model: NonBlank
     harness: Literal["codex", "claude", "opencode"] = "codex"
     provider: Literal["openai", "openrouter", "anthropic"] | None = None
-    version: Version | None = None
-    multi_agent: Annotated[bool, Field(strict=True)] = True
-    wall_seconds: PositiveNumber = 900
-    max_budget_usd: PositiveNumber = 0.25
-    max_turns: Annotated[int, Field(strict=True, gt=0)] = 10
     auth: Literal["oauth", "api_key"] = "oauth"
+    limit: StoppingLimit = Field(default_factory=default_limit)
+    watchdog_seconds: PositiveNumber = 900
+    multi_agent: Annotated[bool, Field(strict=True)] = True
+
+    @property
+    def timeout_seconds(self) -> float:
+        """A wall policy is its own deadline; otherwise the watchdog bounds it."""
+        return self.limit.value if self.limit.kind == "wall_seconds" else self.watchdog_seconds
 
     @model_validator(mode="after")
-    def resolve_harness(self):
+    def validate_enforceable_limit(self) -> HarnessConfig:
+        """Reject a policy the selected CLI cannot apply, before any model call."""
+        supported = HARNESS_LIMITS[self.harness]
+        if self.limit.kind not in supported:
+            raise ValueError(
+                f"The {self.harness} harness can enforce only "
+                f"{' or '.join(supported)} as a stopping limit"
+            )
+        return self
+
+    @model_validator(mode="after")
+    def resolve_harness(self) -> HarnessConfig:
         """Resolve harness defaults together with the permitted providers."""
-        if self.harness == "claude":
-            self.provider = self.provider or "anthropic"
-            self.version = self.version or CLAUDE_VERSION
-            providers = {"anthropic", "openrouter"}
-        elif self.harness == "opencode":
-            self.provider = self.provider or "openrouter"
-            self.version = self.version or OPENCODE_VERSION
-            providers = {"openrouter"}
-        else:
-            self.provider = self.provider or "openai"
-            self.version = self.version or CODEX_VERSION
-            providers = {"openai", "openrouter"}
+        providers = HARNESS_PROVIDERS[self.harness]
+        self.provider = self.provider or providers[0]
         if self.provider not in providers:
             raise ValueError(
-                "Use codex with openai/openrouter, claude with anthropic/openrouter, "
+                "Use codex with openrouter/openai, claude with openrouter/anthropic, "
                 "or opencode with openrouter"
             )
         return self
@@ -116,16 +166,29 @@ class AgentConfig(ConfigModel):
         return "OPENAI_API_KEY"
 
 
+class AgentConfig(HarnessConfig):
+    """Generation settings. Subagents are permitted; the judge's are not."""
+
+
+class JudgeConfig(HarnessConfig):
+    """Settings for the optional, privileged generated-test judge."""
+
+    rubric: NonBlank
+    instructions: NonBlank
+    # The judge never spawns subagents. The type checker complains because this
+    # narrows an inherited field, which is exactly what we want here.
+    multi_agent: Literal[False] = False  # pyright: ignore[reportIncompatibleVariableOverride]
+
+
 class TaskConfig(ConfigModel):
     prompt: str
     scope: Literal["localized", "repository"] = "repository"
-    existing_tests: Literal["keep", "hide", "hide_all"] = "hide_all"
+    existing_tests: Literal["keep", "hide_all"] = "hide_all"
     generated_dir: RepositoryPath = "oracle_tests"
 
     @property
     def hides_existing_tests(self) -> bool:
-        """Treat the original ``hide`` spelling as a backward-compatible alias."""
-        return self.existing_tests in {"hide", "hide_all"}
+        return self.existing_tests == "hide_all"
 
 
 class LimitsConfig(ConfigModel):
@@ -152,17 +215,29 @@ class ToolchainConfig(ConfigModel):
     """Oracle Bench implementation dependencies recorded with resolved runs."""
 
     node_image: ImageReference = NODE_IMAGE
+    codex_version: Version = HARNESS_VERSIONS["codex"]
+    claude_version: Version = HARNESS_VERSIONS["claude"]
+    opencode_version: Version = HARNESS_VERSIONS["opencode"]
     pytest_version: Version = PYTEST_VERSION
     coverage_version: Version = COVERAGE_VERSION
+
+    @property
+    def installed_harnesses(self) -> dict[str, str]:
+        """Return the complete CLI toolchain independently of the selected agent."""
+        return {
+            "codex": self.codex_version,
+            "claude": self.claude_version,
+            "opencode": self.opencode_version,
+        }
 
 
 class RunConfig(ConfigModel):
     source: SourceConfig
     agent: AgentConfig
+    judge: JudgeConfig | None = None
     task: TaskConfig
     limits: LimitsConfig = Field(default_factory=LimitsConfig)
     output: str = "runs"
-    schema_version: Literal[2] = SCHEMA_VERSION
     runtime: RuntimeConfig | None = None
     toolchain: ToolchainConfig = Field(default_factory=ToolchainConfig)
 
@@ -174,9 +249,17 @@ class RunConfig(ConfigModel):
             raise RuntimeError("The source adapter has not resolved the repository runtime")
         return self.runtime
 
+    def require_judge(self) -> JudgeConfig:
+        if self.judge is None:
+            raise ValueError("This run has no judge configuration")
+        return self.judge
 
-def validate_resolved_config(config: RunConfig):
-    """Check the rule joining experiment choices to the source adapter's layout."""
+
+def validate_resolved_config(config: RunConfig) -> None:
+    """Make sure the agent's test directory is not inside the repo's source code.
+
+    If it were, the agent could edit production code and have it counted as a test.
+    """
     runtime = config.require_runtime()
     generated = PurePosixPath(config.task.generated_dir)
     for source in map(PurePosixPath, runtime.source_roots):
@@ -189,7 +272,7 @@ def _read_settings(path: Path, resolved: bool) -> dict:
     raw = yaml.safe_load(path.read_text())
     if not isinstance(raw, dict):
         raise ValueError("Configuration must be a YAML mapping")
-    generated_fields = {"schema_version", "runtime", "toolchain"} & raw.keys()
+    generated_fields = {"runtime", "toolchain"} & raw.keys()
     if generated_fields and not resolved:
         raise ValueError(
             f"Settings are generated by Oracle Bench and cannot be input: {sorted(generated_fields)}"
@@ -199,6 +282,9 @@ def _read_settings(path: Path, resolved: bool) -> dict:
 
 def _resolve_paths(config: RunConfig, base: Path) -> None:
     config.task.prompt = str((base / config.task.prompt).resolve())
+    if config.judge:
+        config.judge.rubric = str((base / config.judge.rubric).resolve())
+        config.judge.instructions = str((base / config.judge.instructions).resolve())
     config.output = str((base / config.output).resolve())
     if config.source.record:
         config.source.record = str((base / config.source.record).resolve())

@@ -1,3 +1,4 @@
+import os
 from pathlib import Path
 
 import pytest
@@ -5,6 +6,23 @@ import pytest
 from oracle_bench import cli
 
 SAMPLE = Path(__file__).parents[1] / "configs" / "smoke.yaml"
+
+
+def test_saved_run_config_is_loaded_once_at_cli_boundary(tmp_path, monkeypatch):
+    config = object()
+    loads = []
+
+    def load(path, *, resolved):
+        loads.append((path, resolved))
+        return config
+
+    monkeypatch.setattr(cli, "load_config", load)
+
+    loaded_config, paths = cli._load_saved_run(tmp_path)
+
+    assert loaded_config is config
+    assert paths.root == tmp_path.resolve()
+    assert loads == [(paths.config, True)]
 
 
 @pytest.mark.parametrize("shell_value", [None, "from-shell"])
@@ -33,7 +51,8 @@ def test_offline_commands_do_not_load_credentials(tmp_path, monkeypatch, command
         pytest.fail("Offline commands must not load credentials")
 
     monkeypatch.setattr(cli, "load_dotenv", unexpected_load)
-    monkeypatch.setattr(cli, "reevaluate", lambda path: tmp_path)
+    monkeypatch.setattr(cli, "_load_saved_run", lambda path: (object(), object()))
+    monkeypatch.setattr(cli, "reevaluate", lambda config, paths: tmp_path)
     monkeypatch.setattr(cli, "report", lambda path: tmp_path)
     monkeypatch.setattr(cli, "read_json", lambda path: {"state": "completed"})
     assert cli.main([command, str(tmp_path)]) == 0
@@ -49,3 +68,77 @@ def test_batch_loads_credentials_and_returns_batch_status(tmp_path, monkeypatch)
     monkeypatch.setattr(cli, "run_batch", lambda path, resume: batch_dir)
 
     assert cli.main(["batch", "batch.yaml"]) == 0
+
+
+def test_judge_loads_credentials_and_uses_saved_run(tmp_path, monkeypatch):
+    monkeypatch.chdir(tmp_path)
+    monkeypatch.delenv("OPENAI_API_KEY", raising=False)
+    (tmp_path / ".env").write_text("OPENAI_API_KEY=judge-fixture\n")
+    (tmp_path / "status.json").write_text('{"state": "completed"}\n')
+
+    config = object()
+    monkeypatch.setattr(cli, "_load_saved_run", lambda path: (config, cli.RunPaths.open(path)))
+
+    def invoke(loaded_config, paths):
+        assert loaded_config is config
+        assert paths.root == tmp_path.resolve()
+        assert os.environ["OPENAI_API_KEY"] == "judge-fixture"
+        return {"status": "completed"}
+
+    monkeypatch.setattr(cli, "judge", invoke)
+    monkeypatch.setattr(cli, "report", lambda paths: paths.report)
+
+    assert cli.main(["judge", str(tmp_path)]) == 0
+
+
+def test_human_workspace_commands_are_offline_and_dispatch_explicit_actions(tmp_path, monkeypatch):
+    def unexpected_load(*args, **kwargs):
+        pytest.fail("Human workspace commands must not load model credentials")
+
+    calls = []
+    monkeypatch.setattr(cli, "load_dotenv", unexpected_load)
+    monkeypatch.setattr(cli, "_load_saved_run", lambda path: (object(), cli.RunPaths.open(path)))
+    monkeypatch.setattr(
+        cli,
+        "create_human_workspace",
+        lambda config, paths, rater: calls.append(("create", paths.root, rater)) or "created",
+    )
+    monkeypatch.setattr(
+        cli,
+        "collect_human_judgment",
+        lambda name, archive_existing: (
+            calls.append(("collect", name, archive_existing)) or tmp_path / "judgment.json"
+        ),
+    )
+    monkeypatch.setattr(
+        cli,
+        "remove_human_workspace",
+        lambda name: calls.append(("remove", name)) or name,
+    )
+
+    assert cli.main(["judge-workspace", "create", str(tmp_path), "--rater", "rater_1"]) == 0
+    assert cli.main(["judge-workspace", "collect", "container", "--archive-existing"]) == 0
+    assert cli.main(["judge-workspace", "remove", "container"]) == 0
+    assert calls == [
+        ("create", tmp_path, "rater_1"),
+        ("collect", "container", True),
+        ("remove", "container"),
+    ]
+
+
+def test_agreement_command_is_offline(tmp_path, monkeypatch):
+    def unexpected_load(*args, **kwargs):
+        pytest.fail("Agreement analysis must not load model credentials")
+
+    monkeypatch.setattr(cli, "load_dotenv", unexpected_load)
+    monkeypatch.setattr(
+        cli,
+        "analyze_agreement",
+        lambda path, sample_per_stratum: (
+            tmp_path / f"agreement-{sample_per_stratum}.md"
+            if path == tmp_path
+            else pytest.fail("Unexpected batch path")
+        ),
+    )
+
+    assert cli.main(["agreement", str(tmp_path), "--sample-per-stratum", "3"]) == 0

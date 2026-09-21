@@ -17,11 +17,11 @@ runs/<run-id>/
 │   └── prompt.txt
 ├── image-build/
 │   ├── runtime.json
-│   ├── agent/agent.Dockerfile
+│   ├── harnesses/{harnesses.Dockerfile,package.json,package-lock.json}
 │   ├── runtime/runtime.Dockerfile
 │   ├── runtime/container_helpers/*.py
 │   ├── requested.json
-│   ├── agent.inputs.json
+│   ├── harnesses.inputs.json
 │   ├── runtime.inputs.json
 │   ├── images.json
 │   └── output.log (when a pull or build runs)
@@ -54,12 +54,92 @@ runs/<run-id>/
 │   ├── results.json
 │   ├── buggy/<execution artifacts>
 │   └── golden/<execution artifacts>
+├── judge/
+│   ├── rubric.md (when judge configuration is present)
+│   ├── workspace.log
+│   ├── image.json
+│   ├── workspace-spec.json
+│   ├── bundle-manifest.json
+│   ├── prompt.md
+│   ├── judgment.raw.txt
+│   ├── judgment.json
+│   ├── human/<opaque-rater-id>/{judgment.raw.json,judgment.json,provenance.json}
+│   ├── human-history/<opaque-rater-id>/<archived rating>/
+│   ├── human-workspaces/<workspace metadata and VS Code files>
+│   ├── human-workspace.log
+│   └── agent/{command.json,version.txt,trace.jsonl,stderr.log,final.txt,result.json}
+├── judge-history/<archived judge attempts>/
 └── evaluation-history/<archived reevaluations>/
 ```
 
 A run that stops early contains only the files produced before the failure. For
 example, an image-build failure will not have generation or evaluation artifacts.
 Consult `status.json` and the last stage log when expected files are absent.
+
+## Judge workspace manifests
+
+`workspace-spec.json` records the workspace-layout version, prepared image ID
+and digests, base commit, patch, rubric and container-helper hashes,
+repository-view construction method, reconstruction commands, and every exposed
+artifact. The separate
+`bundle-manifest.json` is the compact destination-to-SHA-256 inventory.
+
+The disposable container receives `/oracle-judge/buggy` and
+`/oracle-judge/golden` repository views, the generated submission in both views,
+the issue and patches, and saved evaluation evidence. Oracle Bench verifies the
+submission bundle before transfer and checks every generated file again inside
+both views. Repository views are not copied back to the host; the saved run
+artifacts and workspace specification are the reproducible inputs.
+
+Run the judge independently after paired evaluation:
+
+```sh
+uv run oracle-bench judge runs/<run-id>
+```
+
+The command requires the configured judge credential and the saved runtime image.
+It writes the exact prompt and raw final response before validating
+`judgment.json`. Invalid model output is retained as `status: invalid_output` and
+is not retried automatically. Harness failures and deadlines produce explicit
+`failed` and `timed_out` judgments. A rerun archives the complete prior attempt
+under `judge-history/<UTC timestamp>/` before rebuilding the workspace.
+
+## Interactive human judging
+
+Create a blinded human workspace from the same saved `workspace-spec.json` used
+for model judging:
+
+```sh
+uv run oracle-bench judge-workspace create runs/<run-id> --rater rater_01
+```
+
+The command reconstructs the bundle and refuses to continue if its specification
+differs from the saved one. It leaves a named container running without network
+access or model credentials and prints commands for opening a shell or attaching
+VS Code. The common evidence is read-only; the non-root `oracle` user can write
+only `/oracle-judge/output/`. LLM responses and earlier human ratings are never
+uploaded into this container.
+
+Write the six rubric fields to `/oracle-judge/output/judgment.json`, then collect
+and validate them:
+
+```sh
+uv run oracle-bench judge-workspace collect <container-name>
+uv run oracle-bench judge-workspace remove <container-name>
+```
+
+Invalid JSON or invalid labels do not stop or remove the workspace, allowing the
+rater to correct the draft. A valid rating is saved under
+`judge/human/<opaque-rater-id>/` with both the submitted JSON and normalized
+result. Its `provenance.json` records the hashes of the rubric, common workspace
+specification, and exact human instruction file. Collection refuses to overwrite
+that result. To replace it deliberately,
+pass `--archive-existing`; Oracle Bench first moves the previous files under
+`judge/human-history/<opaque-rater-id>/<UTC timestamp>/`. The `remove` operation
+checks the container's profile label and refuses to remove unrelated containers.
+Rerunning the automated judge preserves these human artifacts. Reevaluation marks
+both automated and human judgments stale because their execution evidence has
+changed.
 
 ## Primary results
 
@@ -68,29 +148,62 @@ Consult `status.json` and the last stage log when expected files are absent.
 The human-readable summary. It identifies whether test generation covered the
 whole repository or a calculated localized target, then shows agent and evaluation
 completion states, submission compliance, the paired pass/fail matrix, non-binary
-outcomes, coverage, important artifact links, agent duration, and
-provider-reported usage and cost.
+outcomes, coverage, and links to artifacts that exist. When judging is configured,
+it also shows judge status, harness and model provenance, all five rubric labels,
+the rationale, and audit links. Generation and judge duration, usage, and cost are
+reported separately.
 
 The ground-truth section links the original issue and exact buggy-to-golden fix
 for manual analysis. These private artifacts are written on the host and are not
 mounted or copied into the generation container.
 
-`oracle-bench report runs/<run-id>` regenerates this file and
-`generation/session.log` from saved data. It does not execute tests or call a model.
+`oracle-bench report runs/<run-id>` regenerates this file from saved data. It does
+not execute tests or call a model.
+
+A run with no frozen rubric renders the judge as `disabled`; a frozen rubric
+without `judgment.json` renders as `missing`. Failed, timed-out, invalid, and
+stale judgments render their diagnostic fields without assuming successful label
+fields are present.
+
+## `judge/`
+
+### `judge/judgment.json`
+
+The normalized semantic annotation. A completed judgment contains `status`, the
+five rubric labels, and `rationale`. Other states are explicit:
+
+| Status | Meaning |
+|---|---|
+| `invalid_output` | The final response was not one valid rubric JSON object |
+| `failed` | Harness or judge-workspace execution failed |
+| `timed_out` | The judge exceeded its selected wall limit or infrastructure watchdog |
+| `stale` | Reevaluation replaced the execution evidence; the prior annotation is nested for audit |
+
+### Judge model evidence
+
+`judgment.raw.txt` preserves the final assistant response before parsing.
+`prompt.md` and `rubric.md` preserve the exact instructions. `agent/result.json`
+records status, usage, cost, duration, harness, provider, model, CLI version, and
+the stopping limit that bounded the turn;
+the neighboring command, version, trace, stderr, and final files have the same
+roles as their generation counterparts.
 
 ### `evaluation/results.json`
 
-The machine-readable aggregate for the generated tests.
+The machine-readable aggregate for the generated tests. It is a validated
+contract: per-version `tests.json` is checked as it enters the host from the
+container, so unreadable runner output becomes an explicit incomplete result
+rather than a missing outcome discovered later. Artifacts carry no schema
+version; a file written by an earlier revision fails to load rather than being
+partially interpreted.
 
 | Field | Meaning |
 |---|---|
-| `schema_version` | Result schema version, currently `1` |
 | `instance_id` | Dataset instance evaluated |
 | `agent` | Copy of `generation/result.json` |
 | `artifact_sha256` | Checksum over the generated-file manifest entries |
 | `submission_compliant` | Whether the agent made only permitted changes |
 | `forbidden_changes` | Paths changed outside the allowed submission policy |
-| `diagnostic_only` | Whether violations make this a diagnostic result |
 | `task_scope` | `localized` or `repository`, matching the generation assignment |
 | `test_target` | Sanitized localized code area delivered to the agent, or null |
 | `existing_tests` | Test-visibility policy; `keep` means existing tests were visible |
@@ -99,8 +212,11 @@ The machine-readable aggregate for the generated tests.
 | `tests` | One paired row per test ID |
 | `other_outcomes` | Tests excluded from the binary matrix |
 | `failure_kinds` | Assertion, other-exception, and unknown failure counts for each version |
-| `has_fail_on_buggy_pass_on_golden` | Whether a test distinguishes the pair in the expected direction |
 | `coverage` | Normalized coverage summaries for both versions |
+
+Diagnostic-only status is derived from `submission_compliant`. Detection in the
+expected direction is derived from the `fail_on_buggy_pass_on_golden` matrix count;
+neither value is duplicated as a separately persisted field.
 
 Each `tests` row contains `test_id`, `buggy`, `golden`, and `cell`. Failed sides
 also include `buggy_failure` or `golden_failure` with a diagnostic kind, exception
@@ -122,12 +238,15 @@ test IDs, and incomplete runs remain in `other_outcomes`.
 
 The latest lifecycle checkpoint, containing `stage`, `state`, `updated_at`, and an
 error when applicable. Stages progress through `resolve`, `build`, `reference`,
-`generate`, `capture`, `evaluate`, and `finished`.
+`generate`, `evaluate`, optional `judge`, and `finished`. Capturing the
+submission is part of the `generate` stage.
 
 The final state is `completed` only when the agent and both evaluations completed
 and the submission was compliant. `completed_with_errors` means the run retained
-results but one of those conditions failed. An early exception records its stage
-and a failed state.
+results but one of those conditions failed. The independent `judge_status` is
+`disabled`, `completed`, `invalid_output`, `failed`, `timed_out`, `stale`, or
+`missing`; judge failure does not replace a completed evaluation state. An early
+exception records its stage and a failed state.
 
 ## Inputs and reproducibility
 
@@ -163,21 +282,25 @@ this image to remain available. Its source images are detailed in
 
 ### Build contexts and inputs
 
-`image-build/agent/` and `image-build/runtime/` contain copies of the checked-in Dockerfiles
-and, for the runtime, public Python helpers. These directories are isolated build
-contexts containing only approved assets. Host run data and credentials do not
-enter either context. The runtime recipe copies the harness from its reusable
-image and extends the prepared repository image.
+`image-build/harnesses/` and `image-build/runtime/` contain copies of the
+checked-in Dockerfiles, the harness package lock, and public Python helpers.
+These directories are isolated build contexts containing only approved assets.
+Host run data and credentials do not enter either context. The runtime recipe
+copies the complete locked harness toolchain from its reusable image and extends
+the prepared repository image.
 
-`requested.json` records source/Node references, platform, and harness/version
-before any pull. `agent.inputs.json` and `runtime.inputs.json` record non-secret
-arguments, platform, recipe name, and SHA-256 hashes of all context files before
-their builds. Cache tags depend on these inputs, including helper contents.
+`requested.json` records source/Node references, platform, all installed harness
+pins, and the package-lock hash before any pull. `harnesses.inputs.json` and
+`runtime.inputs.json` record non-secret arguments, platform, recipe name, and
+SHA-256 hashes of all context files before their builds. Cache tags depend on
+these inputs, including lockfile and helper contents.
 ### `image-build/images.json`
 
 Configured references and resolved IDs or digests for the repository, Node,
-harness, and final runtime images. This record is updated as each image becomes
-available, so interrupted builds can contain only the completed stages.
+shared harness-toolchain, and final runtime images. It also records the requested
+harness pins, lockfile hash, and each installed CLI's observed `--version`
+output. This record is updated as each image becomes available, so interrupted
+builds can contain only the completed stages.
 
 ### `image-build/output.log`
 
@@ -205,11 +328,11 @@ extract completion, errors, usage, cost, and `session.log`.
 ### `generation/command.json`
 
 The exact agent CLI argument vector, including model, isolation flags, provider
-overrides, and configured budget or turn limit. Credential values are absent.
+overrides, and the configured stopping limit. Credential values are absent.
 
 ### `generation/version.txt`
 
-Output of `codex --version` or `claude --version` inside the container.
+Output of the selected harness's `--version` command inside the container.
 
 ### `generation/final.txt`
 
@@ -290,7 +413,6 @@ The artifact inventory and compliance decision.
 
 | Field | Meaning |
 |---|---|
-| `schema_version` | Manifest schema version, currently `1` |
 | `files` | Allowed paths mapped to SHA-256 and Unix mode |
 | `forbidden_changes` | Changed paths that violated capture policy |
 | `compliant` | Whether `forbidden_changes` is empty |
@@ -321,7 +443,6 @@ Normalized pytest results.
 
 | Field | Meaning |
 |---|---|
-| `schema_version` | Test-result schema version, currently `1` |
 | `status` | Overall execution status |
 | `exit_code` | pytest exit code |
 | `collected` | Number of collected tests |
@@ -367,8 +488,8 @@ failure.
 
 The paired private-regression result. It has the same matrix shape as the paired
 portion of `evaluation/results.json`. Generation begins only when
-`has_fail_on_buggy_pass_on_golden` is true, verifying the base commit, repair,
-private test, and environment before model spending.
+At least one `fail_on_buggy_pass_on_golden` matrix entry is required, verifying
+the base commit, repair, private test, and environment before model spending.
 
 ## Reevaluation archives
 
@@ -384,9 +505,14 @@ fresh containers. Generation evidence, provenance, runtime identity, and frozen
 tests remain unchanged. Earlier reevaluations therefore remain available for
 comparison.
 
-`generation/session.log` is regenerated from the original trace when the new report is
-rendered. It is generation evidence rather than an evaluation result and is not
-archived.
+Reevaluation marks an existing `judge/judgment.json` as `stale` because its saved
+execution evidence has been replaced. Human judgments are marked stale for the
+same reason. Each stale record retains the previous normalized judgment for audit.
+Reevaluation never calls the judge model; invoke `oracle-bench judge` explicitly
+to produce a new automated annotation.
+
+`generation/session.log` is rendered from the original trace when generation
+finishes. It is generation evidence rather than an evaluation result and is not archived.
 
 ## Empty, optional, and absent files
 
@@ -409,6 +535,73 @@ the closest stage log.
 `oracle-bench batch` writes a batch directory containing the original manifest,
 the resolved and checksum-locked job list, batch status, `summary.json`, and
 `report.md`. The summary preserves each job's state, run-directory link, paired
-matrix counts, coverage, duration, and available cost. Its headline bug-detection
-rate counts compliant instances with at least one fail-on-buggy/pass-on-golden
-test, and reports both attempted and completed denominators explicitly.
+matrix counts, coverage, and generation measurements. When a run has judge
+artifacts, its job record also contains the judge status, five rubric labels,
+model provenance, token usage, duration, and cost. Runs without judge
+configuration are recorded as `disabled`; configured runs without a result are
+`missing`. Invalid, failed, timed-out, and stale judgments remain explicit and do
+not make an otherwise completed evaluation resumable.
+
+`summary.json` distinguishes three useful denominators:
+
+- `attempted`: jobs that started;
+- `completed_evaluations`: jobs whose buggy and golden executions both completed;
+- `judge.valid_judgments`: jobs with a normalized `completed` judgment.
+
+`matrix_detection_rate` is the fraction of completed evaluations with a compliant
+fail-on-buggy/pass-on-golden result. `judge_confirmed_issue_reproduction_rate` is
+the fraction of valid judgments labeled `confirmed_issue_reproduction`. These
+metrics answer different questions and are reported separately.
+`detection_rate_attempted` reports the same detections over every attempted job,
+matching SWE-bench's resolved/submitted denominator.
+
+The `judge` object contains status counts, per-facet label frequencies, and these
+cross-tabs:
+
+- matrix detection by final verdict;
+- issue-target alignment by matrix detection;
+- oracle alignment by the presence or absence of each matrix cell.
+
+Generation and judge costs are totaled separately as `generation_cost_usd` and
+`judge_cost_usd`, and `total_cost_usd` is their sum. Each is `null` when no
+harness reported a cost. Per-job records use the same `generation_` prefix, so a
+job's model spend is never confused with its judge's. The Markdown report
+presents a compact per-run comparison and the facet frequency tables; the
+complete cross-tabs remain in `summary.json`.
+
+# Agreement artifacts
+
+After blinded human ratings have been collected, run the offline agreement
+analysis for a batch:
+
+```sh
+uv run oracle-bench agreement batches/<batch-id> --sample-per-stratum 8
+```
+
+The command writes `agreement/report.md`, `agreement/summary.json`, and
+`agreement/calibration-sample.json` inside the batch directory. It never loads
+credentials, starts containers, or calls a model.
+
+Agreement is reported independently for all five rubric facets and separately
+for human–human and human–LLM comparisons. Each result contains its observation
+count, raw agreement, an observation-weighted mean of the per-rater-pair Cohen's
+kappas, a pooled confusion matrix, and individual disagreements. Each rater pair
+also retains its own expected agreement and Cohen's kappa. A pair enters these calculations
+only when both ratings are valid and complete. Possible, available, and missing
+pair counts are explicit, and every absent rater is retained as `status:
+missing` in the per-run records. Kappa is `null` when no observations exist or
+when expected agreement is one.
+
+The report records every rubric, LLM prompt, human instruction, and workspace
+specification hash together with the judge model identities. This makes results
+from changed rating conditions visible instead of silently combining them.
+
+The calibration sample lives only in `calibration-sample.json`; `summary.json`
+carries the agreement figures and per-run ratings. The sample selects a
+deterministic maximum per stratum for F→P, F→F, P→P, invalid, and LLM-judged
+unrelated submissions, ordered by a hash of each run's instance ID and directory
+name, so relocating a batch does not change the selection. A run may appear in
+more than one stratum. The sample records whether every unique selected run has
+at least two completed human ratings; agreement is not presented as calibrated
+until that condition is met. Do not give the sample manifest or existing labels
+to raters—the interactive workspace remains the blinded rating interface.

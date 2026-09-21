@@ -26,10 +26,10 @@ where = ["src"]
 
 [tool.setuptools.package-data]
 oracle_bench = [
-    "container_helpers/*.py",
-    "docker/*.Dockerfile",
-    "docker/agents/*.Dockerfile",
-    "docker/*.md",
+    "container/helpers/*.py",
+    "container/docker/*.Dockerfile",
+    "container/docker/package*.json",
+    "container/docker/*.md",
 ]
 
 [tool.pytest.ini_options]

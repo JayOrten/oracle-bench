@@ -1,18 +1,16 @@
+"""Runs OpenCode: builds the command, reads back its JSON events. OpenRouter only."""
+
 from __future__ import annotations
 
 import json
-import os
 from dataclasses import asdict
 from pathlib import Path
 
-from oracle_bench.harnesses.launch import launch
-from oracle_bench.io import write_json
-from oracle_bench.paths import RunPaths
-
-
-def require_credentials(config):
-    if not os.environ.get(config.agent.credential_env):
-        raise RuntimeError("Set OPENROUTER_API_KEY to run the OpenCode harness")
+from oracle_bench.container.sandbox import Sandbox
+from oracle_bench.harnesses.launch import (
+    AgentTurnRequest,
+    run_agent_turn,
+)
 
 
 def parse_trace(path: Path) -> dict:
@@ -49,6 +47,7 @@ def parse_trace(path: Path) -> dict:
                 completed = part.get("reason") == "stop"
             elif event.get("type") == "error":
                 errors.append(event)
+
     return {
         "usage": usage if any(usage.values()) else None,
         "cost_usd": cost if finish_seen else None,
@@ -60,12 +59,12 @@ def parse_trace(path: Path) -> dict:
     }
 
 
-def generate(sandbox, config, run_dir: Path):
-    runtime = config.require_runtime()
-    require_credentials(config)
-    directory = RunPaths.open(run_dir).generation
-    directory.mkdir(exist_ok=True)
-    model = f"openrouter/{config.agent.model}"
+def run_turn(sandbox: Sandbox, request: AgentTurnRequest) -> dict:
+    """Run OpenCode with caller-supplied prompt, workspace, and artifacts."""
+    harness = request.harness
+    directory = request.artifact_directory
+    model = f"openrouter/{harness.model}"
+
     argv = [
         "opencode",
         "run",
@@ -73,27 +72,29 @@ def generate(sandbox, config, run_dir: Path):
         "json",
         "--auto",
         "--dir",
-        runtime.workdir,
+        request.working_directory,
         "--model",
         model,
     ]
+
     environment = {
         "XDG_CONFIG_HOME": "/home/oracle/.config",
         "XDG_DATA_HOME": "/home/oracle/.local/share",
         "OPENCODE_DISABLE_AUTOUPDATE": "true",
     }
-    if not config.agent.multi_agent:
+    if not harness.multi_agent:
         environment["OPENCODE_CONFIG_CONTENT"] = json.dumps(
             {"permission": {"task": "deny"}}, separators=(",", ":")
         )
-    outcome = launch(
+
+    outcome = run_agent_turn(
         sandbox,
-        config,
-        run_dir,
+        request,
         argv,
         environment,
         "OPENROUTER_API_KEY",
     )
+
     parsed = parse_trace(directory / "trace.jsonl")
     (directory / "final.txt").write_text(parsed.pop("final_text"))
     summary = {**asdict(outcome), **parsed}
@@ -104,5 +105,4 @@ def generate(sandbox, config, run_dir: Path):
         if outcome.exit_code or summary["turn_failed"] or not summary["turn_completed"]
         else "completed"
     )
-    write_json(directory / "result.json", summary)
     return summary

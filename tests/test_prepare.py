@@ -1,7 +1,7 @@
 import subprocess
 import sys
 
-from oracle_bench.container_helpers.prepare import remove_existing_tests
+from oracle_bench.container.helpers.prepare import remove_existing_tests
 
 
 def test_helper_annotations_are_not_evaluated_by_old_repository_python():

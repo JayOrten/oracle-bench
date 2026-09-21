@@ -48,7 +48,7 @@ def test_session_preserves_messages_tools_errors_and_unknown_events(tmp_path):
     ]
     (agent / "trace.jsonl").write_text("\n".join(map(json.dumps, events)) + "\npartial-json")
     (agent / "stderr.log").write_text("warning")
-    text = render_session(tmp_path).read_text()
+    text = render_session(RunPaths.open(tmp_path)).read_text()
     for expected in [
         "Generate tests",
         "Reading the code",
@@ -66,4 +66,4 @@ def test_session_preserves_messages_tools_errors_and_unknown_events(tmp_path):
 
 def test_missing_trace_is_explicit(tmp_path):
     RunPaths.create(tmp_path)
-    assert "No trace captured" in render_session(tmp_path).read_text()
+    assert "No trace captured" in render_session(RunPaths.open(tmp_path)).read_text()

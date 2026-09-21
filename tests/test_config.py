@@ -3,7 +3,13 @@ from pathlib import Path
 import pytest
 import yaml
 
-from oracle_bench.config import RuntimeConfig, load_config, validate_resolved_config
+from oracle_bench.config import (
+    HARNESS_VERSIONS,
+    AgentConfig,
+    RuntimeConfig,
+    load_config,
+    validate_resolved_config,
+)
 
 SAMPLE = Path(__file__).parents[1] / "configs" / "smoke.yaml"
 
@@ -16,11 +22,11 @@ def config_file(tmp_path, section, key, value):
     return path
 
 
-@pytest.mark.parametrize("visibility", ["keep", "hide", "hide_all"])
+@pytest.mark.parametrize("visibility", ["keep", "hide_all"])
 def test_test_visibility_is_explicit_and_paths_are_config_relative(tmp_path, visibility):
     config = load_config(config_file(tmp_path, "task", "existing_tests", visibility))
     assert config.task.existing_tests == visibility
-    assert config.task.prompt == str((tmp_path / "../prompts/unit-tests.md").resolve())
+    assert config.task.prompt == str((tmp_path / "../prompts/agent/smoke-tests.md").resolve())
     assert config.output == str((tmp_path / "../runs").resolve())
 
 
@@ -32,14 +38,112 @@ def test_sample_uses_repository_scope_with_existing_tests_hidden():
     assert config.task.hides_existing_tests
 
 
-def test_small_config_resolves_harness_defaults():
+def test_smoke_config_uses_budgeted_haiku_for_generation_and_judging():
     config = load_config(SAMPLE)
     assert config.source.dataset == "lite"
-    assert config.agent.harness == "codex"
-    assert config.agent.provider == "openai"
-    assert config.agent.credential_env == "OPENAI_API_KEY"
-    assert config.agent.version
+    assert config.agent.harness == "claude"
+    assert config.agent.provider == "openrouter"
+    assert config.agent.model == "anthropic/claude-haiku-4.5"
+    assert config.agent.credential_env == "OPENROUTER_API_KEY"
+    assert config.agent.limit.kind == "budget_usd"
+    assert config.agent.limit.value == 0.25
+    assert config.agent.multi_agent is False
     assert config.runtime is None
+    assert config.judge is not None
+    assert config.judge.harness == "claude"
+    assert config.judge.provider == "openrouter"
+    assert config.judge.model == "anthropic/claude-haiku-4.5"
+    assert config.judge.credential_env == "OPENROUTER_API_KEY"
+    assert config.judge.limit.kind == "budget_usd"
+    assert config.judge.limit.value == 0.1
+
+
+@pytest.mark.parametrize("kind,value", [("budget_usd", 0.1), ("turns", 3), ("wall_seconds", 30)])
+def test_claude_judge_accepts_exactly_one_supported_limit(tmp_path, kind, value):
+    raw = yaml.safe_load(SAMPLE.read_text())
+    raw["judge"] = {
+        "rubric": "rubric.md",
+        "instructions": "instructions.md",
+        "harness": "claude",
+        "model": "judge-model",
+        "limit": {"kind": kind, "value": value},
+    }
+    path = tmp_path / "config.yaml"
+    path.write_text(yaml.safe_dump(raw))
+
+    config = load_config(path)
+
+    assert config.judge.limit.kind == kind
+    assert config.judge.rubric == str((tmp_path / "rubric.md").resolve())
+
+
+@pytest.mark.parametrize("harness", ["codex", "opencode"])
+def test_judge_rejects_a_limit_the_harness_cannot_enforce(tmp_path, harness):
+    raw = yaml.safe_load(SAMPLE.read_text())
+    raw["judge"] = {
+        "rubric": "rubric.md",
+        "instructions": "instructions.md",
+        "harness": harness,
+        "model": "judge-model",
+        "limit": {"kind": "budget_usd", "value": 0.1},
+    }
+    path = tmp_path / "config.yaml"
+    path.write_text(yaml.safe_dump(raw))
+
+    with pytest.raises(ValueError, match="can enforce only wall_seconds"):
+        load_config(path)
+
+
+@pytest.mark.parametrize(
+    "limit",
+    [
+        {"kind": "tokens", "value": 10},
+        {"kind": "turns", "value": 1, "wall_seconds": 30},
+        {"kind": "turns"},
+        {"kind": "turns", "value": 1.5},
+    ],
+)
+def test_judge_rejects_invalid_stopping_policy(tmp_path, limit):
+    raw = yaml.safe_load(SAMPLE.read_text())
+    raw["judge"] = {
+        "rubric": "rubric.md",
+        "instructions": "instructions.md",
+        "harness": "claude",
+        "model": "judge-model",
+        "limit": limit,
+    }
+    path = tmp_path / "config.yaml"
+    path.write_text(yaml.safe_dump(raw))
+
+    with pytest.raises(ValueError):
+        load_config(path)
+
+
+@pytest.mark.parametrize(
+    "changes,error",
+    [
+        ({"unexpected": True}, "Extra inputs are not permitted"),
+        ({"harness": "opencode", "provider": "anthropic"}, "opencode with openrouter"),
+        ({"version": "2.1.263"}, "judge.version"),
+        ({"multi_agent": True}, "multi_agent"),
+    ],
+)
+def test_judge_rejects_unknown_or_incompatible_harness_settings(tmp_path, changes, error):
+    raw = yaml.safe_load(SAMPLE.read_text())
+    judge = {
+        "rubric": "rubric.md",
+        "instructions": "instructions.md",
+        "harness": "claude",
+        "model": "judge-model",
+        "limit": {"kind": "wall_seconds", "value": 30},
+    }
+    judge.update(changes)
+    raw["judge"] = judge
+    path = tmp_path / "config.yaml"
+    path.write_text(yaml.safe_dump(raw))
+
+    with pytest.raises(ValueError, match=error):
+        load_config(path)
 
 
 @pytest.mark.parametrize(
@@ -53,6 +157,8 @@ def test_small_config_resolves_harness_defaults():
 def test_openrouter_is_supported_by_every_harness(tmp_path, harness, provider, credential):
     raw = yaml.safe_load(SAMPLE.read_text())
     raw["agent"].update(harness=harness, provider=provider)
+    if harness != "claude":
+        raw["agent"]["limit"] = {"kind": "wall_seconds", "value": 30}
     path = tmp_path / "config.yaml"
     path.write_text(yaml.safe_dump(raw))
     config = load_config(path)
@@ -64,11 +170,34 @@ def test_openrouter_is_supported_by_every_harness(tmp_path, harness, provider, c
 def test_opencode_rejects_non_openrouter_provider(tmp_path):
     raw = yaml.safe_load(SAMPLE.read_text())
     raw["agent"].update(harness="opencode", provider="openai")
+    raw["agent"]["limit"] = {"kind": "wall_seconds", "value": 30}
     path = tmp_path / "config.yaml"
     path.write_text(yaml.safe_dump(raw))
 
     with pytest.raises(ValueError, match="opencode with openrouter"):
         load_config(path)
+
+
+@pytest.mark.parametrize("section", ["agent", "judge"])
+def test_harness_version_is_not_selectable_per_run(tmp_path, section):
+    """One locked toolchain installs every CLI, so a run cannot pin its own."""
+    raw = yaml.safe_load(SAMPLE.read_text())
+    raw.setdefault(
+        "judge",
+        {"model": "judge-model", "harness": "claude", "rubric": "r.md", "instructions": "i.md"},
+    )
+    raw[section]["version"] = HARNESS_VERSIONS["codex"]
+    path = tmp_path / "config.yaml"
+    path.write_text(yaml.safe_dump(raw))
+
+    with pytest.raises(ValueError, match=f"{section}.version"):
+        load_config(path)
+
+
+def test_resolved_toolchain_records_every_harness_version():
+    config = load_config(SAMPLE)
+
+    assert config.toolchain.installed_harnesses == HARNESS_VERSIONS
 
 
 @pytest.mark.parametrize(
@@ -81,10 +210,11 @@ def test_opencode_rejects_non_openrouter_provider(tmp_path):
         ("task", "generated_dir", ".git/hooks"),
         ("source", "revision", "main"),
         ("source", "kind", "git"),
-        ("agent", "wall_seconds", 0),
-        ("agent", "wall_seconds", True),
-        ("agent", "wall_seconds", "300"),
-        ("agent", "max_turns", 1.5),
+        ("agent", "watchdog_seconds", 0),
+        ("agent", "watchdog_seconds", True),
+        ("agent", "watchdog_seconds", "300"),
+        ("agent", "limit", {"kind": "turns", "value": 1.5}),
+        ("agent", "limit", {"kind": "unbounded", "value": 1}),
         ("agent", "multi_agent", "false"),
         ("limits", "cpus", float("inf")),
         ("agent", "typo", 123),
@@ -106,10 +236,10 @@ def test_verbose_schema_is_rejected(tmp_path, old_section):
         load_config(path)
 
 
-@pytest.mark.parametrize("section", ["runtime", "toolchain", "schema_version"])
+@pytest.mark.parametrize("section", ["runtime", "toolchain"])
 def test_resolved_sections_cannot_be_supplied_as_input(tmp_path, section):
     raw = yaml.safe_load(SAMPLE.read_text())
-    raw[section] = {} if section != "schema_version" else 2
+    raw[section] = {}
     path = tmp_path / "config.yaml"
     path.write_text(yaml.safe_dump(raw))
     with pytest.raises(ValueError, match="generated by Oracle Bench"):
@@ -142,7 +272,6 @@ def test_resolved_run_lock_can_be_reloaded(tmp_path):
 
     reloaded = load_config(path, resolved=True)
 
-    assert reloaded.schema_version == 2
     assert reloaded.require_runtime().image == "example/image:latest"
     assert reloaded.toolchain.coverage_version
 
@@ -173,3 +302,11 @@ def test_runtime_schema_checks_external_adapter_data(field, value):
     values[field] = value
     with pytest.raises(ValueError):
         RuntimeConfig(**values)
+
+
+@pytest.mark.parametrize("harness", ["codex", "claude", "opencode"])
+def test_openrouter_is_the_default_provider(harness):
+    """A config that names no provider routes through OpenRouter."""
+    config = AgentConfig(model="vendor/model", harness=harness)
+    assert config.provider == "openrouter"
+    assert config.credential_env == "OPENROUTER_API_KEY"

@@ -18,10 +18,7 @@ Run from the repository root:
 ```sh
 uv sync --extra dataset --extra dev
 
-uv run oracle-bench run configs/smoke-claude.yaml
-
-# Run an explicit, resumable set of experiments and aggregate their results.
-uv run oracle-bench batch configs/batches/initial-haiku.yaml
+uv run oracle-bench run configs/smoke.yaml
 ```
 
 ## About
@@ -44,12 +41,12 @@ flowchart TD
     Capture --> Golden["Fresh container: tests against golden code"]
     Buggy --> Results["Paired outcomes + coverage + session log"]
     Golden --> Results
-    Results --> Report["JSON results and Markdown report"]
+    Results --> JudgeEnabled{"Judge configured?"}
+    JudgeEnabled -- Yes --> Judge["Privileged judge container: assess generated tests against the issue"]
+    JudgeEnabled -- No --> Report["JSON results and Markdown report"]
+    Judge --> Judgment["Validated judgment JSON"]
+    Judgment --> Report
 ```
-
-The private regression check must pass before generation starts. The agent runs as a non-root user with the selected credential; the host Docker socket and private run artifacts are not mounted. Generation, reference, and evaluation containers have outbound network access so repository tests run under a consistent environment. Git-history sanitization and internet-use auditing are not implemented yet.
-
-Only new tests and fixtures under `oracle_tests/` are evaluated. Changes outside that directory are recorded as violations and make the results diagnostic. Existing repository tests can remain visible or be hidden through configuration.
 
 ## Usage
 
@@ -57,10 +54,16 @@ Only new tests and fixtures under `oracle_tests/` are evaluated. Changes outside
 
 ```sh
 # Generate tests and evaluate both code versions.
-uv run oracle-bench run configs/smoke-claude.yaml
+uv run oracle-bench run configs/smoke.yaml
 
 # Rerun saved tests in fresh containers; no agent or model calls.
 uv run oracle-bench evaluate runs/<run-id>
+
+# Run the configured semantic judge after paired evaluation.
+uv run oracle-bench judge runs/<run-id>
+
+# Compare saved human and LLM ratings and select a calibration sample.
+uv run oracle-bench agreement batches/<batch-id> --sample-per-stratum 8
 
 # Rebuild the report and readable session log from saved data.
 uv run oracle-bench report runs/<run-id>
@@ -71,54 +74,59 @@ uv run oracle-bench batch --resume batches/<batch-id>
 uv run oracle-bench --help
 ```
 
-`evaluate` archives previous evaluation results and requires the saved runtime image to remain available locally. Neither `evaluate` nor `report` needs credentials. CLI exit codes are `0` for success, `1` for setup/configuration errors, `2` for recorded agent/execution/submission problems, and `130` for interruption. Failing test assertions are valid benchmark outcomes and do not by themselves make the CLI fail.
+### Human judgment
+
+Create a workspace for a saved run:
+
+```sh
+uv run oracle-bench judge-workspace create runs/<run-id> --rater rater_01
+```
+
+In VS Code, run **Dev Containers: Attach to Running Container** and select the
+container printed by the command. Open `/oracle-judge/human-judge.code-workspace`,
+follow `HUMAN_INSTRUCTIONS.md`, and save the completed judgment to the requested
+output path.
+
+Back on the host, collect the judgment and remove the container:
+
+```sh
+uv run oracle-bench judge-workspace collect <container-name>
+uv run oracle-bench judge-workspace remove <container-name>
+```
 
 ### Configuration and credentials
 
-Choose a sample configuration, or copy one and edit it:
+Choose a sample configuration, or copy one and edit it.
 
-| Config                                                 | Harness / provider             | Credential           |
-| ------------------------------------------------------ | ------------------------------ | -------------------- |
-| [smoke-claude.yaml](configs/smoke-claude.yaml)         | Claude Code / Anthropic, Haiku | `ANTHROPIC_API_KEY`  |
-| [smoke-claude-openrouter.yaml](configs/smoke-claude-openrouter.yaml) | Claude Code / OpenRouter, Haiku 4.5 | `OPENROUTER_API_KEY` |
-| [smoke.yaml](configs/smoke.yaml)                       | Codex / OpenAI                 | `OPENAI_API_KEY`     |
-| [smoke-openrouter.yaml](configs/smoke-openrouter.yaml) | Codex / OpenRouter, free model | `OPENROUTER_API_KEY` |
-| [smoke-opencode-openrouter.yaml](configs/smoke-opencode-openrouter.yaml) | OpenCode / OpenRouter, free agentic model | `OPENROUTER_API_KEY` |
+The smoke configuration uses Claude Haiku through OpenRouter for generation and
+judging. Set `OPENROUTER_API_KEY` in `.env` before running it.
 
 The YAML interface defines:
 
-| Section  | Controls                                                                    |
-| -------- | --------------------------------------------------------------------------- |
-| `source` | Source adapter and instance ID                                              |
-| `agent`  | Claude Code, Codex, or OpenCode harness; provider, model, and limits         |
+| Section  | Controls                                                                     |
+| -------- | ---------------------------------------------------------------------------- |
+| `source` | Source adapter and instance ID                                               |
+| `agent`  | Claude Code, Codex, or OpenCode harness; provider, model, one stopping limit |
+| `judge`  | Optional semantic-judge rubric, harness, model, and stopping limit           |
 | `task`   | Repository/localized scope, prompt, generated directory, and test visibility |
-| `limits` | Setup/evaluation timeouts and container CPU/memory limits                   |
-| `output` | Run-directory location                                                      |
+| `limits` | Setup/evaluation timeouts and container CPU/memory limits                    |
+| `output` | Run-directory location                                                       |
 
 See the [complete configuration reference](docs/configuration.md) for every
 setting, default, validation rule, and harness-specific behavior.
 
-File paths are relative to the YAML file. The SWE-bench adapter derives the
-prepared image, repository runtime, existing-test paths, coverage settings, and
-private reference targets from the instance. Localized tasks disclose only the
-affected production file or enclosing symbol derived from the private repair.
-`hide_all` removes explicitly declared test files and collectable test modules
-inside adapter-declared test directories during generation and final evaluation.
-It retains non-test support modules because some projects import runners or
-helpers from their test packages at runtime. The private reference check retains
-all original tests.
-
 ### Results
 
-| Artifact in `runs/<run-id>/`                   | Contents                                                  |
-| ---------------------------------------------- | --------------------------------------------------------- |
-| `report.md`                                    | Human-readable run summary and artifact links             |
-| `inputs/`                                      | Frozen prompt, resolved config, and private instance       |
-| `image-build/`                                 | Runtime image, build inputs, provenance, and logs          |
-| `reference-check/`                             | Private fail-on-buggy/pass-on-golden validation            |
-| `generation/`                                  | Agent command, transcript, raw events, and workspace diff |
-| `submission/`                                  | Captured generated tests, hashes, and violations           |
-| `evaluation/`                                  | Paired result plus buggy and golden executions             |
+| Artifact in `runs/<run-id>/` | Contents                                                  |
+| ---------------------------- | --------------------------------------------------------- |
+| `report.md`                  | Human-readable run summary and artifact links             |
+| `inputs/`                    | Frozen prompt, resolved config, and private instance      |
+| `image-build/`               | Runtime image, build inputs, provenance, and logs         |
+| `reference-check/`           | Private fail-on-buggy/pass-on-golden validation           |
+| `generation/`                | Agent command, transcript, raw events, and workspace diff |
+| `submission/`                | Captured generated tests, hashes, and violations          |
+| `evaluation/`                | Paired result plus buggy and golden executions            |
+| `judge/`                     | Judge workspace manifest, model evidence, and judgment    |
 
 See the [complete results and artifacts reference](docs/results.md) for the full
 directory layout, JSON fields, logs, evaluation artifacts, and reevaluation
@@ -126,11 +134,13 @@ behavior.
 
 ### Development
 
-The package lives in `src/oracle_bench/`: `cli.py` and `config.py` define the interface,
-`run.py` orchestrates the pipeline, `container/` integrates the Docker Python SDK,
-`docker/` contains image recipes, and `workspace.py` prepares repositories.
-`datasets/` resolves tasks, `harnesses/` launches agents, and `runners/`,
-`evaluate.py`, and `report.py` handle scoring and reporting. See
+The package lives in `src/oracle_bench/` and is organized by pipeline stage:
+`instance/` resolves a task, `container/images.py` prepares the runtime image,
+`generation.py` runs the agent and freezes its submission, `evaluation/` executes
+that submission on both revisions, `judge/` annotates it, and `report.py` renders
+the result. `run.py` calls each stage once; `cli.py` and `config.py` define the
+interface, `container/` integrates the Docker Python SDK, `harnesses/` launches
+agent CLIs, and `repository.py` prepares checkouts. See
 [container development](docs/containers.md) for the API and standalone image builds.
 
 ## Tests
@@ -150,3 +160,11 @@ ORACLE_BENCH_SMOKE_RUN=runs/<run-id> uv run pytest -q -m docker
 Local tests cover configuration, credentials, agent traces, artifacts, pytest outcomes, coverage, and reports. Docker checks use handwritten probes on the Requests task to exercise all four matrix cells and both test-visibility settings. They do not call a model.
 
 If Docker reports a socket permission error after you've joined the `docker` group, run `newgrp docker` in your terminal or log out and back in, then check `docker info` again.
+
+## Misc notes:
+
+- The private regression check must pass before generation starts.
+- The agent runs as a non-root user with the selected credential; the host Docker socket and private run artifacts are not mounted.
+- Generation, reference, and evaluation containers have outbound network access so repository tests run under a consistent environment.
+- Git-history sanitization and internet-use auditing are not implemented yet.
+- Only new tests and fixtures under `oracle_tests/` are evaluated. Changes outside that directory are recorded as violations and make the results diagnostic. Existing repository tests can remain visible or be hidden through configuration.

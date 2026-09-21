@@ -6,10 +6,10 @@ from unittest.mock import Mock
 
 import pytest
 
-from oracle_bench.config import RuntimeConfig, load_config
-from oracle_bench.container import CommandResult
-from oracle_bench.harnesses import claude, codex, opencode
-from oracle_bench.harnesses.launch import launch
+from oracle_bench.config import BudgetLimit, JudgeConfig, RuntimeConfig, WallTimeLimit, load_config
+from oracle_bench.container.sandbox import CommandResult
+from oracle_bench.harnesses import claude, codex, generate, opencode, run_turn
+from oracle_bench.harnesses.launch import AgentTurnRequest, run_agent_turn
 from oracle_bench.paths import RunPaths
 
 
@@ -39,6 +39,10 @@ def test_launch_routes_only_selected_credential(
     config.agent.provider = provider
     config.agent.auth = auth
     config.agent.multi_agent = False
+    if harness is claude:
+        config.agent.limit = BudgetLimit(kind="budget_usd", value=0.25)
+    else:
+        config.agent.limit = WallTimeLimit(kind="wall_seconds", value=300)
     config.runtime = RuntimeConfig(
         image="example/image",
         source_roots=["requests"],
@@ -57,14 +61,15 @@ def test_launch_routes_only_selected_credential(
             assert "credential-fixture" not in str(argv)
             assert kwargs["user"] == "10001:10001"
             assert kwargs["secrets"] == ("credential-fixture",)
+            assert kwargs["workdir"] == config.runtime.workdir
             if harness is codex:
                 assert "features.multi_agent=false" in argv
                 if provider == "openrouter":
                     assert 'model_provider="openrouter"' in argv
                 trace = {"type": "turn.completed"}
             elif harness is claude:
-                assert argv[argv.index("--max-turns") + 1] == "10"
                 assert argv[argv.index("--max-budget-usd") + 1] == "0.25"
+                assert "--max-turns" not in argv
                 assert "Bash,Read,Write,Edit,Glob,Grep" in argv
                 trace = {"type": "result", "subtype": "success", "total_cost_usd": 0.01}
                 if provider == "openrouter":
@@ -84,8 +89,9 @@ def test_launch_routes_only_selected_credential(
         return CommandResult(0, 1)
 
     sandbox.run.side_effect = run
-    result = harness.generate(sandbox, config, tmp_path)
+    result = generate(sandbox, config, paths)
     assert result["status"] == "completed"
+    assert (paths.generation / "session.log").is_file()
     sandbox.stop_background_processes.assert_called_once()
     for artifact in paths.generation.iterdir():
         assert "credential-fixture" not in artifact.read_text()
@@ -99,5 +105,171 @@ def test_interruption_remains_visible_when_collection_fails(tmp_path, monkeypatc
     sandbox.run.side_effect = [CommandResult(0, 0), CommandResult(0, 0), KeyboardInterrupt()]
     sandbox.stop_background_processes.side_effect = RuntimeError("cleanup failed")
     with pytest.raises(KeyboardInterrupt) as error:
-        launch(sandbox, config, tmp_path, ["codex", "exec"], {}, "CODEX_API_KEY")
+        request = AgentTurnRequest(
+            harness=config.agent,
+            harness_version="1.2.3",
+            prompt=RunPaths.open(tmp_path).prompt,
+            working_directory="/testbed",
+            artifact_directory=RunPaths.open(tmp_path).generation,
+        )
+        run_agent_turn(sandbox, request, ["codex", "exec"], {}, "CODEX_API_KEY")
     assert "collection also failed" in error.value.__notes__[0]
+
+
+def test_agent_turn_uses_caller_supplied_paths_and_working_directory(tmp_path, monkeypatch):
+    config = load_config(Path(__file__).parents[1] / "configs/smoke.yaml")
+    prompt = tmp_path / "judge-prompt.md"
+    prompt.write_text("Inspect the saved evidence.")
+    artifacts = tmp_path / "judge" / "agent"
+    monkeypatch.setenv(config.agent.credential_env, "credential-fixture")
+    sandbox = Mock()
+    sandbox.run.return_value = CommandResult(0, 1)
+    config.agent.limit = WallTimeLimit(kind="wall_seconds", value=45)
+    request = AgentTurnRequest(
+        harness=config.agent,
+        harness_version="1.2.3",
+        prompt=prompt,
+        working_directory="/oracle-judge",
+        artifact_directory=artifacts,
+    )
+
+    run_agent_turn(
+        sandbox,
+        request,
+        ["codex", "exec"],
+        {},
+        "CODEX_API_KEY",
+        last_message_path="/tmp/oracle-agent/final.txt",
+    )
+
+    turn = sandbox.run.call_args_list[2]
+    assert turn.kwargs["stdin"] == prompt
+    assert turn.kwargs["stdout"] == artifacts / "trace.jsonl"
+    assert turn.kwargs["stderr"] == artifacts / "stderr.log"
+    assert turn.kwargs["workdir"] == "/oracle-judge"
+    assert turn.kwargs["timeout"] == 45
+    assert json.loads((artifacts / "command.json").read_text()) == ["codex", "exec"]
+    sandbox.download.assert_called_once_with(
+        "/tmp/oracle-agent/final.txt",
+        artifacts / "final.txt",
+        required=False,
+        secrets=("credential-fixture",),
+    )
+
+
+@pytest.mark.parametrize(
+    "kind,value,present,absent",
+    [
+        ("budget_usd", 0.1, "--max-budget-usd", "--max-turns"),
+        ("turns", 4, "--max-turns", "--max-budget-usd"),
+        ("wall_seconds", 45, None, "--max-budget-usd"),
+    ],
+)
+def test_claude_judge_uses_only_selected_limit_and_disables_subagents(
+    tmp_path, monkeypatch, kind, value, present, absent
+):
+    judge = JudgeConfig(
+        rubric="rubric.md",
+        instructions="instructions.md",
+        harness="claude",
+        model="judge-model",
+        limit={"kind": kind, "value": value},
+    )
+    monkeypatch.setenv(judge.credential_env, "credential-fixture")
+    prompt = tmp_path / "prompt.md"
+    prompt.write_text("judge")
+    request = AgentTurnRequest(
+        harness=judge,
+        harness_version="1.2.3",
+        prompt=prompt,
+        working_directory="/oracle-judge",
+        artifact_directory=tmp_path / "agent",
+    )
+    sandbox = Mock()
+
+    def run(argv, **kwargs):
+        if "environment" in kwargs:
+            if present:
+                assert argv[argv.index(present) + 1] == str(value)
+            assert absent not in argv
+            if kind == "wall_seconds":
+                assert "--max-turns" not in argv
+            assert "Bash,Read,Write,Edit,Glob,Grep" in argv
+            kwargs["stdout"].write_text(
+                json.dumps({"type": "result", "subtype": "success", "result": "{}"})
+            )
+        return CommandResult(0, 1)
+
+    sandbox.run.side_effect = run
+
+    result = run_turn(sandbox, request)
+
+    assert result["status"] == "completed"
+
+
+def test_codex_judge_turn_collects_its_own_last_message_file(tmp_path, monkeypatch):
+    """The caller never names a harness-specific container path."""
+    judge = JudgeConfig(
+        rubric="rubric.md",
+        instructions="instructions.md",
+        harness="codex",
+        model="judge-model",
+        limit={"kind": "wall_seconds", "value": 45},
+    )
+    monkeypatch.setenv(judge.credential_env, "credential-fixture")
+    prompt = tmp_path / "prompt.md"
+    prompt.write_text("judge")
+    request = AgentTurnRequest(
+        harness=judge,
+        harness_version="1.2.3",
+        prompt=prompt,
+        working_directory="/oracle-judge",
+        artifact_directory=tmp_path / "agent",
+    )
+    sandbox = Mock()
+
+    def run(argv, **kwargs):
+        if "environment" in kwargs:
+            assert "features.multi_agent=false" in argv
+            kwargs["stdout"].write_text(json.dumps({"type": "turn.completed", "usage": {}}))
+        return CommandResult(0, 1)
+
+    sandbox.run.side_effect = run
+
+    result = run_turn(sandbox, request)
+
+    assert result["status"] == "completed"
+    sandbox.download.assert_called_once_with(
+        codex.LAST_MESSAGE_PATH,
+        request.artifact_directory / "final.txt",
+        required=False,
+        secrets=("credential-fixture",),
+    )
+
+
+@pytest.mark.parametrize("harness", ["codex", "opencode"])
+def test_adapters_without_harness_side_limits_reject_them(tmp_path, monkeypatch, harness):
+    judge = JudgeConfig(
+        rubric="rubric.md",
+        instructions="instructions.md",
+        harness=harness,
+        provider="openrouter",
+        model="judge-model",
+        limit={"kind": "wall_seconds", "value": 45},
+    )
+    monkeypatch.setenv(judge.credential_env, "credential-fixture")
+    judge.limit = BudgetLimit(kind="budget_usd", value=0.1)
+    request = AgentTurnRequest(
+        harness=judge,
+        harness_version="1.2.3",
+        prompt=tmp_path / "prompt.md",
+        working_directory="/oracle-judge",
+        artifact_directory=tmp_path / "agent",
+    )
+    sandbox = Mock()
+
+    # Configuration rejects this pairing first; the adapter refuses it as well.
+    with pytest.raises(ValueError, match=f"{harness} harness cannot enforce a budget_usd"):
+        run_turn(sandbox, request)
+
+    sandbox.run.assert_not_called()

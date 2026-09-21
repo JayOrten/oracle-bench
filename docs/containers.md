@@ -1,13 +1,13 @@
 # Container development
 
 Oracle Bench uses the official Docker SDK for Python. Images use the checked-in
-[Dockerfiles](../src/oracle_bench/docker/README.md); the host container interface
+[Dockerfiles](../src/oracle_bench/container/docker/README.md); the host container interface
 is a small wrapper around an SDK Container. There is no separate Docker engine
 abstraction or generic task framework.
 
 ```mermaid
 flowchart TD
-    Run[run.py and evaluate.py] --> Workspace[RepositoryWorkspace]
+    Run[run.py stages] --> Workspace[Repository]
     Run --> Harness[Harness adapters]
     Run --> Runner[Test runner]
     Workspace --> Sandbox[Sandbox]
@@ -39,9 +39,11 @@ with docker_client() as client:
         workspace.prepare(base_commit, evaluation_dir)
 ```
 
-Generation, evaluation, and reference profiles use Docker's outbound bridge
-network so repository tests see a consistent environment. The SDK receives
-resource limits and `no-new-privileges`, and no host mounts.
+Generation, evaluation, reference, and judge profiles use Docker's outbound
+bridge network so repository tests see a consistent environment and the judge can
+reach its model provider. Interactive human-judge workspaces are named,
+long-running containers created with no network and no model credential. The SDK
+receives resource limits and `no-new-privileges`, and no host mounts.
 Container creation and start are separate so a failed start still gets cleanup.
 The client and each container have explicit owners through context managers.
 
@@ -67,10 +69,18 @@ archives are validated before any host writes, and links/special files and path
 traversal are rejected. `required=False` allows a missing artifact; it does not
 suppress malformed archives or transport failures.
 
+Container-side logic lives in `container/helpers/` so it is linted, packaged, and
+unit-testable on local fixtures. Those helpers are baked into the prepared image.
+The judge's helper is uploaded into its container instead: judging reads evidence
+produced by a specific image and must run against that image rather than a
+rebuilt one. The workspace specification records the uploaded helper's hash.
+
 Workspace reset, rebuild, test visibility, baseline creation, and repair application
-belong in `workspace.py` and its checked-in helper. Submission classification and
-integrity checks remain in `artifacts.py`. Harness-specific flags and trace parsing
-remain in their adapters; shared launch I/O lives in `harnesses/launch.py`.
+belong in `repository.py` and its checked-in helper. Submission classification and
+integrity checks remain in `generation.py`. The privileged judge bundle is built in
+`judge/workspace.py` rather than by relaxing either of those. Harness-specific
+flags, limits, and trace parsing remain in their adapters; shared launch I/O lives
+in `harnesses/launch.py`.
 
 ## Verification
 

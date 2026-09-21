@@ -9,10 +9,10 @@ uv run oracle-bench run configs/smoke.yaml
 Multiple independent configurations can be coordinated by a batch manifest:
 
 ```yaml
-name: initial-haiku
+name: initial-nex
 jobs:
-  - config: ../initial-haiku/astropy.yaml
-  - config: ../initial-haiku/flask.yaml
+  - config: ../initial-nex/astropy.yaml
+  - config: ../initial-nex/flask.yaml
 execution:
   concurrency: 1
   continue_on_error: true
@@ -27,10 +27,11 @@ All job configurations are validated and hashed before execution. The initial ba
 runner is sequential, isolates job failures, writes aggregate JSON and Markdown after
 every job, and can continue with `oracle-bench batch --resume <batch-directory>`.
 
-The input interface has five top-level sections: `source`, `agent`, `task`,
-`limits`, and `output`. Only `source.instance`, `agent.model`, and `task.prompt`
-are required. Unknown settings are rejected, including the removed `dataset`,
-`environment`, and `harness` sections from the original schema.
+The input interface has six top-level sections: `source`, `agent`, optional
+`judge`, `task`, `limits`, and `output`. Only `source.instance`, `agent.model`,
+and `task.prompt` are required. Unknown settings are rejected, including the
+removed `dataset`, `environment`, and `harness` sections from the original
+schema.
 
 ## Minimal configuration
 
@@ -42,14 +43,14 @@ agent:
   model: gpt-5.4
 
 task:
-  prompt: ../prompts/unit-tests.md
+  prompt: ../prompts/agent/unit-tests.md
 ```
 
 For a localized SWE-bench assignment:
 
 ```yaml
 task:
-  prompt: ../prompts/localized-tests.md
+  prompt: ../prompts/agent/localized-tests.md
   scope: localized
   existing_tests: hide_all
 ```
@@ -64,11 +65,12 @@ agent:
   harness: claude
   model: haiku
   auth: api_key
-  max_budget_usd: 0.25
-  max_turns: 10
+  limit:
+    kind: budget_usd
+    value: 0.25
 
 task:
-  prompt: ../prompts/smoke-tests.md
+  prompt: ../prompts/agent/smoke-tests.md
 ```
 
 Paths in the input file are resolved relative to that file, not the shell's
@@ -77,8 +79,9 @@ current directory.
 Configuration uses Pydantic schemas: unknown fields and incorrect scalar types
 are rejected at loading time. Harness defaults are resolved with the agent schema;
 host path resolution is a separate step. Runtime layout checks occur when source
-adapter data meets the experiment configuration. The schema version remains 2
-and existing saved configuration files can still be loaded.
+adapter data meets the experiment configuration. Configurations are not
+versioned: a file written for an earlier revision fails to load rather than being
+partially interpreted.
 
 ## Resolution model
 
@@ -175,11 +178,11 @@ This section selects the agent being evaluated. Supported combinations are:
 
 | `harness` | `provider` | Credential |
 |---|---|---|
+| `codex` | `openrouter` (default) | `OPENROUTER_API_KEY` |
 | `codex` | `openai` | `OPENAI_API_KEY` |
-| `codex` | `openrouter` | `OPENROUTER_API_KEY` |
+| `claude` | `openrouter` (default) | `OPENROUTER_API_KEY` |
 | `claude` | `anthropic` | `CLAUDE_CODE_OAUTH_TOKEN` or `ANTHROPIC_API_KEY` |
-| `claude` | `openrouter` | `OPENROUTER_API_KEY` |
-| `opencode` | `openrouter` | `OPENROUTER_API_KEY` |
+| `opencode` | `openrouter` (default) | `OPENROUTER_API_KEY` |
 
 Credential names are derived from the provider and authentication mode. Claude
 Code uses OpenRouter's Anthropic-compatible endpoint, Codex uses its
@@ -206,52 +209,49 @@ OpenRouter only in Oracle Bench.
 ### `agent.provider`
 
 - **Type:** `openai`, `openrouter`, or `anthropic`
-- **Default:** `openai` for Codex; `anthropic` for Claude; `openrouter` for OpenCode
+- **Default:** `openrouter` for every harness
 
-Codex supports OpenAI/OpenRouter, Claude supports Anthropic/OpenRouter, and
-OpenCode supports OpenRouter.
+Codex supports OpenRouter/OpenAI, Claude supports OpenRouter/Anthropic, and
+OpenCode supports OpenRouter. Name a native provider explicitly to use it.
 
-### `agent.version`
+### `agent.limit`
 
-- **Type:** pinned package version
-- **Default:** harness-specific tested version
+- **Type:** one stopping policy, `{kind, value}`
+- **Default:** `{kind: wall_seconds, value: 900}`
 
-Advanced override for the installed Codex, Claude Code, or OpenCode package. Because CLI
-behavior can affect benchmark results, the exact resolved version is preserved.
+What stops the generation turn. Exactly one policy applies, so every run records
+an unambiguous experimental condition rather than a race between several caps.
+
+| `kind` | `value` | Supported harnesses |
+|---|---|---|
+| `budget_usd` | Positive number | Claude Code |
+| `turns` | Positive integer | Claude Code |
+| `wall_seconds` | Positive number | Codex, Claude Code, OpenCode |
+
+A configuration is rejected when its harness cannot enforce the selected policy.
+`budget_usd` is passed to Claude Code as `--max-budget-usd`: a per-process CLI
+limit, not an account billing cap. When Claude Code uses OpenRouter it is Claude
+Code's local estimate and may differ from what OpenRouter bills; use an
+OpenRouter key limit for a provider-enforced cap.
+
+`judge.limit` has the same shape, values, and harness support.
+
+### `agent.watchdog_seconds`
+
+- **Type:** positive number
+- **Default:** `900`
+
+Infrastructure protection for a stalled container, not an experimental limit. A
+`wall_seconds` policy is its own deadline and this value is then unused. Partial
+files and traces are captured after a timeout when possible.
 
 ### `agent.multi_agent`
 
 - **Type:** boolean
 - **Default:** `true`
 
-Whether the evaluated harness may use its built-in subagent features.
-
-### `agent.wall_seconds`
-
-- **Type:** positive number
-- **Default:** `900`
-
-Hard limit for the complete agent process. Partial files and traces are captured
-after a timeout when possible.
-
-### `agent.max_budget_usd`
-
-- **Type:** positive number
-- **Default:** `0.25`
-- **Applies to:** Claude
-
-Passed to Claude Code as `--max-budget-usd`. It is a per-process CLI limit, not an
-account billing cap. Codex and OpenCode ignore it. When Claude Code uses
-OpenRouter, this is Claude Code's local cost estimate and may differ from the
-amount OpenRouter bills; use an OpenRouter key limit for a provider-enforced cap.
-
-### `agent.max_turns`
-
-- **Type:** positive integer
-- **Default:** `10`
-- **Applies to:** Claude
-
-Maximum turns passed to Claude Code. Codex ignores it.
+Whether the evaluated harness may use its built-in subagent features. Judge
+subagents are always disabled, so `judge.multi_agent` accepts only `false`.
 
 ### `agent.auth`
 
@@ -261,6 +261,43 @@ Maximum turns passed to Claude Code. Codex ignores it.
 
 `oauth` reads `CLAUDE_CODE_OAUTH_TOKEN`; `api_key` reads `ANTHROPIC_API_KEY`.
 Codex credentials are selected from its provider.
+
+## `judge`
+
+The optional judge section configures a privileged evaluation of the generated
+tests. When this section is present, the normal `run` lifecycle invokes the judge
+after paired evaluation. `oracle-bench judge runs/<run-id>` independently reruns
+the same stage from saved evidence. Omit the section to preserve the ordinary
+generation and evaluation lifecycle without a judge model call.
+
+```yaml
+judge:
+  rubric: ../prompts/judge/generated-test-evaluation-rubric.md
+  instructions: ../prompts/judge/generated-test-instructions.md
+  harness: claude
+  provider: anthropic
+  model: haiku
+  auth: api_key
+  limit:
+    kind: budget_usd
+    value: 0.10
+```
+
+A configured run requires the judge credential before generation starts, so an
+unset judge credential fails the run before it spends anything.
+
+`judge.rubric` and `judge.instructions` are both required and resolved relative
+to the configuration file. Their exact bytes are copied to `judge/rubric.md` and
+`judge/instructions.md` when a run resolves, so a later `oracle-bench judge` uses
+the same text the original run did.
+
+`judge.instructions` tells the judge what the workspace contains and what to
+return; the rubric that follows defines the labels. `$root` in the instructions
+is replaced with the workspace path inside the container. The two are joined, in
+that order, into `judge/prompt.md`, which is the exact text sent to the model.
+
+Every other field has the same meaning and supported values as the corresponding
+agent field, except `multi_agent`, which is always `false`.
 
 ## `task`
 
@@ -304,8 +341,7 @@ the final evaluation workspace. Evaluation still executes only generated tests.
 under repository-specific test directories supplied by the SWE-bench adapter.
 Package initializers, fixtures, runners, helpers, and data remain because some
 projects import that support code at runtime. Private reference validation always
-retains all existing tests. The former value `hide` is
-accepted as a backward-compatible alias for older configurations.
+retains all existing tests.
 
 ### `task.generated_dir`
 
@@ -339,12 +375,14 @@ Parent directory for timestamped run directories.
 
 ## Resolved-only sections
 
-`config.resolved.yaml` uses schema version `2` and adds `runtime` and `toolchain`
-sections. They contain generated execution details rather than experiment input:
+`config.resolved.yaml` adds `runtime` and `toolchain` sections. They contain generated execution details rather than experiment input:
 
 - `runtime`: source image, platform, workdir, Python, rebuild command, coverage
   roots, import probes, and repository-specific existing-test globs.
-- `toolchain`: Node image and pinned pytest/coverage versions.
+- `toolchain`: Node image plus pinned Codex, Claude Code, OpenCode, pytest, and
+  coverage versions. CLI versions come only from this locked toolchain; a run
+  cannot pin its own. Change `docker/package.json` and its lockfile to upgrade a
+  harness.
 
 The resolved file also expands source, agent, task, and resource defaults and is
 the configuration consumed by `oracle-bench evaluate`. Edit the small input file
@@ -370,15 +408,8 @@ buggy/golden matrix by itself.
 
 ## Sample configurations
 
-- [`configs/smoke.yaml`](../configs/smoke.yaml): Codex with OpenAI.
-- [`configs/smoke-claude.yaml`](../configs/smoke-claude.yaml): Claude Code with
-  Anthropic.
-- [`configs/smoke-claude-openrouter.yaml`](../configs/smoke-claude-openrouter.yaml):
-  Claude Code with an inexpensive Anthropic model through OpenRouter.
-- [`configs/smoke-openrouter.yaml`](../configs/smoke-openrouter.yaml): Codex with
-  OpenRouter.
-- [`configs/smoke-opencode-openrouter.yaml`](../configs/smoke-opencode-openrouter.yaml):
-  OpenCode with a free OpenRouter agentic model.
+- [`configs/smoke.yaml`](../configs/smoke.yaml): Claude Code generation and
+  judging with Haiku through OpenRouter. Both stages have small budget limits.
 - [`configs/batches/openrouter-three-harnesses.yaml`](../configs/batches/openrouter-three-harnesses.yaml):
   one localized Requests task each for Opus/Claude Code, GPT-5.6 Sol/Codex, and
   Nex-N2.5 Pro/OpenCode, all routed through OpenRouter.

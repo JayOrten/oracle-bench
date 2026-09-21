@@ -21,18 +21,24 @@ Read these references before changing related behavior:
 The host orchestrator resolves an instance, prepares a runtime image, performs a
 private reference-pair check, launches the agent in a buggy generation container,
 captures new tests, and evaluates the same frozen artifact in fresh buggy and
-golden containers.
+golden containers. A configured run then judges that submission in a separate
+privileged container that may see the private evidence.
 
 Preserve these boundaries:
 
 - Never expose `instance.json`, the golden repair, the reference test patch, or
-  private evaluation results to the generation agent.
+  private evaluation results to the generation agent. The judge deliberately
+  receives all of it; keep that bundle in the judge modules rather than relaxing
+  `RepositoryWorkspace.prepare()` or the generation upload policy.
+- Keep human raters blinded: their workspace exposes the common input bundle
+  only, never an LLM judgment or another rater's result.
 - Never mount the host Docker socket or complete host run directory into the
   generation container.
 - Run agents as the non-root `oracle` user. Docker is the isolation boundary for
   agent permission-bypass flags.
-- Allow networking during generation only. Reference and final evaluation
-  containers run without networking.
+- Keep every disposable profile on Docker's ordinary outbound bridge network, so
+  reference and final evaluation match the generation environment. Only the
+  interactive human-judge workspace runs without networking.
 - Evaluate only captured new regular files under `task.generated_dir`.
 - Record edits outside the generated directory as forbidden changes and mark the
   result diagnostic-only. Do not silently discard or normalize them.
@@ -43,24 +49,51 @@ Preserve these boundaries:
 
 ## Code layout
 
-- `src/oracle_bench/cli.py`: `run`, `evaluate`, and `report` command interface.
-- `src/oracle_bench/config.py`: strict YAML data model, defaults, and validation.
-- `src/oracle_bench/run.py`: top-level lifecycle and status handling.
-- `src/oracle_bench/container/`: Docker SDK integration, lifecycle, transfers, and image builds.
-- `src/oracle_bench/docker/`: checked-in harness/runtime Dockerfiles.
-- `src/oracle_bench/workspace.py`: repository preparation and patch application.
-- `src/oracle_bench/datasets/`: source-record resolution and normalization.
-- `src/oracle_bench/harnesses/`: Codex, Claude Code, and transcript adapters.
-- `src/oracle_bench/artifacts.py`: snapshots, diffs, capture policy, and hashes.
-- `src/oracle_bench/runners/`: structured pytest and coverage execution.
-- `src/oracle_bench/evaluate.py`: reference checks and paired evaluation.
-- `src/oracle_bench/report.py`: Markdown report rendering.
-- `configs/` and `prompts/`: runnable examples and public agent prompts.
+The pipeline stages run in this order, and each is one module or package that
+`run.py` calls once:
 
-Keep harness-specific behavior in its adapter. Add shared behavior only after both
-harnesses need the same contract. Keep result and configuration changes backward
-compatible when practical; update their schema version when changing a persisted
-contract incompatibly.
+- `src/oracle_bench/instance/`: resolve — dataset record, rendered prompt, and
+  private ground truth.
+- `src/oracle_bench/container/images.py`: build — the prepared runtime image.
+- `src/oracle_bench/evaluation/`: reference and evaluate — paired execution in
+  `__init__.py` and outcome pairing in `outcomes.py`.
+- `src/oracle_bench/generation.py`: generate — one agent turn in a buggy
+  checkout, then capture and freeze the submission.
+- `src/oracle_bench/judge/`: judge — `contracts.py` (every persisted judge
+  contract, plus judgment parsing and saved state), `workspace.py` (building the
+  privileged `/oracle-judge` bundle), `run.py`
+  (the LLM judge stage), `human.py` (blinded rater workspaces), `agreement.py`
+  and `agreement_report.py` (offline analysis).
+- `src/oracle_bench/report.py`: report — Markdown rendering from saved artifacts.
+
+Supporting these:
+
+- `src/oracle_bench/cli.py`: `run`, `batch`, `evaluate`, `judge`,
+  `judge-workspace`, `agreement`, and `report` command interface.
+- `src/oracle_bench/run.py`: the stage sequence and run status.
+- `src/oracle_bench/batch/`: sequential batch execution and its summary.
+- `src/oracle_bench/config.py`, `paths.py`, `results.py`: the input contract, the
+  artifact layout, and the result contracts.
+- `src/oracle_bench/repository.py`: the repository checkout inside a sandbox,
+  shared by generation and evaluation.
+- `src/oracle_bench/container/`, `harnesses/`: Docker transport and the agent CLI
+  adapters. Within `container/`, `helpers/` holds the scripts copied into images and
+  `docker/` the checked-in harness/runtime Dockerfiles.
+- `src/oracle_bench/io.py`: JSON reading/writing and hashing.
+
+- `configs/`: runnable example configurations.
+- `prompts/agent/`: public generation prompts; `prompts/judge/`: rating rubrics.
+  Both are delivered to a model, so they live in one tree.
+
+Keep harness-specific behavior in its adapter, including command construction,
+trace parsing, stopping-policy flags, and any container path a CLI writes to.
+Callers describe a turn; adapters decide how to run it. Add shared behavior only
+after both harnesses need the same contract.
+
+Persisted artifacts are not versioned. Strict models reject anything they do not
+describe, so a contract change makes stale artifacts fail loudly rather than be
+half-interpreted. Change the contract and the fixtures together; do not add
+compatibility shims for artifacts produced by an earlier revision.
 
 ## Development workflow
 
@@ -87,6 +120,15 @@ When adding or changing persisted artifacts:
 2. Make incomplete states explicit; never treat missing output as success.
 3. Update `docs/results.md` and report links when applicable.
 4. Add tests for parsing, failure behavior, integrity, or rendering.
+
+Model every persisted contract in `results.py` or `judge/contracts.py` and
+validate it where container output enters the host, not at each reader. Test
+fixtures for these artifacts belong in `tests/fixtures.py` so one schema change
+breaks in one place.
+
+Two conventions keep call sites predictable: `RunPaths` is the handle for a run,
+and only `cli.py` builds one from a user-supplied path; container-side logic is a
+module in `container/helpers/`, never a Python string passed to `python -c`.
 
 Use Mermaid for diagrams embedded in Markdown. Use D2 for dedicated standalone
 diagram files unless the user requests another format.
@@ -124,6 +166,10 @@ crashes, missing IDs, and other incomplete outcomes separately. A failing test i
 a benchmark result, not an infrastructure failure. Empty submissions are
 `no_tests`, not successful executions.
 
+Matrix detection and judge verdicts answer different questions. Never substitute
+one for the other, and never let a judge failure change generation or evaluation
+completion state.
+
 `fail_on_buggy_pass_on_golden` is the expected distinguishing direction.
 `pass_on_both` only says the test did not distinguish the pair; it does not prove
 that the oracle is incorrect. Coverage failures must not erase valid test results.
@@ -131,7 +177,7 @@ that the oracle is incorrect. Coverage failures must not erase valid test result
 ## Current limitations
 
 Do not accidentally present deferred features as implemented. Current gaps
-include arbitrary repository environment construction, batch experiment
-scheduling, history sanitization, internet-use auditing, systematic bug taxonomy,
+include arbitrary repository environment construction, concurrent batch
+execution, history sanitization, internet-use auditing, systematic bug taxonomy,
 and reconstruction of discarded agent tests. Extend these deliberately through
 the staged plan rather than embedding one-off behavior in the Stage 1 path.

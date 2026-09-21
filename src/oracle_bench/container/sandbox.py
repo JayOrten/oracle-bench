@@ -1,5 +1,6 @@
 """Managed SDK containers with the benchmark's lifecycle and output policy."""
 
+from collections.abc import Iterator
 from contextlib import contextmanager
 from dataclasses import dataclass
 from enum import Enum
@@ -8,12 +9,15 @@ from tempfile import TemporaryDirectory
 from uuid import uuid4
 
 import docker
+from docker import DockerClient
 from docker.errors import DockerException, NotFound
+from docker.models.containers import Container
 from requests.exceptions import RequestException
 
+from oracle_bench.config import RunConfig, RuntimeConfig
 from oracle_bench.container import files
+from oracle_bench.container.files import RedactedOutput
 from oracle_bench.container.lifecycle import execution_watchdog
-from oracle_bench.container.output import RedactedOutput
 from oracle_bench.io import read_json
 
 HELPER_DIR = "/opt/oracle-bench/container-helpers"
@@ -24,6 +28,8 @@ class Profile(Enum):
     GENERATION = "generation"
     EVALUATION = "evaluation"
     REFERENCE = "reference"
+    JUDGE = "judge"
+    HUMAN_JUDGE = "human-judge"
 
 
 @dataclass
@@ -36,18 +42,24 @@ class CommandResult:
 class Sandbox:
     """A running container. Use open_sandbox to own its lifetime."""
 
-    def __init__(self, container, runtime, log: Path):
+    def __init__(self, container: Container, runtime: RuntimeConfig, log: Path) -> None:
         self.container = container
         self.runtime = runtime
         self.log = log
         self.helpers = HELPER_DIR
 
-    def upload(self, source: Path, destination: str, *, contents=False):
+    def upload(self, source: Path, destination: str, *, contents: bool = False) -> None:
         files.upload(self.container, source, destination, contents=contents)
 
     def download(
-        self, source: str, destination: Path, *, contents=False, required=True, secrets=()
-    ):
+        self,
+        source: str,
+        destination: Path,
+        *,
+        contents: bool = False,
+        required: bool = True,
+        secrets: tuple[str, ...] = (),
+    ) -> bool:
         try:
             files.download(self.container, source, destination, contents=contents, secrets=secrets)
         except NotFound:
@@ -62,17 +74,19 @@ class Sandbox:
 
     def run(
         self,
-        argv,
+        argv: list[str],
         *,
-        timeout=60,
-        user="root",
-        environment=None,
-        stdin=None,
-        stdout=None,
-        stderr=None,
-        log=None,
-        check=True,
-        secrets=(),
+        # float, not int: callers pass timeouts straight from the config.
+        timeout: float = 60,
+        user: str = "root",
+        environment: dict[str, str] | None = None,
+        stdin: Path | None = None,
+        stdout: Path | None = None,
+        stderr: Path | None = None,
+        log: Path | None = None,
+        check: bool = True,
+        secrets: tuple[str, ...] = (),
+        workdir: str | None = None,
     ) -> CommandResult:
         """Execute argv, stream redacted output, and retain explicit process status.
 
@@ -104,6 +118,7 @@ class Sandbox:
                     stderr=stderr,
                     log=log,
                     secrets=secrets,
+                    workdir=workdir,
                 )
                 if watchdog_fired.is_set() or supervisor_code != 0:
                     raise RuntimeError(f"Container supervisor did not finish; see {log}")
@@ -114,14 +129,28 @@ class Sandbox:
             raise RuntimeError(f"Container command failed (exit {result.exit_code}); see {log}")
         return result
 
-    def _stream_command(self, command, *, user, environment, stdout, stderr, log, secrets):
+    def _stream_command(
+        self,
+        command: list[str],
+        *,
+        user: str,
+        environment: dict[str, str] | None,
+        stdout: Path | None,
+        stderr: Path | None,
+        log: Path,
+        secrets: tuple[str, ...],
+        workdir: str | None,
+    ) -> int:
         """Keep SDK stream handling separate from the command's lifecycle."""
-        api = self.container.client.api
+        client = self.container.client
+        if client is None:
+            raise RuntimeError("Container is detached from its Docker client")
+        api = client.api
         execution = api.exec_create(
             self.container.id,
             command,
             user=user,
-            workdir=self.runtime.workdir,
+            workdir=workdir or self.runtime.workdir,
             environment=environment or {},
         )
         with (
@@ -143,40 +172,22 @@ class Sandbox:
             self.download(status_path, status)
             return CommandResult(**read_json(status))
 
-    def stop_background_processes(self):
+    def stop_background_processes(self) -> None:
         """Restart before capture to terminate even detached agent descendants."""
         self.container.stop(timeout=1)
         self.container.start()
 
 
 @contextmanager
-def open_sandbox(client, image: str, config, profile: Profile, log: Path):
+def open_sandbox(
+    client: DockerClient, image: str, config: RunConfig, profile: Profile, log: Path
+) -> Iterator[Sandbox]:
     """Create explicitly before starting, so failed starts are cleaned up too."""
-    runtime = config.require_runtime()
-    limits = config.limits
-    container = client.containers.create(
-        image,
-        command=["-c", "sleep infinity"],
-        entrypoint="/bin/bash",
-        name="oracle-bench-" + uuid4().hex[:16],
-        detach=True,
-        init=True,
-        platform=runtime.platform,
-        user="root",
-        mem_limit=limits.memory,
-        nano_cpus=int(limits.cpus * 1_000_000_000),
-        security_opt=["no-new-privileges"],
-        # Repository tests may legitimately depend on external services. Keep
-        # every lifecycle profile on Docker's ordinary outbound bridge network
-        # so reference and final evaluation match the generation environment.
-        network_mode="bridge",
-        labels={"oracle-bench.profile": profile.value},
-        use_config_proxy=False,
-    )
+    container = create_sandbox_container(client, image, config, profile)
     failure = None
     try:
         container.start()
-        sandbox = Sandbox(container, runtime, log)
+        sandbox = Sandbox(container, config.require_runtime(), log)
         yield sandbox
     except BaseException as exc:
         failure = exc
@@ -192,8 +203,40 @@ def open_sandbox(client, image: str, config, profile: Profile, log: Path):
             )
 
 
+def create_sandbox_container(
+    client: DockerClient,
+    image: str,
+    config: RunConfig,
+    profile: Profile,
+    *,
+    name: str | None = None,
+    network_mode: str = "bridge",
+    labels: dict[str, str] | None = None,
+    container_user: str = "root",
+) -> Container:
+    """Create a stopped container with the benchmark's standard isolation limits."""
+    runtime = config.require_runtime()
+    limits = config.limits
+    return client.containers.create(
+        image,
+        command=["-c", "sleep infinity"],
+        entrypoint="/bin/bash",
+        name=name or "oracle-bench-" + uuid4().hex[:16],
+        detach=True,
+        init=True,
+        platform=runtime.platform,
+        user=container_user,
+        mem_limit=limits.memory,
+        nano_cpus=int(limits.cpus * 1_000_000_000),
+        security_opt=["no-new-privileges"],
+        network_mode=network_mode,
+        labels={"oracle-bench.profile": profile.value, **(labels or {})},
+        use_config_proxy=False,
+    )
+
+
 @contextmanager
-def docker_client():
+def docker_client() -> Iterator[DockerClient]:
     """Own the SDK connection at the host workflow boundary."""
     client = None
     try:

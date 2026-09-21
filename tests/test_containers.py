@@ -11,16 +11,19 @@ from unittest.mock import Mock
 
 import pytest
 from docker.errors import APIError, ImageNotFound, NotFound
+from fixtures import DOCKERFILES, HELPERS
 
-from oracle_bench.config import RuntimeConfig, load_config
-from oracle_bench.container import Profile, Sandbox, docker_client, open_sandbox
-from oracle_bench.container.deadline import setup_deadline
-from oracle_bench.container.files import download, upload
-from oracle_bench.container.images import build_image
-from oracle_bench.container.output import RedactedOutput
-from oracle_bench.workspace import RepositoryWorkspace
-
-CONTAINER_HELPERS = Path(__file__).parents[1] / "src/oracle_bench/container_helpers"
+from oracle_bench.config import HARNESS_VERSIONS, RuntimeConfig, load_config
+from oracle_bench.container.files import RedactedOutput, download, upload
+from oracle_bench.container.images import (
+    build_image,
+    image_tag,
+    inspect_harness_versions,
+    prepare_contexts,
+)
+from oracle_bench.container.lifecycle import setup_deadline
+from oracle_bench.container.sandbox import Profile, Sandbox, docker_client, open_sandbox
+from oracle_bench.repository import Repository
 
 
 @pytest.fixture
@@ -148,7 +151,6 @@ def test_optional_output_only_suppresses_missing_files(config, tmp_path):
     "visibility,reference,hide",
     [
         ("keep", False, False),
-        ("hide", False, True),
         ("hide_all", False, True),
         ("hide_all", True, False),
     ],
@@ -156,7 +158,7 @@ def test_optional_output_only_suppresses_missing_files(config, tmp_path):
 def test_workspace_preserves_preparation_order(config, tmp_path, visibility, reference, hide):
     config.task.existing_tests = visibility
     sandbox = Mock(helpers="/helpers")
-    workspace = RepositoryWorkspace(sandbox, config)
+    workspace = Repository(sandbox, config)
     workspace.prepare("a" * 40, tmp_path, reference=reference)
     calls = sandbox.run.call_args_list
     assert calls[0].args[0][:3] == ["git", "reset", "--hard"]
@@ -180,6 +182,70 @@ def test_build_cache_changes_with_helpers_and_platform(tmp_path):
         build_image(client, context, "runtime.Dockerfile", {}, "linux/arm64", log)
     tags = [call.args[0] for call in client.images.get.call_args_list]
     assert len(set(tags)) == 3
+
+
+def test_shared_harness_context_contains_locked_complete_toolchain(tmp_path):
+    harnesses, runtime = prepare_contexts(tmp_path / "build")
+    package = json.loads((harnesses / "package.json").read_text())
+
+    assert package["dependencies"] == {
+        "@anthropic-ai/claude-code": HARNESS_VERSIONS["claude"],
+        "@openai/codex": HARNESS_VERSIONS["codex"],
+        "opencode-ai": HARNESS_VERSIONS["opencode"],
+    }
+    assert (harnesses / "package-lock.json").is_file()
+    assert (harnesses / "harnesses.Dockerfile").is_file()
+    assert (runtime / "runtime.Dockerfile").is_file()
+
+
+def test_harness_identity_changes_with_lock_recipe_platform_and_pin(tmp_path):
+    harnesses, _ = prepare_contexts(tmp_path / "build")
+
+    def tag(platform="linux/amd64"):
+        return image_tag(
+            harnesses,
+            "harnesses.Dockerfile",
+            {"NODE_IMAGE": "sha256:node"},
+            platform,
+        )[0]
+
+    original = tag()
+    lockfile = harnesses / "package-lock.json"
+    original_lock = lockfile.read_text()
+    lockfile.write_text("changed lock")
+    assert tag() != original
+    lockfile.write_text(original_lock)
+    package = harnesses / "package.json"
+    package.write_text(package.read_text().replace(HARNESS_VERSIONS["codex"], "0.0.1"))
+    assert tag() != original
+    package.write_text((DOCKERFILES / "package.json").read_text())
+    (harnesses / "harnesses.Dockerfile").write_text("changed recipe")
+    assert tag() != original
+    assert tag("linux/arm64") != tag("linux/amd64")
+
+
+def test_harness_versions_are_inspected_offline_as_oracle_user():
+    client = Mock()
+    client.containers.run.side_effect = [
+        b"codex-cli 0.153.4\n",
+        b"2.1.263 (Claude Code)\n",
+        b"1.18.30\n",
+    ]
+
+    observed = inspect_harness_versions(client, SimpleNamespace(id="runtime-image"))
+
+    assert observed == {
+        "codex": "codex-cli 0.153.4",
+        "claude": "2.1.263 (Claude Code)",
+        "opencode": "1.18.30",
+    }
+    for call in client.containers.run.call_args_list:
+        assert call.kwargs == {
+            "user": "10001:10001",
+            "environment": {"HOME": "/home/oracle"},
+            "network_disabled": True,
+            "remove": True,
+        }
 
 
 def test_build_failure_leaves_inputs_and_raw_log(tmp_path):
@@ -210,7 +276,7 @@ def test_process_supervisor_preserves_evidence(tmp_path, program, timeout, timed
     result = subprocess.run(
         [
             sys.executable,
-            str(CONTAINER_HELPERS / "execute.py"),
+            str(HELPERS / "execute.py"),
             str(timeout),
             str(prompt),
             str(status),

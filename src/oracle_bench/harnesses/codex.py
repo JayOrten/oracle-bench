@@ -1,18 +1,19 @@
+"""Runs Codex: builds the command, wires up OpenRouter, reads back its JSON events."""
+
 from __future__ import annotations
 
 import json
-import os
 from dataclasses import asdict
 from pathlib import Path
 
-from oracle_bench.harnesses.launch import launch
-from oracle_bench.io import write_json
-from oracle_bench.paths import RunPaths
+from oracle_bench.container.sandbox import Sandbox
+from oracle_bench.harnesses.launch import (
+    AgentTurnRequest,
+    run_agent_turn,
+)
 
-
-def require_credentials(config):
-    if not os.environ.get(config.agent.credential_env):
-        raise RuntimeError(f"Set {config.agent.credential_env} to run the Codex harness")
+# Codex writes its final response to a file instead of the JSON event stream.
+LAST_MESSAGE_PATH = "/tmp/oracle-agent/final.txt"
 
 
 def parse_trace(path: Path) -> dict:
@@ -41,6 +42,7 @@ def parse_trace(path: Path) -> dict:
                 failed = True
             if event.get("type") in {"error", "turn.failed"}:
                 errors.append(event)
+
     return {
         "usage": usage,
         "cost_usd": None,
@@ -51,11 +53,11 @@ def parse_trace(path: Path) -> dict:
     }
 
 
-def generate(sandbox, config, run_dir: Path):
-    runtime = config.require_runtime()
-    require_credentials(config)
-    directory = RunPaths.open(run_dir).generation
-    directory.mkdir(exist_ok=True)
+def run_turn(sandbox: Sandbox, request: AgentTurnRequest) -> dict:
+    """Run Codex with caller-supplied prompt, workspace, and artifact paths."""
+    harness = request.harness
+    directory = request.artifact_directory
+
     argv = [
         "codex",
         "exec",
@@ -65,16 +67,16 @@ def generate(sandbox, config, run_dir: Path):
         "--ignore-rules",
         "--dangerously-bypass-approvals-and-sandbox",
         "--model",
-        config.agent.model,
+        harness.model,
         "--cd",
-        runtime.workdir,
+        request.working_directory,
         "--output-last-message",
-        "/tmp/oracle-agent/final.txt",
+        LAST_MESSAGE_PATH,
         "-",
     ]
-    if not config.agent.multi_agent:
+    if not harness.multi_agent:
         argv[2:2] = ["--config", "features.multi_agent=false"]
-    if config.agent.provider == "openrouter":
+    if harness.provider == "openrouter":
         # CLI overrides still apply with --ignore-user-config. Credentials stay
         # in the process environment, never in the saved command or config.
         for setting in [
@@ -91,18 +93,17 @@ def generate(sandbox, config, run_dir: Path):
             'model_providers.openrouter.auth.args=["-c", "echo $OPENROUTER_API_KEY"]',
         ]:
             argv[2:2] = ["--config", setting]
-    credential_name = (
-        "OPENROUTER_API_KEY" if config.agent.provider == "openrouter" else "CODEX_API_KEY"
-    )
-    outcome = launch(
+    credential_name = "OPENROUTER_API_KEY" if harness.provider == "openrouter" else "CODEX_API_KEY"
+
+    outcome = run_agent_turn(
         sandbox,
-        config,
-        run_dir,
+        request,
         argv,
         {"CODEX_HOME": "/home/oracle/.codex"},
         credential_name,
-        final_file=True,
+        last_message_path=LAST_MESSAGE_PATH,
     )
+
     summary = {**asdict(outcome), **parse_trace(directory / "trace.jsonl")}
     summary["status"] = (
         "timeout"
@@ -111,5 +112,4 @@ def generate(sandbox, config, run_dir: Path):
         if outcome.exit_code or summary["turn_failed"] or not summary["turn_completed"]
         else "completed"
     )
-    write_json(directory / "result.json", summary)
     return summary
