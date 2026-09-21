@@ -22,11 +22,9 @@ from oracle_bench.paths import RunPaths
 from oracle_bench.results import MATRIX_CELLS
 
 DEFAULT_LABELS = {
-    "issue_target_alignment": "direct",
-    "trigger_alignment": "matches",
-    "oracle_alignment": "behaviorally_aligned",
-    "test_strategy": "return_value_or_status",
-    "final_verdict": "confirmed_issue_reproduction",
+    "tests_issue": "yes",
+    "attempt_detail": "correct_assertion",
+    "no_attempt_reason": None,
 }
 
 
@@ -36,13 +34,19 @@ def observation(left: str, right: str, instance: str) -> dict:
         "run_dir": f"/runs/{instance}",
         "left_rater": "human:rater_1",
         "right_rater": "human:rater_2",
-        "left": {"issue_target_alignment": left},
-        "right": {"issue_target_alignment": right},
+        "left": {"tests_issue": left},
+        "right": {"tests_issue": right},
     }
 
 
 def rating(status: str = "completed", **labels: str) -> Rating:
     values = DEFAULT_LABELS | labels if status == "completed" else None
+    if values:
+        answer = values["tests_issue"]
+        if "attempt_detail" not in labels:
+            values["attempt_detail"] = "correct_assertion" if answer == "yes" else None
+        if "no_attempt_reason" not in labels:
+            values["no_attempt_reason"] = "nearby_behavior" if answer == "no" else None
     return Rating(status=status, labels=values)
 
 
@@ -62,14 +66,12 @@ def rated_instance(
     )
 
 
-def judgment(target: str = "direct", verdict: str = "issue_relevant_not_confirmed") -> dict:
+def judgment(answer: str = "no") -> dict:
     return {
         "status": "completed",
-        "issue_target_alignment": target,
-        "trigger_alignment": "matches",
-        "oracle_alignment": "behaviorally_aligned",
-        "test_strategy": "return_value_or_status",
-        "final_verdict": verdict,
+        "tests_issue": answer,
+        "attempt_detail": "correct_assertion" if answer == "yes" else None,
+        "no_attempt_reason": "nearby_behavior" if answer == "no" else None,
         "rationale": "Synthetic agreement fixture.",
     }
 
@@ -79,9 +81,8 @@ def write_rated_run(
     instance: str,
     *,
     matrix_cell: str,
-    llm_target: str = "direct",
-    llm_verdict: str = "issue_relevant_not_confirmed",
-    human_targets: dict[str, str] | None = None,
+    llm_answer: str = "no",
+    human_answers: dict[str, str] | None = None,
     compliant: bool = True,
 ) -> None:
     paths = RunPaths.create(run_dir)
@@ -94,7 +95,7 @@ def write_rated_run(
             matrix=matrix,
         ),
     )
-    write_json(paths.judge.judgment, judgment(llm_target, llm_verdict))
+    write_json(paths.judge.judgment, judgment(llm_answer))
     paths.judge.rubric.write_text("rubric fixture")
     paths.judge.prompt.write_text("prompt fixture")
     write_json(
@@ -106,9 +107,9 @@ def write_rated_run(
             "harness_version": "1.2.3",
         },
     )
-    for rater, target in (human_targets or {}).items():
+    for rater, answer in (human_answers or {}).items():
         directory = paths.judge.human.judgments / rater
-        write_json(directory / "judgment.json", judgment(target))
+        write_json(directory / "judgment.json", judgment(answer))
         write_json(
             directory / "provenance.json",
             {
@@ -123,13 +124,13 @@ def write_rated_run(
 
 def test_cohen_kappa_matches_hand_calculation_and_confusion_table():
     observations = [
-        observation("direct", "direct", "one"),
-        observation("direct", "partial", "two"),
-        observation("partial", "partial", "three"),
-        observation("partial", "partial", "four"),
+        observation("yes", "yes", "one"),
+        observation("yes", "no", "two"),
+        observation("no", "no", "three"),
+        observation("no", "no", "four"),
     ]
 
-    result = _agreement_for_facet(observations, "issue_target_alignment")
+    result = _agreement_for_facet(observations, "tests_issue")
 
     assert result["observations"] == 4
     assert result["matches"] == 3
@@ -137,16 +138,14 @@ def test_cohen_kappa_matches_hand_calculation_and_confusion_table():
     assert result["expected_agreement"] == 0.5
     assert result["cohen_kappa"] == 0.5
     assert result["confusion"] == {
-        "direct": {"direct": 1, "partial": 1},
-        "partial": {"partial": 2},
+        "yes": {"yes": 1, "no": 1},
+        "no": {"no": 2},
     }
     assert result["disagreements"][0]["instance_id"] == "two"
 
 
 def test_kappa_is_undefined_when_chance_agreement_is_one():
-    result = _agreement_for_facet(
-        [observation("direct", "direct", "one")], "issue_target_alignment"
-    )
+    result = _agreement_for_facet([observation("yes", "yes", "one")], "tests_issue")
 
     assert result["raw_agreement"] == 1
     assert result["expected_agreement"] == 1
@@ -154,28 +153,24 @@ def test_kappa_is_undefined_when_chance_agreement_is_one():
 
 
 def test_comparison_group_scores_every_facet_independently():
-    human = rating(
-        trigger_alignment="misses_required_condition",
-        final_verdict="issue_relevant_not_confirmed",
-    )
+    human = rating(tests_issue="no")
     instance = rated_instance("one", llm=rating(), humans={"rater_1": human})
 
     group = _comparison_group([instance], [("human:rater_1", "llm")])
 
     assert set(group["facets"]) == set(JUDGMENT_LABEL_KEYS)
-    assert group["facets"]["issue_target_alignment"]["matches"] == 1
-    assert group["facets"]["oracle_alignment"]["matches"] == 1
-    assert group["facets"]["test_strategy"]["matches"] == 1
-    assert group["facets"]["trigger_alignment"]["matches"] == 0
-    assert group["facets"]["final_verdict"]["matches"] == 0
-    assert group["facets"]["trigger_alignment"]["disagreements"] == [
+    assert group["facets"]["attempt_detail"]["matches"] == 0
+    assert group["facets"]["no_attempt_reason"]["matches"] == 0
+    assert group["facets"]["tests_issue"]["matches"] == 0
+    assert group["facets"]["attempt_detail"]["confusion"] == {"null": {"correct_assertion": 1}}
+    assert group["facets"]["tests_issue"]["disagreements"] == [
         {
             "instance_id": "one",
             "run_dir": "/runs/one",
             "left_rater": "human:rater_1",
             "right_rater": "llm",
-            "left_label": "misses_required_condition",
-            "right_label": "matches",
+            "left_label": "no",
+            "right_label": "yes",
         }
     ]
 
@@ -193,30 +188,28 @@ def test_comparison_group_excludes_incomplete_ratings_and_counts_missing_pairs()
     assert group["possible_pairs"] == 4
     assert group["available_pairs"] == 1
     assert group["missing_pairs"] == 3
-    assert group["facets"]["final_verdict"]["observations"] == 1
+    assert group["facets"]["tests_issue"]["observations"] == 1
     assert list(group["by_pair"]) == ["human:rater_1|llm"]
 
 
 def test_headline_kappa_is_weighted_by_each_pairs_shared_observations():
-    llm_targets = ["direct", "partial", "partial", "partial"]
-    alice_targets = ["direct", "direct", "partial", "partial"]
-    bob_targets = ["partial", "direct", None, None]
+    llm_targets = ["yes", "no", "no", "no"]
+    alice_targets = ["yes", "yes", "no", "no"]
+    bob_targets = ["no", "yes", None, None]
     instances = []
     for index, (llm_target, alice_target, bob_target) in enumerate(
         zip(llm_targets, alice_targets, bob_targets, strict=True), start=1
     ):
         humans = {
-            "alice": rating(issue_target_alignment=alice_target),
+            "alice": rating(tests_issue=alice_target),
             "bob": (
-                rating(issue_target_alignment=bob_target)
-                if bob_target is not None
-                else rating("missing")
+                rating(tests_issue=bob_target) if bob_target is not None else rating("missing")
             ),
         }
         instances.append(
             rated_instance(
                 str(index),
-                llm=rating(issue_target_alignment=llm_target),
+                llm=rating(tests_issue=llm_target),
                 humans=humans,
             )
         )
@@ -225,7 +218,7 @@ def test_headline_kappa_is_weighted_by_each_pairs_shared_observations():
         instances,
         [("human:alice", "llm"), ("human:bob", "llm")],
     )
-    facet = group["facets"]["issue_target_alignment"]
+    facet = group["facets"]["tests_issue"]
 
     assert group["possible_pairs"] == 8
     assert group["available_pairs"] == 6
@@ -241,18 +234,18 @@ def test_undefined_pair_kappa_is_not_included_in_headline_mean():
     instances = [
         rated_instance(
             "one",
-            llm=rating(issue_target_alignment="direct"),
+            llm=rating(tests_issue="yes"),
             humans={
-                "constant": rating(issue_target_alignment="direct"),
-                "variable": rating(issue_target_alignment="direct"),
+                "constant": rating(tests_issue="yes"),
+                "variable": rating(tests_issue="yes"),
             },
         ),
         rated_instance(
             "two",
-            llm=rating(issue_target_alignment="partial"),
+            llm=rating(tests_issue="no"),
             humans={
                 "constant": rating("missing"),
-                "variable": rating(issue_target_alignment="partial"),
+                "variable": rating(tests_issue="no"),
             },
         ),
     ]
@@ -261,7 +254,7 @@ def test_undefined_pair_kappa_is_not_included_in_headline_mean():
         instances,
         [("human:constant", "llm"), ("human:variable", "llm")],
     )
-    facet = group["facets"]["issue_target_alignment"]
+    facet = group["facets"]["tests_issue"]
 
     assert facet["pairwise_cohen_kappa"] == {
         "human:constant|llm": None,
@@ -288,24 +281,23 @@ def test_offline_report_preserves_missing_ratings_and_builds_stratified_sample(t
     batch_dir = tmp_path / "batch"
     runs = []
     fixtures = [
-        ("fp", "fail_on_buggy_pass_on_golden", "issue_relevant_not_confirmed", True),
-        ("ff", "fail_on_both", "issue_relevant_not_confirmed", True),
-        ("pp", "pass_on_both", "issue_relevant_not_confirmed", True),
-        ("invalid", "pass_on_both", "issue_relevant_but_invalid", False),
-        ("unrelated", "pass_on_both", "not_issue_relevant", True),
+        ("fp", "fail_on_buggy_pass_on_golden", "yes", True),
+        ("ff", "fail_on_both", "yes", True),
+        ("pp", "pass_on_both", "yes", True),
+        ("invalid", "pass_on_both", "unsure", False),
+        ("no", "pass_on_both", "no", True),
     ]
-    for index, (instance, cell, verdict, compliant) in enumerate(fixtures):
+    for index, (instance, cell, answer, compliant) in enumerate(fixtures):
         run_dir = tmp_path / "runs" / instance
-        human_targets = {"rater_1": "direct", "rater_2": "direct"}
-        if instance == "unrelated":
-            human_targets = {"rater_1": "direct"}
+        human_answers = {"rater_1": "yes", "rater_2": "yes"}
+        if instance == "no":
+            human_answers = {"rater_1": "yes"}
         write_rated_run(
             run_dir,
             instance,
             matrix_cell=cell,
-            llm_target="unrelated" if instance == "unrelated" else "direct",
-            llm_verdict=verdict,
-            human_targets=human_targets,
+            llm_answer=answer,
+            human_answers=human_answers,
             compliant=compliant,
         )
         runs.append(
@@ -359,7 +351,7 @@ def test_analysis_builds_all_human_pairs_and_each_human_llm_pair(tmp_path):
             run_dir,
             str(index),
             matrix_cell="pass_on_both",
-            human_targets={"alice": "direct", "bob": "partial", "carol": "direct"},
+            human_answers={"alice": "yes", "bob": "no", "carol": "yes"},
         )
         runs.append({"run_dir": str(run_dir)})
     write_json(batch_dir / "batch.resolved.json", {"jobs": runs})

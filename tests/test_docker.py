@@ -112,7 +112,7 @@ def test_reconstruct_privileged_judge_workspace(tmp_path, request):
         ),
         harness="claude",
         model="judge-fixture",
-        limit={"kind": "budget_usd", "value": 0.1},
+        limit={"kind": "wall_seconds", "value": 300},
     )
     instance = read_instance_record(saved_paths.instance)
     paths = RunPaths.create(tmp_path)
@@ -171,11 +171,9 @@ def test_reconstruct_privileged_judge_workspace(tmp_path, request):
     def fake_judge_executable(sandbox, turn):
         payload = json.dumps(
             {
-                "issue_target_alignment": "indeterminate",
-                "trigger_alignment": "not_assessable",
-                "oracle_alignment": "not_assessable",
-                "test_strategy": "no_meaningful_assertion",
-                "final_verdict": "unassessable",
+                "no_attempt_reason": None,
+                "tests_issue": "unsure",
+                "attempt_detail": None,
                 "rationale": "The deterministic smoke judge verified that all workspace evidence is readable.",
             }
         )
@@ -235,11 +233,9 @@ def test_reconstruct_privileged_judge_workspace(tmp_path, request):
     )
     human_rating = json.dumps(
         {
-            "issue_target_alignment": "indeterminate",
-            "trigger_alignment": "not_assessable",
-            "oracle_alignment": "not_assessable",
-            "test_strategy": "no_meaningful_assertion",
-            "final_verdict": "unassessable",
+            "no_attempt_reason": None,
+            "tests_issue": "unsure",
+            "attempt_detail": None,
             "rationale": "The human-workspace smoke fixture validates collection.",
         }
     )
@@ -258,28 +254,20 @@ def test_reconstruct_privileged_judge_workspace(tmp_path, request):
 
 
 # Deliberately handwritten evaluator probes, not benchmark predictions.
-PROBES = """import socket
-import pytest
+PROBES = """
 import requests
 
-def exception_type():
-    class Raw:
-        def stream(self, chunk_size, decode_content=None):
-            raise socket.error('controlled stream failure')
-    response = requests.Response()
-    response.raw = Raw()
-    with pytest.raises(Exception) as caught:
-        list(response.iter_content())
-    return type(caught.value)
+def prepared_headers():
+    return requests.Request('GET', 'https://example.test').prepare().headers
 
 def test_pass_on_both():
     assert requests.Response().status_code is None
 
 def test_fail_on_buggy_pass_on_golden():
-    assert exception_type() is requests.exceptions.ConnectionError
+    assert 'Content-Length' not in prepared_headers()
 
 def test_pass_on_buggy_fail_on_golden():
-    assert exception_type() is socket.error
+    assert prepared_headers()['Content-Length'] == '0'
 
 def test_fail_on_both():
     assert requests.Response().status_code == 123456
@@ -296,7 +284,7 @@ def test_real_requests_pair_and_artifact_copy(tmp_path, visibility, monkeypatch,
     config = load_config(saved_paths.config, resolved=True)
     config.task.existing_tests = visibility
     instance = read_instance_record(saved_paths.instance)
-    assert instance.instance_id == "psf__requests-2148"
+    assert instance.instance_id == "psf__requests-1142"
     image = read_json(saved_paths.runtime)["image"]
     client = docker.from_env()
     request.addfinalizer(client.close)

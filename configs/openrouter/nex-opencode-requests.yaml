@@ -1,5 +1,5 @@
 source:
-  instance: psf__requests-1963
+  instance: psf__requests-1142
 
 agent:
   harness: opencode

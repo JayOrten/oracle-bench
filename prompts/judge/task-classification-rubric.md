@@ -15,7 +15,9 @@ behavior. It does not judge whether a particular generated test is good.
 
 ## SWE-bench instance fields
 
-You will receive a SWE-Bench instance. Its fields are:
+The buggy repository checkout is your working directory. The complete SWE-bench
+instance record is available at `/oracle-classification/instance.json`. Its fields
+are:
 
 - `instance_id`: the task identifier.
 - `repo`: the source repository.
@@ -40,8 +42,14 @@ benchmark quality. Facet E has a stricter evidence rule stated in that facet.
 1. Use the issue, gold repair, and reference-test changes to identify the
    behavior that a valid test must fail on in the buggy checkout and pass on
    after the repair.
-2. Classify the task using the facets below.
-3. Return the JSON object in the required format. Use the exact label strings.
+2. You must inspect the buggy repository checkout, including the production
+   code relevant to that behavior. Do not classify the task from the instance
+   record alone.
+3. When deciding Facet E, base the label only on evidence you found in the buggy
+   checkout without tests. Do not use the issue, repair, reference test, or
+   existing tests for that facet.
+4. Classify the task using the facets below.
+5. Return the JSON object in the required format. Use the exact label strings.
 
 ## Facet A: In-scope task
 

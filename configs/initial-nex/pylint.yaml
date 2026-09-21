@@ -1,5 +1,5 @@
 source:
-  instance: pylint-dev__pylint-5859
+  instance: pylint-dev__pylint-4604
 
 agent:
   harness: opencode

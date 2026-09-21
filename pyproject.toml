@@ -30,6 +30,8 @@ oracle_bench = [
     "container/docker/*.Dockerfile",
     "container/docker/package*.json",
     "container/docker/*.md",
+    "judge/templates/*.md",
+    "judge/templates/*.json",
 ]
 
 [tool.pytest.ini_options]

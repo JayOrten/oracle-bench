@@ -33,9 +33,13 @@ def parse_trace(path: Path) -> dict:
     completed = bool(result and result.get("subtype") == "success" and not result.get("is_error"))
     errors = []
     if result and not completed:
-        errors = [
-            {"message": str(result.get("errors") or result.get("result") or result.get("subtype"))}
-        ]
+        detail = result.get("errors") or result.get("result") or result.get("subtype")
+        if isinstance(detail, list):
+            detail = "; ".join(
+                str(item.get("message", item)) if isinstance(item, dict) else str(item)
+                for item in detail
+            )
+        errors = [{"message": str(detail)}]
     return {
         "turn_completed": completed,
         "turn_failed": bool(result and not completed),
@@ -66,11 +70,6 @@ def run_turn(sandbox: Sandbox, request: AgentTurnRequest) -> dict:
         "--model",
         harness.model,
     ]
-    # A wall limit is already the container deadline; the CLI enforces the rest.
-    if harness.limit.kind == "budget_usd":
-        argv += ["--max-budget-usd", str(harness.limit.value)]
-    elif harness.limit.kind == "turns":
-        argv += ["--max-turns", str(harness.limit.value)]
     if not harness.multi_agent:
         argv += ["--tools", "Bash,Read,Write,Edit,Glob,Grep"]
 
@@ -92,6 +91,11 @@ def run_turn(sandbox: Sandbox, request: AgentTurnRequest) -> dict:
     )
 
     summary = {**asdict(outcome), **parse_trace(directory / "trace.jsonl")}
+    if harness.provider == "openrouter":
+        # Claude Code prices unknown router model IDs with an internal fallback
+        # rate. Preserve modelUsage as raw evidence, but do not present that
+        # estimate as provider billing.
+        summary["cost_usd"] = None
     (directory / "final.txt").write_text(summary.pop("final_text"))
     summary["status"] = (
         "timeout"

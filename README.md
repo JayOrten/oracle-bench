@@ -93,8 +93,8 @@ uv run oracle-bench judge-workspace create runs/<run-id> --rater rater_01
 
 In VS Code, run **Dev Containers: Attach to Running Container** and select the
 container printed by the command. Open `/oracle-judge/human-judge.code-workspace`,
-follow `HUMAN_INSTRUCTIONS.md`, and save the completed judgment to the requested
-output path.
+follow `instructions.md` alongside `rubric.md`, and replace the placeholders in
+`output/judgment.json` with the completed judgment.
 
 Back on the host, collect the judgment and remove the container:
 

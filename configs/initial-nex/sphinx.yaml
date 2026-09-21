@@ -1,5 +1,5 @@
 source:
-  instance: sphinx-doc__sphinx-10325
+  instance: sphinx-doc__sphinx-10323
 
 agent:
   harness: opencode

@@ -13,3 +13,4 @@ runs/
 .env.*
 !.env.example
 batches/
+classifications/

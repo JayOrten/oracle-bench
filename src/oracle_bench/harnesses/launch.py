@@ -4,7 +4,7 @@ import os
 from dataclasses import dataclass
 from pathlib import Path
 
-from oracle_bench.config import HARNESS_LIMITS, HarnessConfig
+from oracle_bench.config import HarnessConfig
 from oracle_bench.container.lifecycle import preserve_failure
 from oracle_bench.container.sandbox import ORACLE_USER, CommandResult, Sandbox
 from oracle_bench.io import write_json
@@ -14,14 +14,6 @@ def require_credential(harness: HarnessConfig) -> None:
     """Fail before a container starts if the selected credential is missing."""
     if not os.environ.get(harness.credential_env):
         raise RuntimeError(f"Set {harness.credential_env} to run the {harness.harness} harness")
-
-
-def require_enforceable_limit(harness: HarnessConfig) -> None:
-    """Config rejects this pairing first. Refuse it here too rather than ignore it."""
-    if harness.limit.kind not in HARNESS_LIMITS[harness.harness]:
-        raise ValueError(
-            f"The {harness.harness} harness cannot enforce a {harness.limit.kind} limit"
-        )
 
 
 @dataclass(frozen=True)
@@ -50,7 +42,6 @@ def run_agent_turn(
     last_message_path: str | None = None,
 ) -> CommandResult:
     """Launch one harness command while enforcing credential and I/O policy."""
-    require_enforceable_limit(request.harness)
     require_credential(request.harness)
     directory = request.artifact_directory
     directory.mkdir(parents=True, exist_ok=True)

@@ -47,13 +47,6 @@ HARNESS_PROVIDERS = {
     "claude": ("openrouter", "anthropic"),
     "opencode": ("openrouter",),
 }
-# Stopping policies each CLI enforces itself. Every harness supports wall time,
-# which the container deadline enforces rather than the CLI.
-HARNESS_LIMITS = {
-    "codex": ("wall_seconds",),
-    "claude": ("wall_seconds", "budget_usd", "turns"),
-    "opencode": ("wall_seconds",),
-}
 NODE_IMAGE = "node:22.14.0-bookworm-slim"
 PYTEST_VERSION = "7.4.4"
 COVERAGE_VERSION = "7.6.1"
@@ -109,59 +102,29 @@ class SourceConfig(ConfigModel):
         return self.revision
 
 
-class BudgetLimit(ConfigModel):
-    kind: Literal["budget_usd"]
-    value: PositiveNumber
-
-
-class TurnLimit(ConfigModel):
-    kind: Literal["turns"]
-    value: Annotated[int, Field(strict=True, gt=0)]
-
-
 class WallTimeLimit(ConfigModel):
     kind: Literal["wall_seconds"]
     value: PositiveNumber
 
 
-StoppingLimit = Annotated[BudgetLimit | TurnLimit | WallTimeLimit, Field(discriminator="kind")]
-
-
 def default_limit() -> WallTimeLimit:
-    """Wall-clock is the default stopping policy: every harness can enforce it."""
-    return WallTimeLimit(kind="wall_seconds", value=900)
+    """Bound every model turn with the same five-minute default."""
+    return WallTimeLimit(kind="wall_seconds", value=300)
 
 
 class HarnessConfig(ConfigModel):
-    """One bounded agent turn: which model runs it and what stops it.
-
-    Exactly one stopping policy is the experiment's variable. The watchdog is
-    infrastructure protection and is reported only if it fires.
-    """
+    """One wall-clock-bounded agent turn and the model used to run it."""
 
     model: NonBlank
     harness: Literal["codex", "claude", "opencode"] = "codex"
     provider: Literal["openai", "openrouter", "anthropic"] | None = None
     auth: Literal["oauth", "api_key"] = "oauth"
-    limit: StoppingLimit = Field(default_factory=default_limit)
-    watchdog_seconds: PositiveNumber = 900
+    limit: WallTimeLimit = Field(default_factory=default_limit)
     multi_agent: Annotated[bool, Field(strict=True)] = True
 
     @property
     def timeout_seconds(self) -> float:
-        """A wall policy is its own deadline; otherwise the watchdog bounds it."""
-        return self.limit.value if self.limit.kind == "wall_seconds" else self.watchdog_seconds
-
-    @model_validator(mode="after")
-    def validate_enforceable_limit(self) -> HarnessConfig:
-        """Reject a policy the selected CLI cannot apply, before any model call."""
-        supported = HARNESS_LIMITS[self.harness]
-        if self.limit.kind not in supported:
-            raise ValueError(
-                f"The {self.harness} harness can enforce only "
-                f"{' or '.join(supported)} as a stopping limit"
-            )
-        return self
+        return self.limit.value
 
     @model_validator(mode="after")
     def resolve_harness(self) -> HarnessConfig:

@@ -17,11 +17,9 @@ from oracle_bench.results import write_result
 
 SAMPLE = Path(__file__).parents[1] / "configs/smoke.yaml"
 VALID_JUDGMENT = """{
-  "issue_target_alignment": "partial",
-  "trigger_alignment": "misses_required_condition",
-  "oracle_alignment": "behaviorally_aligned",
-  "test_strategy": "return_value_or_status",
-  "final_verdict": "issue_relevant_not_confirmed",
+  "no_attempt_reason": null,
+  "tests_issue": "yes",
+  "attempt_detail": "missing_required_condition",
   "rationale": "The generated assertion targets the reported behavior but misses its trigger."
 }"""
 
@@ -48,7 +46,7 @@ def saved_run(tmp_path):
         # exercise the anthropic credential path.
         provider="anthropic",
         model="judge-model",
-        limit={"kind": "budget_usd", "value": 0.1},
+        limit={"kind": "wall_seconds", "value": 300},
     )
     paths.config.write_text(yaml.safe_dump(config.to_dict(), sort_keys=False))
     paths.judge.rubric.write_text("# Frozen rubric\n\nChoose labels.\n")
@@ -92,9 +90,8 @@ def install_fakes(monkeypatch, final_text=VALID_JUDGMENT, status="completed"):
 
     def claude_turn(_sandbox, request):
         assert request.working_directory == "/oracle-judge"
-        # A budget policy leaves the watchdog as the container deadline.
-        assert request.harness.limit.kind == "budget_usd"
-        assert request.harness.timeout_seconds == request.harness.watchdog_seconds
+        assert request.harness.limit.kind == "wall_seconds"
+        assert request.harness.timeout_seconds == 300
         assert request.harness.multi_agent is False
         request.artifact_directory.mkdir(parents=True, exist_ok=True)
         (request.artifact_directory / "final.txt").write_text(final_text)
@@ -124,7 +121,7 @@ def test_standalone_judge_saves_prompt_raw_output_provenance_and_labels(tmp_path
     assert paths.judge.judgment_raw.read_text() == VALID_JUDGMENT
     judgment = read_json(paths.judge.judgment)
     assert judgment["status"] == "completed"
-    assert judgment["final_verdict"] == "issue_relevant_not_confirmed"
+    assert judgment["tests_issue"] == "yes"
     result = read_json(paths.judge.result)
     assert result["model"] == "judge-model"
     assert result["harness"] == "claude"
@@ -266,7 +263,7 @@ def test_late_failure_keeps_the_judgment_the_attempt_already_produced(tmp_path, 
 
     judgment = read_json(paths.judge.judgment)
     assert judgment["status"] == "completed"
-    assert judgment["final_verdict"] == "issue_relevant_not_confirmed"
+    assert judgment["tests_issue"] == "yes"
     attempt = read_json(paths.judge.result)
     assert attempt["errors"][-1]["message"] == "Could not remove benchmark container"
 

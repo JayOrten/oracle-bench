@@ -11,8 +11,10 @@ from oracle_bench.config import JudgeConfig, LimitsConfig, RuntimeConfig
 from oracle_bench.io import read_json, write_json
 from oracle_bench.judge.contracts import WorkspaceSpec
 from oracle_bench.judge.human import (
+    HUMAN_JUDGMENT_TEMPLATE,
     RATER_LABEL,
     RUN_DIRECTORY_LABEL,
+    _prepare_human_files,
     collect_human_judgment,
     create_human_workspace,
     remove_human_workspace,
@@ -106,11 +108,9 @@ def install_client(monkeypatch, client):
 
 def valid_rating():
     return {
-        "issue_target_alignment": "direct",
-        "trigger_alignment": "matches",
-        "oracle_alignment": "behaviorally_aligned",
-        "test_strategy": "return_value_or_status",
-        "final_verdict": "confirmed_issue_reproduction",
+        "no_attempt_reason": None,
+        "tests_issue": "yes",
+        "attempt_detail": "correct_assertion",
         "rationale": "The generated test reaches and checks the reported behavior.",
     }
 
@@ -142,6 +142,28 @@ def test_create_uses_blinded_networkless_container_and_saved_spec(tmp_path, monk
     assert "rater_1" in output
     container.start.assert_called_once_with()
     container.remove.assert_not_called()
+
+
+def test_human_workspace_starts_with_instructions_and_editable_template(tmp_path):
+    paths = prepared_paths(tmp_path)
+    paths.judge.rubric.write_text("# Rubric\n")
+    sandbox = Mock(runtime=runtime_config())
+    uploaded = {}
+
+    def upload(source, destination, **kwargs):
+        uploaded[destination] = source.read_text()
+
+    sandbox.upload.side_effect = upload
+
+    _prepare_human_files(sandbox, paths, "workspace", "rater_1")
+
+    assert "/oracle-judge/HUMAN_INSTRUCTIONS.md" not in uploaded
+    assert "/oracle-judge/instructions.md" not in uploaded
+    assert uploaded["/oracle-judge/output/judgment.json"] == HUMAN_JUDGMENT_TEMPLATE.read_text()
+    assert json.loads(uploaded["/oracle-judge/output/judgment.json"])["tests_issue"].startswith(
+        "CHOOSE:"
+    )
+    sandbox.run.assert_any_call(["chmod", "600", "/oracle-judge/output/judgment.json"])
 
 
 def test_mismatched_reconstruction_is_removed(tmp_path, monkeypatch):
@@ -179,10 +201,39 @@ def test_collect_validates_and_preserves_normalized_and_raw_rating(tmp_path, mon
     saved = collect_human_judgment("workspace")
 
     assert read_json(saved)["status"] == "completed"
-    assert read_json(saved)["final_verdict"] == "confirmed_issue_reproduction"
+    assert read_json(saved)["tests_issue"] == "yes"
     assert read_json(saved.parent / "judgment.raw.json") == valid_rating()
     assert read_json(saved.parent / "provenance.json")["rubric_sha256"] == "b" * 64
     container.remove.assert_not_called()
+
+
+@pytest.mark.parametrize(
+    "answer",
+    ["yes", "no", "unsure"],
+)
+def test_human_answer_is_preserved(tmp_path, monkeypatch, answer):
+    prepared_paths(tmp_path)
+    client = Mock()
+    client.containers.get.return_value = human_container(tmp_path)
+    install_client(monkeypatch, client)
+    monkeypatch.setattr(
+        "oracle_bench.judge.human.load_config", lambda *args, **kwargs: run_config()
+    )
+    draft = {
+        **valid_rating(),
+        "tests_issue": answer,
+        "attempt_detail": "correct_assertion" if answer == "yes" else None,
+        "no_attempt_reason": "nearby_behavior" if answer == "no" else None,
+    }
+    monkeypatch.setattr(
+        "oracle_bench.judge.human.Sandbox.download",
+        lambda self, source, destination, **kwargs: destination.write_text(json.dumps(draft)),
+    )
+
+    saved = collect_human_judgment("workspace")
+
+    assert read_json(saved)["tests_issue"] == answer
+    assert read_json(saved.parent / "judgment.raw.json") == draft
 
 
 def test_invalid_draft_remains_in_running_container(tmp_path, monkeypatch):
@@ -196,7 +247,7 @@ def test_invalid_draft_remains_in_running_container(tmp_path, monkeypatch):
     )
 
     def download(self, source, destination, **kwargs):
-        destination.write_text('{"issue_target_alignment": "direct"}')
+        destination.write_text('{"tests_issue": "maybe"}')
 
     monkeypatch.setattr("oracle_bench.judge.human.Sandbox.download", download)
 

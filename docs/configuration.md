@@ -37,7 +37,7 @@ schema.
 
 ```yaml
 source:
-  instance: psf__requests-2148
+  instance: psf__requests-1142
 
 agent:
   model: gpt-5.4
@@ -59,15 +59,15 @@ For a Claude run:
 
 ```yaml
 source:
-  instance: psf__requests-2148
+  instance: psf__requests-1142
 
 agent:
   harness: claude
   model: haiku
   auth: api_key
   limit:
-    kind: budget_usd
-    value: 0.25
+    kind: wall_seconds
+    value: 300
 
 task:
   prompt: ../prompts/agent/smoke-tests.md
@@ -117,7 +117,7 @@ The source selects one SWE-bench Verified record by default.
 - **Type:** string
 - **Required:** yes
 
-The SWE-bench `instance_id`, such as `psf__requests-2148`. Oracle Bench requires
+The SWE-bench `instance_id`, such as `psf__requests-1142`. Oracle Bench requires
 exactly one matching record and derives the official prepared image name from
 this ID.
 
@@ -214,34 +214,12 @@ OpenCode supports OpenRouter. Name a native provider explicitly to use it.
 
 ### `agent.limit`
 
-- **Type:** one stopping policy, `{kind, value}`
-- **Default:** `{kind: wall_seconds, value: 900}`
+- **Type:** `{kind: wall_seconds, value: <positive number>}`
+- **Default:** `{kind: wall_seconds, value: 300}`
 
-What stops the generation turn. Exactly one policy applies, so every run records
-an unambiguous experimental condition rather than a race between several caps.
-
-| `kind` | `value` | Supported harnesses |
-|---|---|---|
-| `budget_usd` | Positive number | Claude Code |
-| `turns` | Positive integer | Claude Code |
-| `wall_seconds` | Positive number | Codex, Claude Code, OpenCode |
-
-A configuration is rejected when its harness cannot enforce the selected policy.
-`budget_usd` is passed to Claude Code as `--max-budget-usd`: a per-process CLI
-limit, not an account billing cap. When Claude Code uses OpenRouter it is Claude
-Code's local estimate and may differ from what OpenRouter bills; use an
-OpenRouter key limit for a provider-enforced cap.
-
-`judge.limit` has the same shape, values, and harness support.
-
-### `agent.watchdog_seconds`
-
-- **Type:** positive number
-- **Default:** `900`
-
-Infrastructure protection for a stalled container, not an experimental limit. A
-`wall_seconds` policy is its own deadline and this value is then unused. Partial
-files and traces are captured after a timeout when possible.
+Maximum elapsed time for the model turn. The container deadline applies the same
+policy to Codex, Claude Code, and OpenCode. Files created before a timeout are
+still captured and evaluated. `judge.limit` has the same shape and default.
 
 ### `agent.multi_agent`
 
@@ -277,8 +255,8 @@ judge:
   model: haiku
   auth: api_key
   limit:
-    kind: budget_usd
-    value: 0.10
+    kind: wall_seconds
+    value: 300
 ```
 
 A configured run requires the judge credential before generation starts, so an
@@ -415,8 +393,8 @@ uv run oracle-bench classify configs/classification/example.yaml
 
 Its top-level fields are `source`, `classifier`, `rubric`, `limits`, and `output`.
 `source` uses the schema above. `classifier` accepts the same harness, provider,
-authentication, model, stopping-limit, and watchdog settings as `judge`, and always
-sets `multi_agent: false`. `rubric` is the task-classification rubric path. `limits`
+authentication, model, and wall-time settings as `judge`, and always sets
+`multi_agent: false`. `rubric` is the task-classification rubric path. `limits`
 controls image setup and container memory/CPU limits; evaluation time is unused.
 `output` defaults to `classifications`.
 
@@ -428,7 +406,7 @@ generated and frozen in the attempt rather than accepted as input.
 ## Sample configurations
 
 - [`configs/smoke.yaml`](../configs/smoke.yaml): Claude Code generation and
-  judging with Haiku through OpenRouter. Both stages have small budget limits.
+  judging with Haiku through OpenRouter. Both stages have five-minute limits.
 - [`configs/batches/openrouter-three-harnesses.yaml`](../configs/batches/openrouter-three-harnesses.yaml):
-  one localized Requests task each for Opus/Claude Code, GPT-5.6 Sol/Codex, and
+  one localized Requests task each for Opus/Claude Code, GPT-5 Mini/Codex, and
   Nex-N2.5 Pro/OpenCode, all routed through OpenRouter.

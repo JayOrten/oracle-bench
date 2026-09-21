@@ -22,7 +22,11 @@ from oracle_bench.generation import generate_submission
 from oracle_bench.harnesses import require_credentials
 from oracle_bench.instance import resolve_source, write_private_instance_artifacts
 from oracle_bench.io import read_json, write_json
-from oracle_bench.judge.contracts import mark_judgments_stale, read_judgment_state
+from oracle_bench.judge.contracts import (
+    mark_judgments_stale,
+    read_judgment_state,
+    skipped_judgment,
+)
 from oracle_bench.judge.run import judge_stage
 from oracle_bench.paths import RunPaths
 from oracle_bench.report import report
@@ -120,7 +124,7 @@ def run(config: RunConfig) -> Path:
 
             stage = "generate"
             status(run_dir, stage)
-            generate_submission(client, config, image, instance, paths)
+            submission = generate_submission(client, config, image, instance, paths)
 
             stage = "evaluate"
             status(run_dir, stage)
@@ -128,9 +132,15 @@ def run(config: RunConfig) -> Path:
 
             judge_status = "disabled"
             if config.judge:
-                stage = "judge"
-                status(run_dir, stage)
-                judgment = judge_stage(client, config, paths, image, instance, result)
+                if submission["empty"]:
+                    judgment = skipped_judgment(
+                        "No generated test files were captured; no judge turn was run."
+                    )
+                    write_json(paths.judge.judgment, judgment.model_dump())
+                else:
+                    stage = "judge"
+                    status(run_dir, stage)
+                    judgment = judge_stage(client, config, paths, image, instance, result)
                 judge_status = judgment.status
         report(paths)
         status(

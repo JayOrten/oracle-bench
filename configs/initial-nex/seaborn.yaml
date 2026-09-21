@@ -1,5 +1,5 @@
 source:
-  instance: mwaskom__seaborn-2848
+  instance: mwaskom__seaborn-3069
 
 agent:
   harness: opencode

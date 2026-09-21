@@ -1,5 +1,5 @@
 source:
-  instance: pydata__xarray-3364
+  instance: pydata__xarray-2905
 
 agent:
   harness: opencode

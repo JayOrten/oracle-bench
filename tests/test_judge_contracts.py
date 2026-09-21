@@ -6,166 +6,167 @@ from oracle_bench.io import read_json, write_json
 from oracle_bench.judge.contracts import (
     MAX_RATIONALE_LENGTH,
     CompletedJudgment,
+    complete_human_judgment,
     failed_judgment,
     mark_judgments_stale,
     parse_judgment,
+    skipped_judgment,
+    validate_judgment,
 )
 from oracle_bench.paths import RunPaths
 
 
 def labels(**changes):
     value = {
-        "issue_target_alignment": "direct",
-        "trigger_alignment": "matches",
-        "oracle_alignment": "behaviorally_aligned",
-        "test_strategy": "exception_behavior",
-        "final_verdict": "unassessable",
-        "rationale": "The generated assertion reaches the relevant path.",
+        "tests_issue": "yes",
+        "attempt_detail": "correct_assertion",
+        "no_attempt_reason": None,
+        "rationale": "The generated assertion checks the reported behavior.",
     }
     value.update(changes)
     return value
 
 
 @pytest.mark.parametrize(
-    "field,value",
+    "detail",
     [
-        ("issue_target_alignment", value)
-        for value in ["direct", "partial", "adjacent", "unrelated", "indeterminate"]
-    ]
-    + [
-        ("trigger_alignment", value)
-        for value in ["matches", "misses_required_condition", "wrong_path", "not_assessable"]
-    ]
-    + [
-        ("oracle_alignment", value)
-        for value in [
-            "behaviorally_aligned",
-            "behaviorally_misaligned",
-            "implementation_coupled",
-            "no_clear_oracle",
-            "not_assessable",
-        ]
-    ]
-    + [
-        ("test_strategy", value)
-        for value in [
-            "return_value_or_status",
-            "exception_behavior",
-            "state_or_artifact",
-            "external_interaction",
-            "resource_or_nondeterminism",
-            "implementation_inspection",
-            "no_meaningful_assertion",
-        ]
+        "correct_assertion",
+        "wrong_assertion",
+        "no_issue_assertion",
+        "missing_required_condition",
+        "test_invalid_or_incomplete",
     ],
 )
-def test_parser_accepts_every_facet_label(field, value):
-    result = parse_judgment(json.dumps(labels(**{field: value})), has_relevant_fail_to_pass=False)
+def test_parser_accepts_every_attempt_detail(detail):
+    result = parse_judgment(json.dumps(labels(attempt_detail=detail)))
 
     assert isinstance(result, CompletedJudgment)
-    assert getattr(result, field) == value
+    assert result.attempt_detail == detail
 
 
 @pytest.mark.parametrize(
-    "changes,has_fail_to_pass",
+    "answer,detail,reason",
     [
-        (
-            {"final_verdict": "confirmed_issue_reproduction"},
-            True,
-        ),
-        (
-            {
-                "issue_target_alignment": "partial",
-                "final_verdict": "issue_relevant_not_confirmed",
-            },
-            False,
-        ),
-        (
-            {
-                "issue_target_alignment": "direct",
-                "final_verdict": "issue_relevant_but_invalid",
-            },
-            False,
-        ),
-        (
-            {
-                "issue_target_alignment": "unrelated",
-                "final_verdict": "not_issue_relevant",
-            },
-            True,
-        ),
-        ({"final_verdict": "unassessable"}, False),
+        ("yes", "correct_assertion", None),
+        ("no", None, "nearby_behavior"),
+        ("no", None, "unrelated_behavior"),
+        ("unsure", None, None),
     ],
 )
-def test_parser_accepts_every_consistent_verdict(changes, has_fail_to_pass):
+def test_parser_accepts_each_answer_and_conditional_fields(answer, detail, reason):
     result = parse_judgment(
-        json.dumps(labels(**changes)), has_relevant_fail_to_pass=has_fail_to_pass
+        json.dumps(labels(tests_issue=answer, attempt_detail=detail, no_attempt_reason=reason))
     )
 
-    assert result.status == "completed"
+    assert result.tests_issue == answer
+    assert result.attempt_detail == detail
+    assert result.no_attempt_reason == reason
+
+
+@pytest.mark.parametrize(
+    "value,detail,reason",
+    [
+        (labels(no_attempt_reason="null"), "correct_assertion", None),
+        (
+            labels(tests_issue="no", attempt_detail="null", no_attempt_reason="nearby_behavior"),
+            None,
+            "nearby_behavior",
+        ),
+        (labels(tests_issue="unsure", attempt_detail="null", no_attempt_reason="null"), None, None),
+    ],
+)
+def test_parser_normalizes_quoted_null_only_in_conditional_fields(value, detail, reason):
+    result = parse_judgment(json.dumps(value))
+
+    assert isinstance(result, CompletedJudgment)
+    assert result.attempt_detail == detail
+    assert result.no_attempt_reason == reason
+
+
+def test_human_input_accepts_quoted_null_but_saved_contract_does_not():
+    raw = labels(tests_issue="no", attempt_detail="null", no_attempt_reason="nearby_behavior")
+
+    judgment = complete_human_judgment(json.dumps(raw))
+
+    assert judgment.attempt_detail is None
+    assert judgment.model_dump()["attempt_detail"] is None
+    with pytest.raises(ValueError):
+        validate_judgment({"status": "completed", **raw})
+
+
+@pytest.mark.parametrize(
+    "answer,detail,reason",
+    [
+        ("yes", None, None),
+        ("yes", "correct_assertion", "nearby_behavior"),
+        ("no", "correct_assertion", "nearby_behavior"),
+        ("no", None, None),
+        ("unsure", "correct_assertion", None),
+        ("unsure", None, "unrelated_behavior"),
+    ],
+)
+def test_parser_rejects_conditional_fields_that_conflict_with_answer(answer, detail, reason):
+    result = parse_judgment(
+        json.dumps(labels(tests_issue=answer, attempt_detail=detail, no_attempt_reason=reason))
+    )
+
+    assert result.status == "invalid_output"
 
 
 def test_parser_accepts_one_json_markdown_fence():
     raw = "```json\n" + json.dumps(labels()) + "\n```"
-    assert parse_judgment(raw, has_relevant_fail_to_pass=False).status == "completed"
+    assert parse_judgment(raw).status == "completed"
 
 
 @pytest.mark.parametrize(
     "raw",
     [
         "before " + json.dumps(labels()),
-        "```json\n" + json.dumps(labels()) + "\n```\nafter",
+        "```json\n" + json.dumps(labels()) + "\n```after",
         "{not json}",
         json.dumps([]),
         json.dumps({key: value for key, value in labels().items() if key != "rationale"}),
         json.dumps(labels(unexpected="field")),
-        json.dumps(labels(trigger_alignment="almost")),
+        json.dumps(labels(oracle_alignment="behaviorally_aligned")),
+        json.dumps(labels(tests_issue="maybe")),
+        json.dumps(labels(attempt_detail=["correct_assertion"])),
+        json.dumps(labels(no_attempt_reason="NULL")),
+        json.dumps(labels(attempt_detail="none")),
         json.dumps(labels(rationale="   ")),
         json.dumps(labels(rationale="x" * (MAX_RATIONALE_LENGTH + 1))),
         json.dumps(labels(rationale=3)),
     ],
 )
 def test_parser_returns_explicit_invalid_output(raw):
-    result = parse_judgment(raw, has_relevant_fail_to_pass=False)
+    result = parse_judgment(raw)
 
     assert result.status == "invalid_output"
     assert result.error
 
 
-@pytest.mark.parametrize(
-    "changes,has_fail_to_pass",
-    [
-        ({"final_verdict": "confirmed_issue_reproduction"}, False),
-        (
-            {
-                "oracle_alignment": "behaviorally_misaligned",
-                "final_verdict": "confirmed_issue_reproduction",
-            },
-            True,
-        ),
-        ({"final_verdict": "not_issue_relevant"}, False),
-        (
-            {
-                "issue_target_alignment": "adjacent",
-                "final_verdict": "issue_relevant_not_confirmed",
-            },
-            False,
-        ),
-        (
-            {
-                "issue_target_alignment": "unrelated",
-                "final_verdict": "issue_relevant_but_invalid",
-            },
-            False,
-        ),
-    ],
-)
-def test_parser_rejects_contradictory_labels(changes, has_fail_to_pass):
-    result = parse_judgment(
-        json.dumps(labels(**changes)), has_relevant_fail_to_pass=has_fail_to_pass
+def test_parser_preserves_independent_answer_even_without_fail_to_pass():
+    result = parse_judgment(json.dumps(labels()))
+
+    assert result.tests_issue == "yes"
+
+
+def test_human_rating_preserves_issue_attempt_even_when_assertion_is_wrong():
+    judgment = complete_human_judgment(
+        json.dumps(
+            labels(
+                tests_issue="yes",
+                attempt_detail="wrong_assertion",
+            )
+        )
     )
 
-    assert result.status == "invalid_output"
+    assert judgment.tests_issue == "yes"
+    assert judgment.attempt_detail == "wrong_assertion"
+
+
+def test_human_rating_rejects_unfilled_rationale():
+    with pytest.raises(ValueError, match="placeholder"):
+        complete_human_judgment(json.dumps(labels(rationale="REPLACE: explain")))
 
 
 def test_failure_results_distinguish_failure_from_timeout():
@@ -173,12 +174,16 @@ def test_failure_results_distinguish_failure_from_timeout():
     assert failed_judgment("deadline exceeded", timed_out=True).status == "timed_out"
 
 
+def test_skipped_judgment_records_why_no_turn_was_run():
+    assert skipped_judgment("generation failed").model_dump() == {
+        "status": "skipped",
+        "reason": "generation failed",
+    }
+
+
 def test_marking_stale_retains_every_previous_annotation(tmp_path):
     paths = RunPaths.create(tmp_path)
-    previous = parse_judgment(
-        json.dumps(labels(final_verdict="issue_relevant_not_confirmed")),
-        has_relevant_fail_to_pass=False,
-    )
+    previous = parse_judgment(json.dumps(labels()))
     human = paths.judge.human.judgments / "rater_1/judgment.json"
     human.parent.mkdir(parents=True)
     for path in (paths.judge.judgment, human):
@@ -191,7 +196,6 @@ def test_marking_stale_retains_every_previous_annotation(tmp_path):
         assert stale["status"] == "stale"
         assert stale["previous_judgment"] == previous.model_dump()
 
-    # Replacing the evidence twice keeps the original annotation instead of nesting.
     first = read_json(paths.judge.judgment)
     mark_judgments_stale(paths)
     assert read_json(paths.judge.judgment) == first

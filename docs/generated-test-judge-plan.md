@@ -51,20 +51,15 @@ judge:
   provider: openai
   model: gpt-5.4-mini
   limit:
-    kind: budget_usd
-    value: 0.10
+    kind: wall_seconds
+    value: 300
 ```
 
 Recommended defaults:
 
 - judging is disabled when the section is absent, preserving existing configs;
 - subagents are always disabled for this bounded classification task;
-- `limit` is one discriminated stopping policy rather than three competing
-  settings. Its supported kinds can be `budget_usd`, `turns`, or `wall_seconds`,
-  but a configuration chooses exactly one. Prefer `budget_usd` for judge runs
-  and reject a harness/provider pair that cannot enforce the selected policy;
-- keep an internal fixed watchdog as infrastructure protection. It is not a
-  user-facing experiment limit and is reported only if it fires;
+- `limit` is a wall-clock deadline with the same semantics for every harness;
 - require an explicit rubric path so the exact prompt can be frozen with the
   run;
 - derive the credential exactly as the generation harness does and never write
@@ -225,6 +220,7 @@ every artifact happens to live:
 ```text
 /oracle-judge/
   rubric.md
+  instructions.md
   instance/
     issue.md
     fix.patch
@@ -237,7 +233,6 @@ every artifact happens to live:
     <repository files>
     <generated submission>
   evidence/
-    relevance.md
     submission-manifest.json
     workspace.diff
     paired-results.json
@@ -258,7 +253,7 @@ Prepare the two repository views from one fresh container:
 4. Upload the issue, repair, reference-test patch, normalized instance metadata,
    paired results, per-version structured results, and execution logs under
    `/oracle-judge`.
-5. Generate `evidence/relevance.md` as a short starting guide containing the
+5. Generate `instructions.md` from a checked-in Markdown template containing the
    production files changed by the repair, files changed by the reference-test
    patch, generated-test paths, relevant test IDs, and links to their execution
    results. This guide points the judge toward useful evidence without deciding
@@ -278,7 +273,7 @@ generation upload policy.
 Keep the complete buggy and golden checkouts available. Producing partial source
 trees would require deciding in advance which transitive code, fixtures, and
 configuration matter, and a mistaken slice could change the judgment. The
-relevance guide gives the common case a compact path through a large repository.
+instructions guide gives the common case a compact path through a large repository.
 If judge traces later show that repository exploration dominates cost, evaluate
 a derived source bundle as a separate optimization and compare its labels with
 the full-checkout condition before adopting it.
@@ -372,31 +367,18 @@ normalized schema is:
 
 ```json
 {
-  "schema_version": 1,
   "status": "completed",
-  "issue_target_alignment": "direct",
-  "trigger_alignment": "matches",
-  "oracle_alignment": "behaviorally_aligned",
-  "test_strategy": "exception_behavior",
-  "final_verdict": "confirmed_issue_reproduction",
+  "tests_issue": "yes",
+  "attempt_detail": "correct_assertion",
+  "no_attempt_reason": null,
   "rationale": "..."
 }
 ```
 
-`schema_version` and `status` are added by Oracle Bench rather than requested
-from the model. Validate cross-field rules from the rubric, including:
-
-- `confirmed_issue_reproduction` requires `direct`, `behaviorally_aligned`, and
-  at least one F→P result in the saved evaluation evidence. Whether that F→P test
-  is issue-relevant remains part of the judge's semantic decision;
-- `not_issue_relevant` requires `adjacent` or `unrelated`;
-- `issue_relevant_not_confirmed` and `issue_relevant_but_invalid` require
-  `direct` or `partial`;
-- rationale must be nonblank and remain within a modest length limit.
-
-Some semantic claims cannot be proven mechanically. Cross-field validation
-should reject contradictions in the labels, while preserving the raw response
-for later audit.
+`status` is added by Oracle Bench rather than requested from the model.
+`tests_issue` is the rater's independent answer and is not derived from the
+other labels or the execution matrix. The rationale must be nonblank and remain
+within a modest length limit. Preserve the raw response for later audit.
 
 Do not automatically make a second paid call when parsing fails. Save
 `status: invalid_output`, the parse or validation error, raw response, usage,
@@ -436,7 +418,7 @@ judge result is a model-derived annotation with separate provenance and cost.
 Extend the run report with:
 
 - judge status, harness, provider, and model;
-- all five labels and the rationale;
+- the issue-attempt answer, its conditional detail, and the rationale;
 - links to normalized judgment, raw response, prompt, rubric, and trace;
 - judge token usage, duration, and cost shown separately from generation cost.
 
@@ -474,7 +456,7 @@ continues to perform no model calls and renders whatever judge state is saved.
 Extend each job summary with:
 
 - `judge_status`;
-- the five normalized labels when valid;
+- the normalized answer and conditional detail when valid;
 - judge harness, provider, and model;
 - judge cost, tokens, and duration separately from generation values.
 
@@ -489,22 +471,21 @@ hide systematic label disagreements.
 Add aggregate counts for every label in every facet. Also include these useful
 cross-tabs:
 
-- matrix detection (`has F→P`) by `final_verdict`;
-- `issue_target_alignment` by matrix detection;
-- `oracle_alignment` by matrix cell presence;
-- generation harness/model by `final_verdict`;
+- matrix detection (`has F→P`) by `tests_issue`;
+- `attempt_detail` by matrix cell presence;
+- generation harness/model by `tests_issue`;
 - valid, invalid, failed, timed-out, stale, and missing judgments.
 
 The Markdown batch report should start small: one per-run table with matrix
-detection, final verdict, target alignment, oracle alignment, and both model
+detection, the `tests_issue` answer, its conditional details, and both model
 costs; then facet-frequency tables. Keep the richer cross-tabs in `summary.json`
 until enough runs exist to know which views are useful.
 
 Report two distinct top-level metrics:
 
 - **matrix detection rate**: the existing compliant F→P measure;
-- **judge-confirmed issue reproduction rate**: valid judgments whose final
-  verdict is `confirmed_issue_reproduction`.
+- **judge tests-issue yes rate**: valid judgments whose `tests_issue` answer is
+  `yes`.
 
 Never substitute one metric for the other. Their disagreement is a central
 result of the experiment.
@@ -515,7 +496,7 @@ The largest savings come from avoiding work rather than trimming evidence:
 
 - install the supported harness CLIs once in a shared, cached runtime layer;
 - use Git worktrees instead of building or exporting two images;
-- direct the judge to a generated relevance guide while retaining the full
+- direct the judge to the generated instructions guide while retaining the full
   checkout for uncertain cases;
 - provide saved structured test results so the judge does not rerun tests;
 - disable subagents and enforce one configured stopping policy;
@@ -526,7 +507,7 @@ The largest savings come from avoiding work rather than trimming evidence:
 Before a large run, judge a stratified calibration sample containing F→P, F→F,
 P→P, invalid, and unrelated submissions. Compare the LLM labels with human
 labels and use disagreements to revise the rubric or model choice. This is more
-useful than spending a larger model budget before inter-rater behavior is known.
+useful than spending more on model calls before inter-rater behavior is known.
 
 ## Implementation milestones
 
@@ -613,11 +594,11 @@ without launching Docker or calling a model.
 2. Validate that the selected harness/provider can enforce the selected stopping
    policy.
 3. Add `RunPaths` entries for the judge artifact tree.
-4. Define strict models for the five rubric labels, rationale, judge status,
+4. Define strict models for the answer, conditional details, rationale, judge status,
    usage, cost, and provenance.
 5. Implement parsing of a bare JSON object or one fenced JSON object from the
    final assistant message.
-6. Implement rubric cross-field validation and explicit `invalid_output`,
+6. Implement strict rubric-label validation and explicit `invalid_output`,
    `failed`, and `timed_out` results.
 7. Freeze the exact rubric into `judge/rubric.md` when resolving a configured
    run.
@@ -628,7 +609,7 @@ without launching Docker or calling a model.
   policy, unknown fields, unsupported provider combinations, and path
   resolution;
 - parser fixtures cover every valid label, fenced output, extra prose, malformed
-  JSON, missing and unknown fields, invalid labels, contradictory verdicts, and
+  JSON, missing and unknown fields, invalid labels, and
   blank or excessive rationales;
 - saved resolved configuration and result fixtures contain no credentials.
 
@@ -651,7 +632,7 @@ results, but there is still no judge container or model call.
 6. Upload byte-identical generated tests into both checkouts.
 7. Upload the issue, fix patch, reference-test patch, normalized metadata,
    generated-test diff, structured evaluation results, and logs.
-8. Generate `evidence/relevance.md` from changed paths, generated-test paths,
+8. Generate `instructions.md` from changed paths, generated-test paths,
    reference test IDs, and paired outcomes.
 9. Hash every uploaded input and record its destination in the workspace
    specification.
@@ -739,7 +720,7 @@ evidence needed to audit it.
 
 **Work:**
 
-1. Add judge status, selected model, five labels, and rationale to the run report.
+1. Add judge status, selected model, answer, conditional detail, and rationale to the run report.
 2. Show generation cost and judge cost separately.
 3. Link the frozen rubric, prompt, raw response, normalized judgment, workspace
    specification, trace, and relevant evaluation evidence.
@@ -766,9 +747,9 @@ where matrix results disagree with semantic judgment.
    job summary.
 2. Count labels independently for every facet and count missing or invalid
    judgments separately.
-3. Add matrix-detection-by-final-verdict, target-alignment-by-detection, and
-   oracle-alignment-by-matrix-presence cross-tabs to `summary.json`.
-4. Add matrix detection rate and judge-confirmed issue reproduction rate as
+3. Add matrix-detection-by-tests-issue and attempt-detail-by-matrix-presence
+   cross-tabs to `summary.json`.
+4. Add matrix detection rate and judge tests-issue yes rate as
    separate metrics.
 5. Add a compact per-run table and facet frequency tables to the Markdown batch
    report.
