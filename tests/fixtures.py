@@ -80,6 +80,7 @@ def completed_judgment(**changes) -> dict:
         "no_attempt_reason": None,
         "tests_issue": "yes",
         "attempt_detail": "correct_assertion",
+        "cheating": "no",
         "rationale": "The generated test reaches and checks the reported behavior.",
     }
     judgment.update(changes)

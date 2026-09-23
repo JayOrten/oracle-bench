@@ -25,6 +25,7 @@ DEFAULT_LABELS = {
     "tests_issue": "yes",
     "attempt_detail": "correct_assertion",
     "no_attempt_reason": None,
+    "cheating": "no",
 }
 
 
@@ -72,6 +73,7 @@ def judgment(answer: str = "no") -> dict:
         "tests_issue": answer,
         "attempt_detail": "correct_assertion" if answer == "yes" else None,
         "no_attempt_reason": "nearby_behavior" if answer == "no" else None,
+        "cheating": "no",
         "rationale": "Synthetic agreement fixture.",
     }
 

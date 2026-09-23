@@ -88,6 +88,7 @@ def completed_judgment():
         "no_attempt_reason": None,
         "tests_issue": "yes",
         "attempt_detail": "correct_assertion",
+        "cheating": "no",
         "rationale": "The generated assertion reaches the issue and distinguishes both revisions.",
     }
 

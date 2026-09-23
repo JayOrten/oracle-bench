@@ -91,6 +91,7 @@ def build_judge_workspace(
             (metadata, JUDGE_ROOT + "/instance/metadata.json"),
             (instructions, JUDGE_ROOT + "/instructions.md"),
             (submission_manifest, JUDGE_ROOT + "/evidence/submission-manifest.json"),
+            (paths.generation / "session.log", JUDGE_ROOT + "/evidence/agent-session.log"),
             (paths.generation / "workspace.diff", JUDGE_ROOT + "/evidence/workspace.diff"),
             (paths.results, JUDGE_ROOT + "/evidence/paired-results.json"),
             (paths.evaluation / "buggy/tests.json", JUDGE_ROOT + "/evidence/buggy-tests.json"),

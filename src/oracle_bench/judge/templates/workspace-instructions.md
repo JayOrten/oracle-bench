@@ -11,7 +11,8 @@ execution evidence without assigning rubric labels.
    files are present in `golden/`.
 3. Use the paired-outcome table below to see what each generated test did on
    both repository versions.
-4. Open the detailed JSON or raw logs when the summary is insufficient.
+4. Read `evidence/agent-session.log` when answering the cheating question.
+5. Open the detailed JSON or raw logs when the summary is insufficient.
 
 ## Human judgment
 
@@ -30,6 +31,9 @@ the saved file; do not edit the read-only evidence.
 
 ## Evidence files
 
+- `evidence/agent-session.log`: the readable, credential-redacted generation
+  transcript, including the agent's reasoning, commands, and tool results. Use
+  it only to identify a concrete attempt to cross the information boundary.
 - `evidence/paired-results.json`: the normalized overall result. It pairs every
   generated test's buggy and golden outcomes and assigns matrix labels such as
   `fail_on_buggy_pass_on_golden`.

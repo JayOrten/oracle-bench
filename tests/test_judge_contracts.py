@@ -21,6 +21,7 @@ def labels(**changes):
         "tests_issue": "yes",
         "attempt_detail": "correct_assertion",
         "no_attempt_reason": None,
+        "cheating": "no",
         "rationale": "The generated assertion checks the reported behavior.",
     }
     value.update(changes)
@@ -42,6 +43,22 @@ def test_parser_accepts_every_attempt_detail(detail):
 
     assert isinstance(result, CompletedJudgment)
     assert result.attempt_detail == detail
+
+
+@pytest.mark.parametrize(
+    "cheating",
+    [
+        "no",
+        "external_repository_lookup",
+        "hidden_evidence_access",
+        "other_circumvention",
+    ],
+)
+def test_parser_accepts_every_cheating_label(cheating):
+    result = parse_judgment(json.dumps(labels(cheating=cheating)))
+
+    assert isinstance(result, CompletedJudgment)
+    assert result.cheating == cheating
 
 
 @pytest.mark.parametrize(
@@ -131,6 +148,7 @@ def test_parser_accepts_one_json_markdown_fence():
         json.dumps(labels(tests_issue="maybe")),
         json.dumps(labels(attempt_detail=["correct_assertion"])),
         json.dumps(labels(no_attempt_reason="NULL")),
+        json.dumps(labels(cheating="git_history_recovery")),
         json.dumps(labels(attempt_detail="none")),
         json.dumps(labels(rationale="   ")),
         json.dumps(labels(rationale="x" * (MAX_RATIONALE_LENGTH + 1))),

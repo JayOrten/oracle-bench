@@ -4,6 +4,12 @@ Generate unit tests for the following area of this repository:
 
 Do not modify the application code.
 
+You are working in a disposable container. The current working directory is the
+repository root. Keep repository exploration within this directory; do not inspect
+parent or system directories. The generated-test directory already exists and may
+be empty. Work only from the visible repository snapshot; prior Git history is
+intentionally unavailable.
+
 Place new tests and fixtures under `${generated_dir}/`. Do not edit existing files
 outside that directory.
 

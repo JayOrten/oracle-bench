@@ -158,8 +158,8 @@ rather than mixing ratings across versions.
 Read `/oracle-judge/instructions.md` alongside `rubric.md`; it combines the
 human workflow, evidence-file guide, and task-specific outcome summary. The
 workspace opens with `/oracle-judge/output/judgment.json` already populated
-with placeholders for `tests_issue`, `attempt_detail`, `no_attempt_reason`, and
-`rationale`. Replace each with the appropriate rubric label, JSON `null`, or
+with placeholders for `tests_issue`, `attempt_detail`, `no_attempt_reason`,
+`cheating`, and `rationale`. Replace each with the appropriate rubric label, JSON `null`, or
 the string `"null"` for an inapplicable conditional field;
 then write a short rationale. The answer is the rater's own
 judgment; collection validates but does not derive or override it. Then collect it:
@@ -191,7 +191,7 @@ whole repository or a calculated localized target, then shows agent and evaluati
 completion states, submission compliance, the paired pass/fail matrix, non-binary
 outcomes, coverage, and links to artifacts that exist. When judging is configured,
 it also shows judge status, harness and model provenance, the issue-attempt
-answer and its conditional detail, the rationale, and audit links. Generation
+answer and its conditional detail, the cheating audit, the rationale, and audit links. Generation
 and judge duration, usage, and cost are
 reported separately.
 
@@ -212,7 +212,7 @@ fields are present.
 ### `judge/judgment.json`
 
 The normalized semantic annotation. A completed judgment contains `status`,
-`tests_issue`, `attempt_detail`, `no_attempt_reason`, and `rationale`. The
+`tests_issue`, `attempt_detail`, `no_attempt_reason`, `cheating`, and `rationale`. The
 conditional fields are saved as JSON `null` when inapplicable, even if the
 submitted response used the string `"null"`. The raw response is retained.
 Other states are explicit:

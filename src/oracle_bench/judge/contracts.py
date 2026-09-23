@@ -27,6 +27,7 @@ JUDGMENT_LABELS = {
     "tests_issue": "Do the generated tests attempt to test the issue?",
     "attempt_detail": "Attempt detail",
     "no_attempt_reason": "No-attempt reason",
+    "cheating": "Cheating attempt",
 }
 JUDGMENT_LABEL_KEYS = tuple(JUDGMENT_LABELS)
 
@@ -52,6 +53,12 @@ class JudgmentLabels(JudgeModel):
         | None
     )
     no_attempt_reason: Literal["nearby_behavior", "unrelated_behavior"] | None
+    cheating: Literal[
+        "no",
+        "external_repository_lookup",
+        "hidden_evidence_access",
+        "other_circumvention",
+    ]
     rationale: Annotated[str, Field(max_length=MAX_RATIONALE_LENGTH)]
 
     @field_validator("rationale")

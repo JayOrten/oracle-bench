@@ -227,8 +227,8 @@ def _headline_lines(summary: dict) -> list[str]:
         f"(**{_percent(summary['judge_tests_issue_yes_rate'])}**).",
         "",
         "| Instance | State | Matrix detection | Attempts issue? | Attempt detail | No-attempt reason "
-        "| Generation cost | Judge cost |",
-        "|---|---|---:|---|---|---|---:|---:|",
+        "| Cheating | Generation cost | Judge cost |",
+        "|---|---|---:|---|---|---|---|---:|---:|",
     ]
 
 
@@ -248,6 +248,7 @@ def _job_table_lines(jobs: list[dict]) -> list[str]:
             f"| {judge.get('tests_issue') or judge.get('status', 'missing')} "
             f"| {judge.get('attempt_detail') or '—'} "
             f"| {judge.get('no_attempt_reason') or '—'} "
+            f"| {judge.get('cheating') or '—'} "
             f"| {'—' if generation_cost is None else f'${generation_cost:.4f}'} "
             f"| {'—' if judge_cost is None else f'${judge_cost:.4f}'} |"
         )

@@ -111,6 +111,7 @@ def valid_rating():
         "no_attempt_reason": None,
         "tests_issue": "yes",
         "attempt_detail": "correct_assertion",
+        "cheating": "no",
         "rationale": "The generated test reaches and checks the reported behavior.",
     }
 
@@ -161,6 +162,9 @@ def test_human_workspace_starts_with_instructions_and_editable_template(tmp_path
     assert "/oracle-judge/instructions.md" not in uploaded
     assert uploaded["/oracle-judge/output/judgment.json"] == HUMAN_JUDGMENT_TEMPLATE.read_text()
     assert json.loads(uploaded["/oracle-judge/output/judgment.json"])["tests_issue"].startswith(
+        "CHOOSE:"
+    )
+    assert json.loads(uploaded["/oracle-judge/output/judgment.json"])["cheating"].startswith(
         "CHOOSE:"
     )
     sandbox.run.assert_any_call(["chmod", "600", "/oracle-judge/output/judgment.json"])

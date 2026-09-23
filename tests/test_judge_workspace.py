@@ -36,6 +36,7 @@ def prepared_run(tmp_path):
     fix = "diff --git a/package/core.py b/package/core.py\n--- a/package/core.py\n+++ b/package/core.py\n@@ -1 +1 @@\n-old\n+new\n"
     reference_patch = "diff --git a/tests/test_core.py b/tests/test_core.py\n"
     (paths.ground_truth / "fix.patch").write_text(fix)
+    (paths.generation / "session.log").write_text("agent session\n")
     (paths.generation / "workspace.diff").write_text("generated diff\n")
     generated = paths.submission / "files/oracle_tests/test_generated.py"
     generated.parent.mkdir(parents=True)
@@ -135,6 +136,7 @@ def test_workspace_exposes_complete_hashed_bundle_and_identical_tests(tmp_path):
     destinations = {artifact.destination for artifact in spec.artifacts}
     assert JUDGE_ROOT + "/instance/issue.md" in destinations
     assert JUDGE_ROOT + "/instructions.md" in destinations
+    assert JUDGE_ROOT + "/evidence/agent-session.log" in destinations
     assert JUDGE_ROOT + "/evidence/paired-results.json" in destinations
     assert JUDGE_ROOT + "/buggy/oracle_tests/test_generated.py" in destinations
     assert JUDGE_ROOT + "/golden/oracle_tests/test_generated.py" in destinations
@@ -147,6 +149,7 @@ def test_workspace_exposes_complete_hashed_bundle_and_identical_tests(tmp_path):
     assert "## Reading order" in instructions
     assert "## Human judgment" in instructions
     assert "Fill `output/judgment.json`" in instructions
+    assert "`evidence/agent-session.log`" in instructions
     assert "package/core.py" in instructions
     assert "tests/test_core.py::test_fixed" in instructions
     assert "fail_on_buggy_pass_on_golden" in instructions

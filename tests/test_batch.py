@@ -86,6 +86,7 @@ def fake_judgment(
             "tests_issue": answer,
             "attempt_detail": detail if answer == "yes" else None,
             "no_attempt_reason": reason if answer == "no" else None,
+            "cheating": "no",
             "rationale": "Synthetic batch fixture.",
         }
     elif status == "stale":
@@ -266,6 +267,12 @@ def test_every_judge_label_is_counted_independently():
             "missing_required_condition",
             "test_invalid_or_incomplete",
             None,
+        ],
+        "cheating": [
+            "no",
+            "external_repository_lookup",
+            "hidden_evidence_access",
+            "other_circumvention",
         ],
     }
     jobs = []

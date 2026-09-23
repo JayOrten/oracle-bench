@@ -20,6 +20,7 @@ VALID_JUDGMENT = """{
   "no_attempt_reason": null,
   "tests_issue": "yes",
   "attempt_detail": "missing_required_condition",
+  "cheating": "no",
   "rationale": "The generated assertion targets the reported behavior but misses its trigger."
 }"""
 

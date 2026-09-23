@@ -174,6 +174,7 @@ def test_reconstruct_privileged_judge_workspace(tmp_path, request):
                 "no_attempt_reason": None,
                 "tests_issue": "unsure",
                 "attempt_detail": None,
+                "cheating": "no",
                 "rationale": "The deterministic smoke judge verified that all workspace evidence is readable.",
             }
         )
@@ -236,6 +237,7 @@ def test_reconstruct_privileged_judge_workspace(tmp_path, request):
             "no_attempt_reason": None,
             "tests_issue": "unsure",
             "attempt_detail": None,
+            "cheating": "no",
             "rationale": "The human-workspace smoke fixture validates collection.",
         }
     )
