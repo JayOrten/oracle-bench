@@ -84,8 +84,11 @@ def run_turn(sandbox: Sandbox, request: AgentTurnRequest) -> dict:
             'model_providers.openrouter.name="OpenRouter"',
             'model_providers.openrouter.base_url="https://openrouter.ai/api/v1"',
             'model_providers.openrouter.wire_api="responses"',
-            "model_providers.openrouter.request_max_retries=0",
-            "model_providers.openrouter.stream_max_retries=0",
+            # Keep transient provider and SSE failures inside this bounded turn.
+            # These values match Codex's documented defaults but remain explicit
+            # so a CLI upgrade cannot silently change benchmark behavior.
+            "model_providers.openrouter.request_max_retries=4",
+            "model_providers.openrouter.stream_max_retries=5",
         ]:
             argv[2:2] = ["--config", setting]
         for setting in [

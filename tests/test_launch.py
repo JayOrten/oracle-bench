@@ -63,6 +63,8 @@ def test_launch_routes_only_selected_credential(
                 assert "features.multi_agent=false" in argv
                 if provider == "openrouter":
                     assert 'model_provider="openrouter"' in argv
+                    assert "model_providers.openrouter.request_max_retries=4" in argv
+                    assert "model_providers.openrouter.stream_max_retries=5" in argv
                 trace = {"type": "turn.completed"}
             elif harness is claude:
                 assert "Bash,Read,Write,Edit,Glob,Grep" in argv

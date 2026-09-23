@@ -4,7 +4,7 @@ source:
 agent:
   harness: claude
   provider: openrouter
-  model: anthropic/claude-3-haiku
+  model: anthropic/claude-3-haiku@preset/oracle-anthropic-first
   multi_agent: false
 
 judge:
@@ -12,7 +12,7 @@ judge:
   instructions: ../../prompts/judge/generated-test-instructions.md
   harness: codex
   provider: openrouter
-  model: openai/gpt-5-mini
+  model: openai/gpt-5-mini@preset/oracle-openai-first
   limit:
     kind: wall_seconds
     value: 300

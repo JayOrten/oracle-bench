@@ -4,7 +4,7 @@ source:
 agent:
   harness: codex
   provider: openrouter
-  model: openai/gpt-5.6-sol
+  model: openai/gpt-6-sol@preset/oracle-openai-first
   multi_agent: false
   limit:
     kind: wall_seconds
@@ -15,7 +15,7 @@ judge:
   instructions: ../../prompts/judge/generated-test-instructions.md
   harness: codex
   provider: openrouter
-  model: google/gemini-3.8-flash
+  model: google/gemini-3.8-flash@preset/oracle-google-first
   limit:
     kind: wall_seconds
     value: 300

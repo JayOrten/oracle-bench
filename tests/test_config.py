@@ -45,7 +45,7 @@ def test_smoke_config_uses_five_minute_limits_for_generation_and_judging():
     assert config.source.revision == "c104f840cc67f8b6eec6f759ebc8b2693d585d4a"
     assert config.agent.harness == "claude"
     assert config.agent.provider == "openrouter"
-    assert config.agent.model == "anthropic/claude-haiku-4.5"
+    assert config.agent.model == "anthropic/claude-haiku-4.5@preset/oracle-anthropic-first"
     assert config.agent.credential_env == "OPENROUTER_API_KEY"
     assert config.agent.limit.kind == "wall_seconds"
     assert config.agent.limit.value == 300
@@ -54,7 +54,7 @@ def test_smoke_config_uses_five_minute_limits_for_generation_and_judging():
     assert config.judge is not None
     assert config.judge.harness == "claude"
     assert config.judge.provider == "openrouter"
-    assert config.judge.model == "anthropic/claude-haiku-4.5"
+    assert config.judge.model == "anthropic/claude-haiku-4.5@preset/oracle-anthropic-first"
     assert config.judge.credential_env == "OPENROUTER_API_KEY"
     assert config.judge.limit.kind == "wall_seconds"
     assert config.judge.limit.value == 300
