@@ -13,20 +13,22 @@ from oracle_bench.io import read_json
 from oracle_bench.results import CoverageResult, VersionResult, read_version_result
 
 
-def execute(tmp_path, source, tests, *, modules=None, extra=None):
+def execute(tmp_path, source, tests, *, modules=None, extra=None, source_roots=None):
     root = tmp_path / "repo"
     root.mkdir(parents=True)
     (root / "subject.py").write_text(source)
     (root / "oracle_tests").mkdir()
     (root / "oracle_tests" / "test_subject.py").write_text(tests)
     for name, content in (extra or {}).items():
-        (root / name).write_text(content)
+        path = root / name
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(content)
     output = tmp_path / "results"
     config = {
         "workdir": str(root),
         "output": str(output),
         "targets": ["oracle_tests"],
-        "source_roots": ["subject.py"],
+        "source_roots": source_roots or ["subject.py"],
         "import_modules": modules or [],
     }
     settings = tmp_path / "runner.json"
@@ -68,6 +70,27 @@ def test_both_fail(): assert subject.answer() == 3
         "buggy": {"assertion": 2, "exception": 0, "unknown": 0},
         "golden": {"assertion": 2, "exception": 0, "unknown": 0},
     }
+
+
+def test_coverage_omits_unparseable_files_without_discarding_valid_results(tmp_path):
+    result, coverage, output = execute(
+        tmp_path,
+        "x = 1\n",
+        "import package\ndef test_value(): assert package.VALUE == 1\n",
+        modules=["package"],
+        source_roots=["package"],
+        extra={
+            "package/__init__.py": "VALUE = 1\n",
+            "package/platform_only.py": r'BROKEN = "\u"' + "\n",
+        },
+    )
+
+    assert result.status == "completed"
+    assert coverage.status == "available"
+    assert coverage.covered_lines == coverage.executable_lines == 1
+    assert any(name.endswith("package/__init__.py") for name in coverage.files)
+    assert not any(name.endswith("platform_only.py") for name in coverage.files)
+    assert (output / "coverage.raw.json").is_file()
 
 
 def test_call_exceptions_are_distinguished_from_assertion_failures(tmp_path):

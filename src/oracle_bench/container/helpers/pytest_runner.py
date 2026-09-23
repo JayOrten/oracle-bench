@@ -177,7 +177,14 @@ print(json.dumps(origins))
             try:
                 cov.stop()
                 cov.save()
-                cov.json_report(morfs=source_files, outfile=str(output / "coverage.raw.json"))
+                # Legacy repositories can contain platform-specific or vendored
+                # Python files that the selected interpreter cannot parse. They
+                # should not erase coverage for the valid production sources.
+                cov.json_report(
+                    morfs=source_files,
+                    outfile=str(output / "coverage.raw.json"),
+                    ignore_errors=True,
+                )
                 raw = json.loads((output / "coverage.raw.json").read_text())
                 totals = raw["totals"]
                 coverage_result = {

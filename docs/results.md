@@ -515,7 +515,9 @@ ordinary per-test failure and does not make the overall execution incomplete.
 | `.coverage` | Binary coverage.py data file, requiring a compatible coverage version to inspect |
 
 When coverage is unavailable, `coverage.json` contains `status: unavailable` and
-a reason. Coverage failure does not discard test results.
+a reason. Coverage failure does not discard test results. Source files that the
+task's selected Python interpreter cannot parse are omitted from coverage rather
+than making coverage unavailable for the rest of the source tree.
 
 ### Other execution files
 
