@@ -1,3 +1,4 @@
+import json
 from contextlib import contextmanager
 from pathlib import Path
 from unittest.mock import Mock
@@ -116,15 +117,25 @@ def install_pipeline_fakes(monkeypatch, runtime, instance, judge_effect=None):
     def judge_sandbox(*args, **kwargs):
         yield Mock(helpers="/opt/oracle-bench/container-helpers")
 
-    def judge_effectively(sandbox, request, paths):
+    def judge_effectively(sandbox, request):
         if judge_effect is not None:
             raise judge_effect
-        write_json(paths.judge.judgment, completed_judgment())
+        judgment = completed_judgment()
+        judgment.pop("status")
+        request.artifact_directory.mkdir(parents=True, exist_ok=True)
+        (request.artifact_directory / "final.txt").write_text(json.dumps(judgment))
+        return {
+            "status": "completed",
+            "duration_seconds": 1,
+            "usage": None,
+            "cost_usd": None,
+            "errors": [],
+        }
 
     judge_call = Mock(side_effect=judge_effectively)
     monkeypatch.setattr(judge_module, "open_sandbox", judge_sandbox)
     monkeypatch.setattr(judge_module, "build_judge_workspace", Mock())
-    monkeypatch.setattr(judge_module, "_execute_judge_turn", judge_call)
+    monkeypatch.setattr(judge_module, "run_turn", judge_call)
     monkeypatch.setattr(run_module, "report", lambda paths: paths.report)
     return judge_call
 

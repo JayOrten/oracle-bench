@@ -99,6 +99,7 @@ runs/<run-id>/
 │   ├── human-workspace.log
 │   └── agent/{command.json,version.txt,trace.jsonl,stderr.log,final.txt,result.json}
 ├── judge-history/<archived judge attempts>/
+├── generation-history/<archived interrupted generation attempts>/
 └── evaluation-history/<archived reevaluations>/
 ```
 
@@ -131,9 +132,13 @@ uv run oracle-bench judge runs/<run-id>
 The command requires the configured judge credential and the saved runtime image.
 It writes the exact prompt and raw final response before validating
 `judgment.json`. Invalid model output is retained as `status: invalid_output` and
-is not retried automatically. Harness failures and deadlines produce explicit
-`failed` and `timed_out` judgments. A rerun archives the complete prior attempt
-under `judge-history/<UTC timestamp>/` before rebuilding the workspace.
+is not retried automatically. Generation and judgment turns that fail with a
+recognized transient API or transport error are retried up to three times, after
+30, 90, and 180 seconds. Each retry uses a fresh container and workspace; prior
+attempt evidence is preserved under `generation-history/` or `judge-history/`.
+Other harness failures and deadlines are not retried and produce their normal
+explicit status. A manual judge rerun archives the complete prior attempt under
+`judge-history/<UTC timestamp>/` before rebuilding the workspace.
 
 ## Interactive human judging
 

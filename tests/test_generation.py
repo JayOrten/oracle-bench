@@ -1,11 +1,13 @@
 import json
 import subprocess
 import sys
+from contextlib import contextmanager
+from unittest.mock import Mock
 
 import pytest
 from fixtures import HELPERS
 
-from oracle_bench.generation import changed_files, verify_bundle
+from oracle_bench.generation import changed_files, generate_submission, verify_bundle
 from oracle_bench.io import digest, read_json, write_json
 from oracle_bench.paths import RunPaths
 
@@ -68,6 +70,55 @@ def test_empty_bundle_has_a_real_files_directory(tmp_path):
     )
 
     assert verify_bundle(paths)["empty"] is True
+
+
+def test_transient_generation_uses_clean_container_and_archives_attempt(tmp_path, monkeypatch):
+    paths = RunPaths.create(tmp_path)
+    sandboxes = [Mock(name="first_sandbox"), Mock(name="second_sandbox")]
+
+    @contextmanager
+    def sandbox_context(*args, **kwargs):
+        yield sandboxes.pop(0)
+
+    workspaces = []
+
+    def repository(sandbox, config):
+        workspace = Mock()
+        workspace.baseline.return_value = "baseline"
+        workspaces.append((sandbox, workspace))
+        return workspace
+
+    attempts = 0
+
+    def generate(_sandbox, _config, run_paths):
+        nonlocal attempts
+        attempts += 1
+        (run_paths.generation / "trace.jsonl").write_text(f"attempt {attempts}\n")
+        return {
+            "status": "failed" if attempts == 1 else "completed",
+            "errors": [{"message": "stream disconnected"}] if attempts == 1 else [],
+        }
+
+    capture = Mock(return_value={"empty": False})
+    delay = Mock()
+    monkeypatch.setattr("oracle_bench.generation.open_sandbox", sandbox_context)
+    monkeypatch.setattr("oracle_bench.generation.Repository", repository)
+    monkeypatch.setattr("oracle_bench.generation.snapshot", Mock(return_value={}))
+    monkeypatch.setattr("oracle_bench.generation.generate", generate)
+    monkeypatch.setattr("oracle_bench.generation.capture", capture)
+    monkeypatch.setattr("oracle_bench.generation.sleep", delay)
+
+    result = generate_submission(Mock(), Mock(), "runtime-image", Mock(base_commit="a" * 40), paths)
+
+    assert result == {"empty": False}
+    assert attempts == 2
+    assert len(workspaces) == 2
+    assert capture.call_count == 1
+    delay.assert_called_once_with(30)
+    archived = list(paths.generation_history.iterdir())
+    assert len(archived) == 1
+    assert (archived[0] / "trace.jsonl").read_text() == "attempt 1\n"
+    assert (paths.generation / "trace.jsonl").read_text() == "attempt 2\n"
 
 
 def test_snapshot_captures_untracked_files_and_symlinks_without_following_them(tmp_path):

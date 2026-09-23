@@ -10,13 +10,15 @@ from __future__ import annotations
 
 import json
 from pathlib import Path, PurePosixPath
+from time import sleep
 
 from docker import DockerClient
 
 from oracle_bench.config import RunConfig, repo_path
 from oracle_bench.container.sandbox import Profile, Sandbox, open_sandbox
 from oracle_bench.harnesses import generate
-from oracle_bench.io import digest, read_json, write_json
+from oracle_bench.harnesses.retry import RETRY_DELAYS_SECONDS, is_transient_failure
+from oracle_bench.io import archive_files, digest, read_json, write_json
 from oracle_bench.paths import RunPaths
 from oracle_bench.repository import Repository
 from oracle_bench.results import InstanceRecord
@@ -29,7 +31,38 @@ def generate_submission(
     instance: InstanceRecord,
     paths: RunPaths,
 ) -> dict:
-    """Run one agent turn in a fresh buggy checkout and return its frozen bundle."""
+    """Run generation in a fresh checkout, retrying transient provider failures."""
+    for retry_delay in (*RETRY_DELAYS_SECONDS, None):
+        result, submission = _generation_attempt(
+            client,
+            config,
+            image,
+            instance,
+            paths,
+            retry_available=retry_delay is not None,
+        )
+        if retry_delay is None or not is_transient_failure(result):
+            assert submission is not None
+            return submission
+
+        # An interrupted agent may have left incomplete tests and repository edits.
+        # Archive its evidence and discard its container before the next attempt.
+        archive_files(list(paths.generation.iterdir()), paths.generation_history)
+        sleep(retry_delay)
+
+    raise AssertionError("generation retry loop did not return")
+
+
+def _generation_attempt(
+    client: DockerClient,
+    config: RunConfig,
+    image: str,
+    instance: InstanceRecord,
+    paths: RunPaths,
+    *,
+    retry_available: bool,
+) -> tuple[dict, dict | None]:
+    """Run and capture one generation attempt in its own disposable container."""
     log = paths.generation / "setup.log"
     with open_sandbox(client, image, config, Profile.GENERATION, log) as sandbox:
         workspace = Repository(sandbox, config)
@@ -38,8 +71,10 @@ def generate_submission(
         workspace.prepare(instance.base_commit, paths.generation, sanitize_history=True)
         before = snapshot(sandbox, paths.generation / "before.json", log)
         baseline = workspace.baseline(paths.generation / "baseline.txt")
-        generate(sandbox, config, paths)
-        return capture(sandbox, config, paths, before, baseline)
+        result = generate(sandbox, config, paths)
+        if retry_available and is_transient_failure(result):
+            return result, None
+        return result, capture(sandbox, config, paths, before, baseline)
 
 
 def changed_files(before: dict, after: dict, generated_dir: str) -> tuple[list[str], list[str]]:

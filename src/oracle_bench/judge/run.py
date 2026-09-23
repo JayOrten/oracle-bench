@@ -4,16 +4,18 @@ from __future__ import annotations
 
 from datetime import datetime, timezone
 from string import Template
+from time import sleep
 
 from docker import DockerClient
 from docker.errors import DockerException
 
 from oracle_bench.config import RunConfig
 from oracle_bench.container.images import require_saved_image
-from oracle_bench.container.sandbox import Profile, Sandbox, docker_client, open_sandbox
+from oracle_bench.container.sandbox import Profile, docker_client, open_sandbox
 from oracle_bench.generation import verify_bundle
 from oracle_bench.harnesses import provenance, run_turn, turn_request
-from oracle_bench.harnesses.launch import AgentTurnRequest, require_credential
+from oracle_bench.harnesses.launch import require_credential
+from oracle_bench.harnesses.retry import RETRY_DELAYS_SECONDS, is_transient_failure
 from oracle_bench.io import archive_files, read_json, require_files, write_json
 from oracle_bench.judge.contracts import (
     JudgmentResult,
@@ -102,11 +104,22 @@ def judge_stage(
         paths.judge.prompt.write_text(
             instructions.substitute(root=JUDGE_ROOT) + paths.judge.rubric.read_text()
         )
-        with open_sandbox(client, image, config, Profile.JUDGE, paths.judge.log) as sandbox:
-            build_judge_workspace(
-                sandbox, config, paths, image, instance, evaluation, manifest=manifest
-            )
-            _execute_judge_turn(sandbox, request, paths)
+        result = None
+        for retry_delay in (*RETRY_DELAYS_SECONDS, None):
+            with open_sandbox(client, image, config, Profile.JUDGE, paths.judge.log) as sandbox:
+                build_judge_workspace(
+                    sandbox, config, paths, image, instance, evaluation, manifest=manifest
+                )
+                result = run_turn(sandbox, request)
+                retry = retry_delay is not None and is_transient_failure(result)
+                if not retry:
+                    # Save before container cleanup so a cleanup failure cannot
+                    # erase a valid answer the completed turn already produced.
+                    _save_judgment(result, paths)
+            if not retry:
+                break
+            archive_files([paths.judge.agent], paths.judge.history)
+            sleep(retry_delay)
     except (RuntimeError, OSError, ValueError, DockerException) as error:
         # A judge failure is an annotation failure. It must never discard the completed
         # generation and evaluation evidence it describes. A judgment this attempt
@@ -137,12 +150,8 @@ def judge_stage(
     return validate_judgment(read_json(paths.judge.judgment))
 
 
-def _execute_judge_turn(sandbox: Sandbox, request: AgentTurnRequest, paths: RunPaths) -> None:
-    """Turn the harness result into a saved judgment.
-
-    Harness failures are left to propagate, so judge_stage records them in one place.
-    """
-    result = run_turn(sandbox, request)
+def _save_judgment(result: dict, paths: RunPaths) -> None:
+    """Parse and save the final judge attempt after retry policy is exhausted."""
     final = paths.judge.final
     raw = final.read_text(errors="replace") if final.is_file() else ""
     paths.judge.judgment_raw.write_text(raw)

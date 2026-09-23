@@ -89,6 +89,10 @@ class RunPaths:
         return self.root / "evaluation-history"
 
     @property
+    def generation_history(self) -> Path:
+        return self.root / "generation-history"
+
+    @property
     def ground_truth(self) -> Path:
         return self.root / "ground-truth"
 

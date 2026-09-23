@@ -19,4 +19,5 @@ def test_run_paths_group_artifacts_by_lifecycle_stage(tmp_path):
     assert paths.submission == tmp_path / "submission"
     assert paths.results == tmp_path / "evaluation/results.json"
     assert paths.evaluation_history == tmp_path / "evaluation-history"
+    assert paths.generation_history == tmp_path / "generation-history"
     assert paths.ground_truth == tmp_path / "ground-truth"

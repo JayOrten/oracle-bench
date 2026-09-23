@@ -240,16 +240,16 @@ def test_harness_versions_are_inspected_offline_as_oracle_user():
     client = Mock()
     client.containers.run.side_effect = [
         b"codex-cli 0.153.4\n",
-        b"2.1.263 (Claude Code)\n",
-        b"1.18.30\n",
+        b"2.1.280 (Claude Code)\n",
+        b"1.18.32\n",
     ]
 
     observed = inspect_harness_versions(client, SimpleNamespace(id="runtime-image"))
 
     assert observed == {
         "codex": "codex-cli 0.153.4",
-        "claude": "2.1.263 (Claude Code)",
-        "opencode": "1.18.30",
+        "claude": "2.1.280 (Claude Code)",
+        "opencode": "1.18.32",
     }
     for call in client.containers.run.call_args_list:
         assert call.kwargs == {

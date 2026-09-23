@@ -146,6 +146,77 @@ def test_invalid_model_output_is_saved_without_a_retry(tmp_path, monkeypatch):
     assert turn.call_count == 1
 
 
+def test_transient_harness_failure_is_archived_and_retried(tmp_path, monkeypatch):
+    paths = saved_run(tmp_path)
+    monkeypatch.setenv("CLAUDE_CODE_OAUTH_TOKEN", "credential-fixture")
+    install_fakes(monkeypatch)
+    attempts = 0
+
+    def transient_then_complete(_sandbox, request):
+        nonlocal attempts
+        attempts += 1
+        request.artifact_directory.mkdir(parents=True, exist_ok=True)
+        (request.artifact_directory / "trace.jsonl").write_text(f"attempt {attempts}\n")
+        if attempts == 1:
+            return {
+                "status": "failed",
+                "duration_seconds": 1,
+                "usage": None,
+                "cost_usd": None,
+                "errors": [{"message": "429 Too Many Requests"}],
+            }
+        (request.artifact_directory / "final.txt").write_text(VALID_JUDGMENT)
+        return {
+            "status": "completed",
+            "duration_seconds": 2,
+            "usage": {"input_tokens": 10, "output_tokens": 5},
+            "cost_usd": 0.01,
+            "errors": [],
+        }
+
+    monkeypatch.setattr("oracle_bench.harnesses.claude.run_turn", transient_then_complete)
+    delay = Mock()
+    monkeypatch.setattr("oracle_bench.judge.run.sleep", delay)
+
+    output = judge(paths)
+
+    assert output.status == "completed"
+    assert attempts == 2
+    delay.assert_called_once_with(30)
+    archived = list(paths.judge.history.iterdir())
+    assert len(archived) == 1
+    assert (archived[0] / "agent/trace.jsonl").read_text() == "attempt 1\n"
+
+
+def test_transient_harness_failure_stops_after_three_retries(tmp_path, monkeypatch):
+    paths = saved_run(tmp_path)
+    monkeypatch.setenv("CLAUDE_CODE_OAUTH_TOKEN", "credential-fixture")
+    install_fakes(monkeypatch)
+
+    def always_rate_limited(_sandbox, request):
+        request.artifact_directory.mkdir(parents=True, exist_ok=True)
+        (request.artifact_directory / "trace.jsonl").write_text("rate limited\n")
+        return {
+            "status": "failed",
+            "duration_seconds": 1,
+            "usage": None,
+            "cost_usd": None,
+            "errors": [{"message": "429 Too Many Requests"}],
+        }
+
+    turn = Mock(side_effect=always_rate_limited)
+    monkeypatch.setattr("oracle_bench.harnesses.claude.run_turn", turn)
+    delay = Mock()
+    monkeypatch.setattr("oracle_bench.judge.run.sleep", delay)
+
+    output = judge(paths)
+
+    assert output.status == "failed"
+    assert turn.call_count == 4
+    assert [call.args[0] for call in delay.call_args_list] == [30, 90, 180]
+    assert len(list(paths.judge.history.iterdir())) == 3
+
+
 @pytest.mark.parametrize(
     "harness_status,judgment_status",
     [("failed", "failed"), ("timeout", "timed_out")],
