@@ -178,5 +178,6 @@ If Docker reports a socket permission error after you've joined the `docker` gro
 - The private regression check must pass before generation starts.
 - The agent runs as a non-root user with the selected credential; the host Docker socket and private run artifacts are not mounted.
 - Generation, reference, and evaluation containers have outbound network access so repository tests run under a consistent environment.
-- Git-history sanitization and internet-use auditing are not implemented yet.
+- Generation agents receive a fresh one-commit Git repository containing only the
+  prepared buggy snapshot. Internet-use auditing is not implemented yet.
 - Only new tests and fixtures under `oracle_tests/` are evaluated. Changes outside that directory are recorded as violations and make the results diagnostic. Existing repository tests can remain visible or be hidden through configuration.

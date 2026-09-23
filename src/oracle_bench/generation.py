@@ -33,7 +33,9 @@ def generate_submission(
     log = paths.generation / "setup.log"
     with open_sandbox(client, image, config, Profile.GENERATION, log) as sandbox:
         workspace = Repository(sandbox, config)
-        workspace.prepare(instance.base_commit, paths.generation)
+        # The agent needs Git for normal inspection and diffing, but must not be able
+        # to recover hidden tests or issue details from the source repository's past.
+        workspace.prepare(instance.base_commit, paths.generation, sanitize_history=True)
         before = snapshot(sandbox, paths.generation / "before.json", log)
         baseline = workspace.baseline(paths.generation / "baseline.txt")
         generate(sandbox, config, paths)

@@ -317,7 +317,9 @@ the final evaluation workspace. Evaluation still executes only generated tests.
 under repository-specific test directories supplied by the SWE-bench adapter.
 Package initializers, fixtures, runners, helpers, and data remain because some
 projects import that support code at runtime. Private reference validation always
-retains all existing tests.
+retains all existing tests. Regardless of this setting, generation receives a
+fresh one-commit Git repository, so earlier revisions cannot expose removed tests
+or other historical task evidence.
 
 ### `task.generated_dir`
 

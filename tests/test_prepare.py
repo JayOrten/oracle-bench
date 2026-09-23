@@ -1,7 +1,7 @@
 import subprocess
 import sys
 
-from oracle_bench.container.helpers.prepare import remove_existing_tests
+from oracle_bench.container.helpers.prepare import remove_existing_tests, replace_git_history
 
 
 def test_helper_annotations_are_not_evaluated_by_old_repository_python():
@@ -59,3 +59,34 @@ def test_removing_tests_preserves_runtime_imports_from_test_package(tmp_path):
     assert result.stdout.strip() == "available"
     assert not (tests / "test_behavior.py").exists()
     assert not (tests / "tests.py").exists()
+
+
+def test_replace_git_history_removes_original_commits_and_objects(tmp_path):
+    def git(*args, check=True):
+        return subprocess.run(
+            ["git", "-C", str(tmp_path), *args],
+            text=True,
+            capture_output=True,
+            check=check,
+        )
+
+    git("init", "--quiet")
+    git("config", "user.email", "test@localhost")
+    git("config", "user.name", "Test")
+    hidden_test = tmp_path / "test_hidden.py"
+    hidden_test.write_text("def test_secret(): pass\n")
+    git("add", "test_hidden.py")
+    git("commit", "--quiet", "-m", "original history")
+    original_commit = git("rev-parse", "HEAD").stdout.strip()
+    hidden_test.unlink()
+
+    replace_git_history(tmp_path)
+    git("config", "user.email", "test@localhost")
+    git("config", "user.name", "Test")
+    (tmp_path / "module.py").write_text("VALUE = 1\n")
+    git("add", "-A")
+    git("commit", "--quiet", "-m", "prepared snapshot")
+
+    assert git("rev-list", "--count", "HEAD").stdout.strip() == "1"
+    assert git("cat-file", "-e", original_commit, check=False).returncode != 0
+    assert git("show", "HEAD^:test_hidden.py", check=False).returncode != 0

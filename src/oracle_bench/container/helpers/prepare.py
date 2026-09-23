@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 import os
+import shutil
 import subprocess
 import sys
 from pathlib import Path
@@ -35,6 +36,21 @@ def remove_existing_tests(root: Path, patterns: list[str]) -> None:
         path.unlink()
 
 
+def replace_git_history(root: Path) -> None:
+    """Replace the source repository metadata with a new, object-free repository.
+
+    An orphan branch is insufficient because the original commits and blobs remain
+    recoverable from the object database. Removing ``.git`` ensures the prepared
+    snapshot is the only history available to the generation agent.
+    """
+    metadata = root / ".git"
+    if metadata.is_dir():
+        shutil.rmtree(metadata)
+    else:
+        metadata.unlink()
+    git("-C", str(root), "init", "--quiet")
+
+
 def prepare(settings: dict) -> None:
     root = Path(settings["workdir"])
     os.chdir(root)
@@ -42,6 +58,8 @@ def prepare(settings: dict) -> None:
         remove_existing_tests(root, settings["existing_test_globs"])
     # Refuse to repurpose an existing directory: only new files are submissions.
     (root / settings["generated_dir"]).mkdir(parents=True, exist_ok=False)
+    if settings["sanitize_history"]:
+        replace_git_history(root)
     git("config", "user.email", "oracle-bench@localhost")
     git("config", "user.name", "OracleBench")
     git("config", "--global", "--add", "safe.directory", str(root))

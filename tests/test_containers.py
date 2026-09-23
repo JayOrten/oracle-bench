@@ -164,7 +164,19 @@ def test_workspace_preserves_preparation_order(config, tmp_path, visibility, ref
     assert calls[0].args[0][:3] == ["git", "reset", "--hard"]
     assert calls[1].args[0][:2] == ["/bin/bash", "-c"]
     assert calls[2].args[0][1] == "/helpers/prepare.py"
-    assert json.loads((tmp_path / "workspace.json").read_text())["hide"] == hide
+    settings = json.loads((tmp_path / "workspace.json").read_text())
+    assert settings["hide"] == hide
+    assert settings["sanitize_history"] is False
+
+
+def test_generation_workspace_requests_sanitized_history(config, tmp_path):
+    sandbox = Mock(helpers="/helpers")
+    workspace = Repository(sandbox, config)
+
+    workspace.prepare("a" * 40, tmp_path, sanitize_history=True)
+
+    settings = json.loads((tmp_path / "workspace.json").read_text())
+    assert settings["sanitize_history"] is True
 
 
 def test_build_cache_changes_with_helpers_and_platform(tmp_path):

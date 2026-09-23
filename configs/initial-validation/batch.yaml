@@ -1,0 +1,12 @@
+name: initial-validation-requests
+
+jobs:
+  - config: claude-requests.yaml
+  - config: codex-requests.yaml
+  - config: opencode-requests.yaml
+
+execution:
+  concurrency: 1
+  continue_on_error: true
+
+output: ../../batches

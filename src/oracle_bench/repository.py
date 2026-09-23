@@ -18,7 +18,14 @@ class Repository:
         self.runtime = config.require_runtime()
         self.setup_timeout = config.limits.setup_seconds
 
-    def prepare(self, base_commit: str, directory: Path, *, reference: bool = False) -> None:
+    def prepare(
+        self,
+        base_commit: str,
+        directory: Path,
+        *,
+        reference: bool = False,
+        sanitize_history: bool = False,
+    ) -> None:
         """Restore tracked code while retaining artifacts supplied by the runtime image.
 
         Every sandbox starts from a fresh image, so untracked files cannot come from a
@@ -34,6 +41,7 @@ class Repository:
                 "workdir": self.runtime.workdir,
                 "generated_dir": self.config.task.generated_dir,
                 "hide": self.config.task.hides_existing_tests and not reference,
+                "sanitize_history": sanitize_history,
                 "existing_test_globs": self.runtime.existing_test_globs,
             },
         )
