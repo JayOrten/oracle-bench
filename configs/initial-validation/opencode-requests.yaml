@@ -4,7 +4,7 @@ source:
 agent:
   harness: opencode
   provider: openrouter
-  model: qwen/qwen3.8-max-0902@preset/oracle-alibaba-first
+  model: qwen/qwen3.8-max-0902
   multi_agent: false
   limit:
     kind: wall_seconds
@@ -15,7 +15,7 @@ judge:
   instructions: ../../prompts/judge/generated-test-instructions.md
   harness: codex
   provider: openrouter
-  model: google/gemini-3.8-flash@preset/oracle-google-first
+  model: google/gemini-3.8-flash
   limit:
     kind: wall_seconds
     value: 300

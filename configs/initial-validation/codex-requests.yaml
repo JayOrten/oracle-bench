@@ -15,7 +15,7 @@ judge:
   instructions: ../../prompts/judge/generated-test-instructions.md
   harness: codex
   provider: openrouter
-  model: google/gemini-3.8-flash@preset/oracle-google-first
+  model: google/gemini-3.8-flash
   limit:
     kind: wall_seconds
     value: 300

@@ -4,7 +4,7 @@ source:
 agent:
   harness: opencode
   provider: openrouter
-  model: google/gemini-2.5-flash-lite@preset/oracle-google-first
+  model: google/gemini-2.5-flash-lite
   multi_agent: false
   limit:
     kind: wall_seconds
