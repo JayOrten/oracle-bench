@@ -37,8 +37,8 @@ SWEBENCH_DATASET_REVISIONS = {
 # must stay equal to docker/package.json. Nothing selects a version per run.
 HARNESS_VERSIONS = {
     "codex": "0.153.4",
-    "claude": "2.1.263",
-    "opencode": "1.18.30",
+    "claude": "2.1.280",
+    "opencode": "1.18.32",
 }
 # First provider listed is the default. Everything goes through OpenRouter unless
 # a config asks for the other one.
