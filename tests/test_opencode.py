@@ -3,7 +3,7 @@ import json
 from oracle_bench.harnesses.opencode import parse_trace
 
 
-def test_parse_trace_accumulates_usage_cost_and_final_text(tmp_path):
+def test_parse_trace_accumulates_usage_and_final_text(tmp_path):
     trace = tmp_path / "trace.jsonl"
     events = [
         {"type": "text", "part": {"text": "working"}},
@@ -11,7 +11,6 @@ def test_parse_trace_accumulates_usage_cost_and_final_text(tmp_path):
             "type": "step_finish",
             "part": {
                 "reason": "tool-calls",
-                "cost": 0.01,
                 "tokens": {"input": 10, "output": 2, "reasoning": 1},
             },
         },
@@ -20,7 +19,6 @@ def test_parse_trace_accumulates_usage_cost_and_final_text(tmp_path):
             "type": "step_finish",
             "part": {
                 "reason": "stop",
-                "cost": 0.02,
                 "tokens": {"input": 20, "output": 3, "reasoning": 2},
             },
         },
@@ -30,7 +28,6 @@ def test_parse_trace_accumulates_usage_cost_and_final_text(tmp_path):
     result = parse_trace(trace)
 
     assert result["turn_completed"]
-    assert result["cost_usd"] == 0.03
     assert result["usage"] == {
         "input_tokens": 30,
         "output_tokens": 5,
@@ -46,4 +43,3 @@ def test_parse_trace_treats_missing_final_event_as_incomplete(tmp_path):
     result = parse_trace(trace)
 
     assert not result["turn_completed"]
-    assert result["cost_usd"] is None

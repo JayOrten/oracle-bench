@@ -200,7 +200,6 @@ def test_reconstruct_privileged_judge_workspace(tmp_path, request):
             "timed_out": outcome.timed_out,
             "duration_seconds": outcome.duration_seconds,
             "usage": None,
-            "cost_usd": None,
             "errors": [],
         }
 

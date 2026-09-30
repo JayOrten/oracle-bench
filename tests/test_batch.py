@@ -75,7 +75,6 @@ def fake_judgment(
     detail: str = "correct_assertion",
     reason: str = "nearby_behavior",
     answer: str = "yes",
-    cost: float | None = 0.02,
 ) -> None:
     paths = RunPaths.open(run_dir)
     paths.judge.root.mkdir(parents=True, exist_ok=True)
@@ -101,7 +100,7 @@ def fake_judgment(
     else:
         judgment = {"status": status, "error": f"{status} fixture"}
     write_json(paths.judge.judgment, judgment)
-    write_json(paths.judge.result, judge_attempt(status=status, cost_usd=cost))
+    write_json(paths.judge.result, judge_attempt(status=status))
 
 
 def test_batch_paths_are_relative_and_all_jobs_validate(tmp_path):
@@ -184,6 +183,8 @@ def test_batch_aggregates_judge_labels_disagreements_and_costs(tmp_path):
     manifest = tmp_path / "batch.yaml"
     write_batch_config(manifest, [f"{instance}.yaml" for instance in instances])
 
+    costs = {"unrelated-detected": 0.3, "relevant-fail-both": 0.2, "disabled": 0.05}
+
     def run_one(config):
         instance = config.source.instance
         run_dir = tmp_path / "runs" / instance
@@ -203,12 +204,15 @@ def test_batch_aggregates_judge_labels_disagreements_and_costs(tmp_path):
             )
         elif instance == "invalid":
             fake_result(run_dir, instance)
-            fake_judgment(run_dir, status="invalid_output", cost=0.01)
+            fake_judgment(run_dir, status="invalid_output")
+            write_json(run_dir / "cost.json", {"status": "unavailable", "error": "HTTP 503"})
         elif instance == "stale":
             fake_result(run_dir, instance)
-            fake_judgment(run_dir, status="stale", cost=None)
+            fake_judgment(run_dir, status="stale")
         else:
             fake_result(run_dir, instance)
+        if instance in costs:
+            write_json(run_dir / "cost.json", {"status": "measured", "cost_usd": costs[instance]})
         return run_dir
 
     batch_dir = run_batch(manifest, run_one=run_one)
@@ -218,9 +222,15 @@ def test_batch_aggregates_judge_labels_disagreements_and_costs(tmp_path):
     assert summary["completed_evaluations"] == 5
     assert summary["matrix_detection_rate"] == 0.2
     assert summary["judge_tests_issue_yes_rate"] == 0.5
-    assert summary["generation_cost_usd"] == 0.5
-    assert summary["judge_cost_usd"] == 0.05
     assert summary["total_cost_usd"] == pytest.approx(0.55)
+    assert summary["costed_runs"] == 3
+    assert [job["cost_status"] for job in summary["jobs"]] == [
+        "measured",
+        "measured",
+        "unavailable",
+        None,
+        "measured",
+    ]
     assert judge["valid_judgments"] == 2
     assert judge["status_counts"] == {
         "completed": 2,

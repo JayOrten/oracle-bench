@@ -44,8 +44,6 @@ def parse_trace(path: Path) -> dict:
         "turn_completed": completed,
         "turn_failed": bool(result and not completed),
         "usage": result.get("usage") if result else None,
-        "cost_usd": result.get("total_cost_usd") if result else None,
-        "model_usage": result.get("modelUsage") if result else None,
         "errors": errors,
         "unparsed_trace_lines": malformed,
         "final_text": result.get("result", "") if result else "",
@@ -91,11 +89,6 @@ def run_turn(sandbox: Sandbox, request: AgentTurnRequest) -> dict:
     )
 
     summary = {**asdict(outcome), **parse_trace(directory / "trace.jsonl")}
-    if harness.provider == "openrouter":
-        # Claude Code prices unknown router model IDs with an internal fallback
-        # rate. Preserve modelUsage as raw evidence, but do not present that
-        # estimate as provider billing.
-        summary["cost_usd"] = None
     (directory / "final.txt").write_text(summary.pop("final_text"))
     summary["status"] = (
         "timeout"

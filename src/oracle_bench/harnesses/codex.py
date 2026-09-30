@@ -45,7 +45,6 @@ def parse_trace(path: Path) -> dict:
 
     return {
         "usage": usage,
-        "cost_usd": None,
         "errors": errors,
         "unparsed_trace_lines": malformed,
         "turn_completed": completed,

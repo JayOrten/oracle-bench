@@ -13,7 +13,7 @@ from oracle_bench.harnesses.claude import parse_trace
         ("error", True, False),
     ],
 )
-def test_claude_result_preserves_failure_and_cost(tmp_path, subtype, is_error, completed):
+def test_claude_result_preserves_failure_and_usage(tmp_path, subtype, is_error, completed):
     path = tmp_path / "trace.jsonl"
     path.write_text(
         json.dumps(
@@ -22,7 +22,6 @@ def test_claude_result_preserves_failure_and_cost(tmp_path, subtype, is_error, c
                 "subtype": subtype,
                 "is_error": is_error,
                 "usage": {"input_tokens": 20},
-                "total_cost_usd": 0.02,
             }
         )
         + "\n"
@@ -30,7 +29,6 @@ def test_claude_result_preserves_failure_and_cost(tmp_path, subtype, is_error, c
     result = parse_trace(path)
     assert result["turn_completed"] == completed
     assert bool(result["errors"]) != completed
-    assert result["cost_usd"] == 0.02
     assert result["usage"] == {"input_tokens": 20}
 
 
@@ -39,7 +37,6 @@ def test_incomplete_claude_trace_is_not_success(tmp_path):
     path.write_text('broken\n{"type":"assistant"}\n')
     result = parse_trace(path)
     assert not result["turn_completed"]
-    assert result["cost_usd"] is None
     assert result["unparsed_trace_lines"] == 1
 
 

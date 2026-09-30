@@ -21,6 +21,7 @@ classifications/<instance-id>/<timestamp>-<id>/
 ├── workspace-spec.json
 ├── classification.raw.txt
 ├── classification.json
+├── cost.json
 └── status.json
 ```
 
@@ -35,11 +36,13 @@ result. Completed in-scope results contain every rubric facet; out-of-scope resu
 contain task nature and rationale only. `invalid_output`, `failed`, and `timed_out`
 are explicit result states. The raw final response, frozen rubric, harness trace,
 model provenance, image provenance, and workspace exposure manifest remain alongside
-it for audit.
+it for audit. `cost.json` records the classifier turn's spend in the same format
+as a run's [`cost.json`](#costjson).
 
 ```text
 runs/<run-id>/
 ├── status.json
+├── cost.json
 ├── report.md
 ├── inputs/
 │   ├── config.resolved.yaml
@@ -197,13 +200,13 @@ The human-readable summary, in this order:
   (generation status, `no tests collected`, an incomplete evaluation, or
   diagnostic-only), and any forbidden changes.
 - Pipeline: one row per stage (resolve, build, reference, generate, evaluate,
-  judge) with its parameters and result. Generation and judge rows name the
-  harness, version, model, provider, and limit.
+  judge) with its parameters and result, then the run's cost. Generation and
+  judge rows name the harness, version, model, provider, and limit.
 - Test outcomes: the paired matrix plus other outcomes, then coverage and failure
   causes per version.
 - Judgment: the labels and rationale, or the judge's non-completed state.
 - Task classification: the central classification for the problem.
-- Usage: wall time, input and output tokens, and cost for generation and judge.
+- Usage: wall time and input and output tokens for generation and judge.
 - Files: links to the artifacts that exist, grouped by stage, including the
   private ground truth. Ground truth is written on the host and never mounted or
   copied into the generation container.
@@ -237,7 +240,7 @@ Other states are explicit:
 
 `judgment.raw.txt` preserves the final assistant response before parsing.
 `prompt.md` and `rubric.md` preserve the exact instructions. `agent/result.json`
-records status, usage, cost, duration, harness, provider, model, CLI version, and
+records status, usage, duration, harness, provider, model, CLI version, and
 the stopping limit that bounded the turn;
 the neighboring command, version, trace, stderr, and final files have the same
 roles as their generation counterparts.
@@ -292,8 +295,9 @@ test IDs, and incomplete runs remain in `other_outcomes`.
 
 The latest lifecycle checkpoint, containing `stage`, `state`, `updated_at`, and an
 error when applicable. Stages progress through `resolve`, `build`, `reference`,
-`generate`, `evaluate`, optional `judge`, and `finished`. Capturing the
-submission is part of the `generate` stage.
+`generate`, `evaluate`, optional `judge`, `cost`, and `finished`. Capturing the
+submission is part of the `generate` stage. `cost` is the wait for the spend
+reading described in [`cost.json`](#costjson).
 
 The final state is `completed` only when the agent and both evaluations completed
 and the submission was compliant. `completed_with_errors` means the run retained
@@ -305,6 +309,33 @@ test (`no_tests`). Tests captured from a timed-out or otherwise
 incomplete generation are still evaluated and judged. Judge failure does not
 replace a completed evaluation state. An early exception records its stage and a
 failed state.
+
+### `cost.json`
+
+What the run's model stages cost. The host reads the OpenRouter key's total spend
+(`GET /api/v1/key`) just before generation, and again after the judge, or after
+evaluation when no judge runs. The difference is the run's cost, covering
+generation and judge together. Resolve, build, the reference check, and
+evaluation call no model.
+
+OpenRouter updates the total about a minute after a request, and consecutive
+readings can briefly disagree. The final reading polls every 5 s, waits at least
+60 s, and accepts the total once it has risen and three readings in a row match.
+It stops at 180 s.
+
+| Field | Meaning |
+|---|---|
+| `status` | `measured`; `unsettled` (180 s passed without a steady reading, so the last reading is used); `unavailable` (a lookup failed); `not_measured` (a model stage does not use OpenRouter) |
+| `cost_usd` | `after - before` in US dollars, or null |
+| `before`, `after` | The key's total spend at each reading |
+| `waited_seconds` | Time spent waiting for the final reading |
+| `error` | The lookup error, when `unavailable` |
+
+The difference counts everything charged to the key while the run's model stages
+ran. Another use of the same key during that time inflates it; a key used only by
+the benchmark avoids this. A run that fails after generation starts is still
+measured. An interrupted run is not. A cost failure never changes the run's state.
+Runs made before this file existed have no cost.
 
 ## Inputs and reproducibility
 
@@ -411,8 +442,6 @@ Normalized generation metadata.
 | `errors` | Structured errors extracted from the trace |
 | `unparsed_trace_lines` | Lines that were not valid JSON |
 | `usage` | Provider/CLI token data, or null |
-| `cost_usd` | CLI-reported cost for Claude, otherwise null |
-| `model_usage` | Claude's optional per-model breakdown |
 
 Provider usage structures are semi-structured and may change between CLI
 versions.
@@ -597,7 +626,7 @@ the resolved and checksum-locked job list, batch status, `summary.json`, and
 `report.md`. The summary preserves each job's state, run-directory link, paired
 matrix counts, coverage, and generation measurements. When a run has judge
 artifacts, its job record also contains the judge status, answer, conditional
-details, model provenance, token usage, duration, and cost. Runs without judge
+details, model provenance, token usage, and duration. Runs without judge
 configuration are recorded as `disabled`; configured runs without a result are
 `missing`. Invalid, failed, timed-out, and stale judgments remain explicit and do
 not make an otherwise completed evaluation resumable.
@@ -625,10 +654,10 @@ cross-tabs:
 - matrix detection by the `tests_issue` answer;
 - attempt detail by the presence or absence of each matrix cell.
 
-Generation and judge costs are totaled separately as `generation_cost_usd` and
-`judge_cost_usd`, and `total_cost_usd` is their sum. Each is `null` when no
-harness reported a cost. Per-job records use the same `generation_` prefix, so a
-job's model spend is never confused with its judge's. The Markdown report
+Each job record carries its run's `cost_status` and `cost_usd` from `cost.json`,
+including for a run that failed after generation started. `total_cost_usd` sums
+every job with a cost, and `costed_runs` counts them; the total is `null` when
+none has one. The Markdown report
 presents a compact per-run comparison and the facet frequency tables; the
 complete cross-tabs remain in `summary.json`.
 

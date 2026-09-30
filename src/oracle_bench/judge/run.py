@@ -133,7 +133,6 @@ def judge_stage(
                 "status": "failed",
                 "duration_seconds": 0,
                 "usage": None,
-                "cost_usd": None,
                 "errors": [],
                 **provenance(request),
             }

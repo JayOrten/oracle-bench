@@ -68,7 +68,7 @@ def test_launch_routes_only_selected_credential(
                 trace = {"type": "turn.completed"}
             elif harness is claude:
                 assert "Bash,Read,Write,Edit,Glob,Grep" in argv
-                trace = {"type": "result", "subtype": "success", "total_cost_usd": 0.01}
+                trace = {"type": "result", "subtype": "success"}
                 if provider == "openrouter":
                     assert environment["ANTHROPIC_BASE_URL"] == "https://openrouter.ai/api"
                     assert environment["ANTHROPIC_API_KEY"] == ""
@@ -80,7 +80,7 @@ def test_launch_routes_only_selected_credential(
                 }
                 trace = {
                     "type": "step_finish",
-                    "part": {"reason": "stop", "cost": 0, "tokens": {"input": 1, "output": 1}},
+                    "part": {"reason": "stop", "tokens": {"input": 1, "output": 1}},
                 }
             kwargs["stdout"].write_text(json.dumps(trace))
         return CommandResult(0, 1)
@@ -88,8 +88,6 @@ def test_launch_routes_only_selected_credential(
     sandbox.run.side_effect = run
     result = generate(sandbox, config, paths)
     assert result["status"] == "completed"
-    if harness is claude:
-        assert result["cost_usd"] == (None if provider == "openrouter" else 0.01)
     assert (paths.generation / "session.log").is_file()
     sandbox.stop_background_processes.assert_called_once()
     for artifact in paths.generation.iterdir():

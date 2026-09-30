@@ -27,6 +27,7 @@ from oracle_bench.repo_classification.contracts import (
     read_saved_classification,
 )
 from oracle_bench.results import InstanceRecord, write_result
+from oracle_bench.spend import measure_spend
 
 CLASSIFICATION_ROOT = "/oracle-classification"
 
@@ -58,7 +59,10 @@ def classify(config: ClassificationConfig) -> Path:
 
             stage = "classify"
             _status(attempt, stage)
-            result = _classification_stage(client, config, attempt, image, instance)
+            with measure_spend(
+                [config.classifier], attempt / "cost.json", lambda: _status(attempt, "cost")
+            ):
+                result = _classification_stage(client, config, attempt, image, instance)
 
         state = "completed" if result.status == "completed" else "completed_with_errors"
         _status(attempt, "finished", state, classification_status=result.status)
@@ -108,7 +112,6 @@ def _classification_stage(
                     "status": "failed",
                     "duration_seconds": 0,
                     "usage": None,
-                    "cost_usd": None,
                     "errors": [{"message": str(error)}],
                     **provenance(request),
                 },

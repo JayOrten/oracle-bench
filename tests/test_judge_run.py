@@ -100,7 +100,6 @@ def install_fakes(monkeypatch, final_text=VALID_JUDGMENT, status="completed"):
             "status": status,
             "duration_seconds": 2.5,
             "usage": {"input_tokens": 10, "output_tokens": 5},
-            "cost_usd": 0.01,
             "errors": [] if status == "completed" else [{"message": "harness failed"}],
         }
 
@@ -162,7 +161,6 @@ def test_transient_harness_failure_is_archived_and_retried(tmp_path, monkeypatch
                 "status": "failed",
                 "duration_seconds": 1,
                 "usage": None,
-                "cost_usd": None,
                 "errors": [{"message": "429 Too Many Requests"}],
             }
         (request.artifact_directory / "final.txt").write_text(VALID_JUDGMENT)
@@ -170,7 +168,6 @@ def test_transient_harness_failure_is_archived_and_retried(tmp_path, monkeypatch
             "status": "completed",
             "duration_seconds": 2,
             "usage": {"input_tokens": 10, "output_tokens": 5},
-            "cost_usd": 0.01,
             "errors": [],
         }
 
@@ -200,7 +197,6 @@ def test_transient_harness_failure_stops_after_three_retries(tmp_path, monkeypat
             "status": "failed",
             "duration_seconds": 1,
             "usage": None,
-            "cost_usd": None,
             "errors": [{"message": "429 Too Many Requests"}],
         }
 

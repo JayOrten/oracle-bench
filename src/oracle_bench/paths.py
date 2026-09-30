@@ -85,6 +85,10 @@ class RunPaths:
         return self.root / "status.json"
 
     @property
+    def cost(self) -> Path:
+        return self.root / "cost.json"
+
+    @property
     def evaluation_history(self) -> Path:
         return self.root / "evaluation-history"
 
