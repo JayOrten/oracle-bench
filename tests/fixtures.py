@@ -60,7 +60,7 @@ def evaluation_result(**changes) -> dict:
         "buggy_status": "completed",
         "golden_status": "completed",
         "coverage": {},
-        "agent": {"status": "completed", "cost_usd": 0.1, "duration_seconds": 3},
+        "agent": {"status": "completed", "duration_seconds": 3},
     }
     result.update(changes)
     return result
@@ -93,7 +93,6 @@ def judge_attempt(**changes) -> dict:
         "status": "completed",
         "duration_seconds": 4.5,
         "usage": {"input_tokens": 100, "output_tokens": 20},
-        "cost_usd": 0.02,
         "errors": [],
         "harness": "codex",
         "provider": "openai",

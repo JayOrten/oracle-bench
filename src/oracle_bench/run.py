@@ -31,6 +31,7 @@ from oracle_bench.judge.run import judge_stage
 from oracle_bench.paths import RunPaths
 from oracle_bench.report import report
 from oracle_bench.results import EvaluationResult, read_instance_record, write_result
+from oracle_bench.spend import measure_spend
 
 
 def status(run_dir: Path, stage: str, state: str = "running", **details: Any) -> None:
@@ -122,26 +123,29 @@ def run(config: RunConfig) -> Path:
             status(run_dir, stage)
             check_reference(client, config, image, instance, paths)
 
-            stage = "generate"
-            status(run_dir, stage)
-            submission = generate_submission(client, config, image, instance, paths)
+            # Only generation and the judge call a model, so spend is measured around them.
+            harnesses = [config.agent] + ([config.judge] if config.judge else [])
+            with measure_spend(harnesses, paths.cost, lambda: status(run_dir, "cost")):
+                stage = "generate"
+                status(run_dir, stage)
+                submission = generate_submission(client, config, image, instance, paths)
 
-            stage = "evaluate"
-            status(run_dir, stage)
-            result = evaluate(client, config, image, instance, paths)
+                stage = "evaluate"
+                status(run_dir, stage)
+                result = evaluate(client, config, image, instance, paths)
 
-            judge_status = "disabled"
-            if config.judge:
-                if submission["empty"] or result.no_tests:
-                    judgment = skipped_judgment(
-                        "No generated tests were collected; no judge turn was run."
-                    )
-                    write_json(paths.judge.judgment, judgment.model_dump())
-                else:
-                    stage = "judge"
-                    status(run_dir, stage)
-                    judgment = judge_stage(client, config, paths, image, instance, result)
-                judge_status = judgment.status
+                judge_status = "disabled"
+                if config.judge:
+                    if submission["empty"] or result.no_tests:
+                        judgment = skipped_judgment(
+                            "No generated tests were collected; no judge turn was run."
+                        )
+                        write_json(paths.judge.judgment, judgment.model_dump())
+                    else:
+                        stage = "judge"
+                        status(run_dir, stage)
+                        judgment = judge_stage(client, config, paths, image, instance, result)
+                    judge_status = judgment.status
         report(paths)
         status(
             run_dir,

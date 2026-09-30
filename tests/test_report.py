@@ -21,13 +21,12 @@ from oracle_bench.results import MATRIX_CELLS
         ),
     ],
 )
-@pytest.mark.parametrize("cost", [None, 0.0378])
-def test_report_renders_run_metadata(tmp_path, cost, scope, target, expected_scope):
+def test_report_renders_run_metadata(tmp_path, scope, target, expected_scope):
     results = report_results(
         task_scope=scope,
         test_target=target,
         existing_tests="keep",
-        agent={"status": "completed", "cost_usd": cost},
+        agent={"status": "completed"},
         failure_kinds={
             "buggy": {"assertion": 2, "exception": 1, "unknown": 0},
             "golden": {"assertion": 0, "exception": 1, "unknown": 0},
@@ -38,12 +37,44 @@ def test_report_renders_run_metadata(tmp_path, cost, scope, target, expected_sco
     (paths.ground_truth / "issue.md").write_text("issue")
     (paths.ground_truth / "fix.patch").write_text("patch")
     text = report(paths).read_text()
-    assert ("$0.0378" in text) == (cost is not None)
     assert "existing tests visible" in text
     assert expected_scope in text
     assert "- Ground truth: [issue](ground-truth/issue.md), [fix](ground-truth/fix.patch)" in text
     assert "| buggy | — | 2 | 1 | 0 |" in text
     assert "| Judge | — | disabled |" in text
+    assert "| Cost | OpenRouter key spend, generation and judge | — |" in text
+
+
+@pytest.mark.parametrize(
+    "cost,expected",
+    [
+        (
+            {"status": "measured", "cost_usd": 0.0378, "waited_seconds": 70},
+            "$0.0378",
+        ),
+        (
+            {"status": "unsettled", "cost_usd": 0.0378, "waited_seconds": 180},
+            "$0.0378 (unsettled after 180 s)",
+        ),
+        (
+            {"status": "unavailable", "error": "HTTP Error 503"},
+            "unavailable: HTTP Error 503",
+        ),
+        (
+            {"status": "not_measured"},
+            "not measured: a model stage does not use OpenRouter",
+        ),
+    ],
+)
+def test_report_renders_run_cost(tmp_path, cost, expected):
+    paths = RunPaths.create(tmp_path)
+    paths.results.write_text(json.dumps(report_results()))
+    write_json(paths.cost, cost)
+
+    text = report(paths).read_text()
+
+    assert f"| Cost | OpenRouter key spend, generation and judge | {expected} |" in text
+    assert "[cost](cost.json)" in text
 
 
 def report_results(**changes):
@@ -58,7 +89,6 @@ def report_results(**changes):
         "existing_tests": "hide_all",
         "agent": {
             "status": "completed",
-            "cost_usd": 0.125,
             "duration_seconds": 4,
             "usage": {"input_tokens": 12},
         },
@@ -88,7 +118,7 @@ def completed_judgment():
     }
 
 
-def test_report_renders_completed_judge_with_provenance_cost_and_supporting_files(tmp_path):
+def test_report_renders_completed_judge_with_provenance_and_supporting_files(tmp_path):
     paths = RunPaths.create(tmp_path)
     paths.results.write_text(json.dumps(report_results()))
     paths.judge.judgment.write_text(json.dumps(completed_judgment()))
@@ -112,7 +142,6 @@ def test_report_renders_completed_judge_with_provenance_cost_and_supporting_file
             harness_version="2.1.263",
             duration_seconds=3,
             usage={"input_tokens": 20},
-            cost_usd=0.025,
         ),
     )
 
@@ -124,8 +153,8 @@ def test_report_renders_completed_judge_with_provenance_cost_and_supporting_file
     )
     assert "| yes | correct_assertion | — | no |" in text
     assert "> The generated assertion reaches the issue" in text
-    assert "| Generate | 4 s | 12 | — | $0.1250 |" in text
-    assert "| Judge | 3 s | 20 | — | $0.0250 |" in text
+    assert "| Generate | 4 s | 12 | — |" in text
+    assert "| Judge | 3 s | 20 | — |" in text
     assert "[workspace](judge/workspace-spec.json)" in text
     for target in re.findall(r"\[[^]]+\]\(([^)]+)\)", text):
         assert (tmp_path / target).is_file(), target
@@ -189,7 +218,7 @@ def test_report_renders_a_run_without_judge_configuration(tmp_path):
     text = report(paths).read_text()
 
     assert "| Judge | — | disabled |" in text
-    assert "Disabled." in text
+    assert "| Cost | OpenRouter key spend, generation and judge | — |" in text
 
 
 def test_report_derives_diagnostic_status_from_submission_compliance(tmp_path):
@@ -273,7 +302,6 @@ def test_report_renders_central_task_classification_and_provenance(tmp_path, mon
             "status": "completed",
             "duration_seconds": 2,
             "usage": {"input_tokens": 10},
-            "cost_usd": 0.01,
             "errors": [],
             "harness": "codex",
             "provider": "openrouter",

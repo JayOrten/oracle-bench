@@ -114,7 +114,6 @@ def install_stage_fakes(monkeypatch, final=VALID_CLASSIFICATION, status="complet
             "status": status,
             "duration_seconds": 2.5,
             "usage": {"input_tokens": 10, "output_tokens": 5},
-            "cost_usd": 0.01,
             "errors": [] if status == "completed" else [{"message": "harness failed"}],
             "harness": "codex",
             "provider": "openrouter",
@@ -252,10 +251,19 @@ def test_classify_resolves_builds_and_records_attempt_lifecycle(tmp_path, monkey
         return OutOfScopeClassification(task_nature="out_of_scope", rationale="Feature request.")
 
     monkeypatch.setattr("oracle_bench.repo_classification.run._classification_stage", stage)
+    spent = []
+
+    @contextmanager
+    def measure_spend(harnesses, path, on_wait):
+        spent.append(([harness.harness for harness in harnesses], path.name))
+        yield
+
+    monkeypatch.setattr("oracle_bench.repo_classification.run.measure_spend", measure_spend)
 
     attempt = classify(config)
 
     assert stages == [("sha256:image", instance.instance_id)]
+    assert spent == [([config.classifier.harness], "cost.json")]
     assert (attempt / "inputs/instance.json").is_file()
     assert (attempt / "inputs/rubric.md").read_text() == "# Rubric\n"
     assert read_json(attempt / "image-build/runtime.json") == {"image": "sha256:image"}

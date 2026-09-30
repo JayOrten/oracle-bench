@@ -24,6 +24,7 @@ from oracle_bench.results import (
     MatrixCellName,
     read_evaluation_result,
     read_paired_result,
+    read_run_cost,
 )
 
 
@@ -115,7 +116,7 @@ def _pipeline_lines(
         (
             "Generate",
             _harness_text(agent) + f"; target: {target}; existing tests {visible}",
-            ", ".join([agent.status, _seconds(agent.duration_seconds), _cost(agent.cost_usd)]),
+            f"{agent.status}, {_seconds(agent.duration_seconds)}",
         )
     )
     generated_dir = config.task.generated_dir if config else "generated tests"
@@ -143,6 +144,7 @@ def _pipeline_lines(
     elif status == "skipped":
         judge_result += " (no tests)"
     rows.append(("Judge", judge_params, judge_result))
+    rows.append(("Cost", "OpenRouter key spend, generation and judge", _cost(paths.cost)))
 
     return [
         "## Pipeline",
@@ -233,7 +235,10 @@ def _classification_lines(paths: RunPaths) -> list[str]:
     attempt_result = attempt / "agent/result.json" if attempt is not None else None
     if attempt_result is not None and attempt_result.is_file():
         classifier = read_classification_attempt(attempt_result)
-        lines += [f"Classifier: {_harness_text(classifier)}.", ""]
+        lines += [
+            f"Classifier: {_harness_text(classifier)}. Cost: {_cost(attempt / 'cost.json')}.",
+            "",
+        ]
     if status == "completed":
         if classification["task_nature"] == "out_of_scope":
             lines += [f"Task nature: `{classification['task_nature']}`.", ""]
@@ -266,12 +271,12 @@ def _usage_lines(results: EvaluationResult, judge_attempt: JudgeAttempt | None) 
     return [
         "## Usage",
         "",
-        "| Stage | Wall time | Input tokens | Output tokens | Cost |",
-        "|---|---:|---:|---:|---:|",
+        "| Stage | Wall time | Input tokens | Output tokens |",
+        "|---|---:|---:|---:|",
         *[
             f"| {stage} | {_seconds(result.duration_seconds)} | "
             f"{_tokens(result.usage, 'input_tokens')} | "
-            f"{_tokens(result.usage, 'output_tokens')} | {_cost(result.cost_usd)} |"
+            f"{_tokens(result.usage, 'output_tokens')} |"
             for stage, result in rows
         ],
         "",
@@ -287,8 +292,18 @@ def _tokens(usage: dict | None, key: str) -> str:
     return "—" if value is None else f"{value:,}"
 
 
-def _cost(cost: float | None) -> str:
-    return "—" if cost is None else f"${cost:.4f}"
+def _cost(path: Path) -> str:
+    cost = read_run_cost(path)
+    if cost is None:
+        return "—"
+    if cost.status == "not_measured":
+        return "not measured: a model stage does not use OpenRouter"
+    if cost.status == "unavailable":
+        return f"unavailable: {cost.error}"
+    text = f"${cost.cost_usd:.4f}"
+    if cost.status == "unsettled":
+        text += f" (unsettled after {cost.waited_seconds:g} s)"
+    return text
 
 
 def _file_lines(paths: RunPaths) -> list[str]:
@@ -301,6 +316,7 @@ def _file_lines(paths: RunPaths) -> list[str]:
             ],
         ),
         ("Build", [("images", paths.build / "images.json")]),
+        ("Cost", [("cost", paths.cost)]),
         ("Reference", [("results", paths.reference / "results.json")]),
         (
             "Generate",

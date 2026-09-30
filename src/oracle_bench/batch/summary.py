@@ -13,7 +13,7 @@ from typing import Callable
 from oracle_bench.io import read_json, write_json
 from oracle_bench.judge.contracts import JUDGMENT_LABEL_KEYS, read_judgment_state
 from oracle_bench.paths import RunPaths
-from oracle_bench.results import MATRIX_CELLS, read_evaluation_result
+from oracle_bench.results import MATRIX_CELLS, read_evaluation_result, read_run_cost
 
 
 def summarize_job(job: dict) -> dict:
@@ -27,6 +27,12 @@ def summarize_job(job: dict) -> dict:
     if not job["run_dir"]:
         return summary
     paths = RunPaths.open(Path(job["run_dir"]))
+    # A failed run can still have spent money, so cost is read before results.
+    cost = read_run_cost(paths.cost)
+    summary.update(
+        cost_status=cost.status if cost else None,
+        cost_usd=cost.cost_usd if cost else None,
+    )
     if not paths.results.is_file():
         return summary
     result = read_evaluation_result(paths.results)
@@ -41,7 +47,6 @@ def summarize_job(job: dict) -> dict:
             version: coverage.percent if coverage.status == "available" else None
             for version, coverage in result.coverage.items()
         },
-        generation_cost_usd=result.agent.cost_usd,
         generation_duration_seconds=result.agent.duration_seconds,
         judge=_summarize_judge(paths),
     )
@@ -71,7 +76,6 @@ def _summarize_judge(paths: RunPaths) -> dict:
             harness_version=attempt["harness_version"],
             limit=attempt["limit"],
             usage=attempt["usage"],
-            cost_usd=attempt["cost_usd"],
             duration_seconds=attempt["duration_seconds"],
         )
     return summary
@@ -88,19 +92,8 @@ def write_summary(batch_dir: Path, name: str, jobs: list[dict]) -> dict:
     matrix = {
         key: sum(job.get("matrix", {}).get(key, 0) for job in job_summaries) for key in MATRIX_CELLS
     }
-    generation_costs = [
-        job["generation_cost_usd"]
-        for job in job_summaries
-        if job.get("generation_cost_usd") is not None
-    ]
-    judge_costs = [
-        job["judge"]["cost_usd"]
-        for job in job_summaries
-        if job.get("judge", {}).get("cost_usd") is not None
-    ]
+    costs = [job["cost_usd"] for job in job_summaries if job.get("cost_usd") is not None]
     judge_aggregation = _aggregate_judgments(job_summaries)
-    generation_cost = sum(generation_costs) if generation_costs else None
-    judge_cost = sum(judge_costs) if judge_costs else None
     summary = {
         "name": name,
         "planned": len(jobs),
@@ -118,14 +111,8 @@ def write_summary(batch_dir: Path, name: str, jobs: list[dict]) -> dict:
             if judge_aggregation["valid_judgments"]
             else None
         ),
-        # Generation and judging are separate model calls, so keep their costs separable.
-        "generation_cost_usd": generation_cost,
-        "judge_cost_usd": judge_cost,
-        "total_cost_usd": (
-            None
-            if generation_cost is None and judge_cost is None
-            else (generation_cost or 0) + (judge_cost or 0)
-        ),
+        "total_cost_usd": sum(costs) if costs else None,
+        "costed_runs": len(costs),
         "matrix": matrix,
         "judge": judge_aggregation,
         "jobs": job_summaries,
@@ -180,6 +167,10 @@ def _cross_tab(
     return {row_name: dict(sorted(counts.items())) for row_name, counts in sorted(table.items())}
 
 
+def _dollars(value: float | None) -> str:
+    return "—" if value is None else f"${value:.4f}"
+
+
 def _percent(value: float | None) -> str:
     return "—" if value is None else f"{value:.1%}"
 
@@ -226,9 +217,12 @@ def _headline_lines(summary: dict) -> list[str]:
         f"**{summary['judge']['valid_judgments']}** valid judgments "
         f"(**{_percent(summary['judge_tests_issue_yes_rate'])}**).",
         "",
+        f"Cost: **{_dollars(summary['total_cost_usd'])}** over **{summary['costed_runs']}** "
+        "runs with a measured cost.",
+        "",
         "| Instance | Run ID | State | Matrix detection | Attempts issue? | Attempt detail | No-attempt reason "
-        "| Cheating | Generation cost | Judge cost |",
-        "|---|---|---|---:|---|---|---|---|---:|---:|",
+        "| Cheating | Cost |",
+        "|---|---|---|---:|---|---|---|---|---:|",
     ]
 
 
@@ -244,8 +238,6 @@ def _job_table_lines(jobs: list[dict]) -> list[str]:
             report = run_dir / "report.md"
             instance = f"[{instance}]({report.as_posix()})"
         judge = job.get("judge", {})
-        generation_cost = job.get("generation_cost_usd")
-        judge_cost = judge.get("cost_usd")
         lines.append(
             f"| {instance} | {run_id} | {job['state']} "
             f"| {'yes' if job.get('detected') else 'no'} "
@@ -253,8 +245,7 @@ def _job_table_lines(jobs: list[dict]) -> list[str]:
             f"| {judge.get('attempt_detail') or '—'} "
             f"| {judge.get('no_attempt_reason') or '—'} "
             f"| {judge.get('cheating') or '—'} "
-            f"| {'—' if generation_cost is None else f'${generation_cost:.4f}'} "
-            f"| {'—' if judge_cost is None else f'${judge_cost:.4f}'} |"
+            f"| {_dollars(job.get('cost_usd'))} |"
         )
     return lines
 

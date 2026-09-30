@@ -32,12 +32,11 @@ def test_reevaluation_archives_results_but_preserves_generated_tests(tmp_path):
     assert (paths.submission / "manifest.json").read_text() == "keep"
 
 
-def test_trace_usage_is_reported_without_inventing_cost(tmp_path):
+def test_trace_usage_is_reported(tmp_path):
     path = tmp_path / "trace.jsonl"
     path.write_text('not-json\n{"type":"turn.completed","usage":{"input_tokens":12}}\n')
     result = parse_trace(path)
     assert result["usage"] == {"input_tokens": 12}
-    assert result["cost_usd"] is None
     assert result["unparsed_trace_lines"] == 1
 
 
@@ -128,7 +127,6 @@ def install_pipeline_fakes(monkeypatch, runtime, instance, judge_effect=None):
             "status": "completed",
             "duration_seconds": 1,
             "usage": None,
-            "cost_usd": None,
             "errors": [],
         }
 
@@ -137,7 +135,18 @@ def install_pipeline_fakes(monkeypatch, runtime, instance, judge_effect=None):
     monkeypatch.setattr(judge_module, "build_judge_workspace", Mock())
     monkeypatch.setattr(judge_module, "run_turn", judge_call)
     monkeypatch.setattr(run_module, "report", lambda paths: paths.report)
+    monkeypatch.setattr(run_module, "measure_spend", fake_spend)
     return judge_call
+
+
+spent = []
+
+
+@contextmanager
+def fake_spend(harnesses, path, on_wait):
+    spent.append(([harness.harness for harness in harnesses], path.name))
+    yield
+    on_wait()
 
 
 @pytest.mark.parametrize(
@@ -156,6 +165,17 @@ def test_normal_lifecycle_runs_only_a_configured_judge(
     assert final["state"] == "completed"
     assert final["judge_status"] == expected_status
     assert judge_call.call_count == expected_calls
+
+
+@pytest.mark.parametrize("with_judge,measured", [(False, ["claude"]), (True, ["claude", "claude"])])
+def test_run_measures_spend_across_every_model_stage(tmp_path, monkeypatch, with_judge, measured):
+    config, runtime, instance = configured_pipeline(tmp_path, with_judge)
+    install_pipeline_fakes(monkeypatch, runtime, instance)
+    spent.clear()
+
+    run_module.run(config)
+
+    assert spent == [(measured, "cost.json")]
 
 
 def test_run_fills_the_agent_prompt_environment(tmp_path, monkeypatch):

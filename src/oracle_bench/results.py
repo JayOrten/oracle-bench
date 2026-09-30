@@ -137,8 +137,18 @@ class HarnessResult(ArtifactModel):
     status: str
     duration_seconds: float | None = None
     usage: dict | None = None
-    cost_usd: float | None = None
     errors: list[dict] = Field(default_factory=list)
+
+
+class RunCost(ArtifactModel):
+    """What the OpenRouter key spent while a run's model stages ran."""
+
+    status: Literal["measured", "unsettled", "unavailable", "not_measured"]
+    cost_usd: float | None = None
+    before: float | None = None
+    after: float | None = None
+    waited_seconds: float | None = None
+    error: str | None = None
 
 
 class PairedResult(ArtifactModel):
@@ -208,6 +218,10 @@ def read_paired_result(path: Path) -> PairedResult:
 
 def read_evaluation_result(path: Path) -> EvaluationResult:
     return EvaluationResult.model_validate(read_json(path))
+
+
+def read_run_cost(path: Path) -> RunCost | None:
+    return RunCost.model_validate(read_json(path)) if path.is_file() else None
 
 
 def write_result(path: Path, result: ArtifactModel) -> None:

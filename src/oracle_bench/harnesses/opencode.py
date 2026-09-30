@@ -16,12 +16,10 @@ from oracle_bench.harnesses.launch import (
 def parse_trace(path: Path) -> dict:
     """Normalize OpenCode's JSON event stream into the shared harness result."""
     usage = {"input_tokens": 0, "output_tokens": 0, "reasoning_tokens": 0}
-    cost = 0.0
     final_text = ""
     errors = []
     malformed = 0
     completed = False
-    finish_seen = False
     if path.exists():
         for line in path.read_text(errors="replace").splitlines():
             if not line.strip():
@@ -38,19 +36,16 @@ def parse_trace(path: Path) -> dict:
             if event.get("type") == "text":
                 final_text = str(part.get("text", ""))
             elif event.get("type") == "step_finish":
-                finish_seen = True
                 tokens = part.get("tokens") or {}
                 usage["input_tokens"] += tokens.get("input", 0)
                 usage["output_tokens"] += tokens.get("output", 0)
                 usage["reasoning_tokens"] += tokens.get("reasoning", 0)
-                cost += part.get("cost", 0) or 0
                 completed = part.get("reason") == "stop"
             elif event.get("type") == "error":
                 errors.append(event)
 
     return {
         "usage": usage if any(usage.values()) else None,
-        "cost_usd": cost if finish_seen else None,
         "errors": errors,
         "unparsed_trace_lines": malformed,
         "turn_completed": completed,
