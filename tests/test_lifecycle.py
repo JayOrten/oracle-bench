@@ -237,8 +237,25 @@ def test_empty_generation_skips_configured_judge(tmp_path, monkeypatch):
     assert read_json(paths.status)["judge_status"] == "skipped"
     assert read_json(paths.judge.judgment) == {
         "status": "skipped",
-        "reason": "No generated test files were captured; no judge turn was run.",
+        "reason": "No generated tests were collected; no judge turn was run.",
     }
+    judge_call.assert_not_called()
+
+
+def test_captured_files_without_collected_tests_skip_judge(tmp_path, monkeypatch):
+    """A timeout that leaves only a conftest.py has files but nothing to judge."""
+    config, runtime, instance = configured_pipeline(tmp_path, True)
+    judge_call = install_pipeline_fakes(monkeypatch, runtime, instance)
+    no_tests = EvaluationResult.model_validate(
+        evaluation_result(
+            agent={"status": "timeout"}, buggy_status="no_tests", golden_status="no_tests"
+        )
+    )
+    monkeypatch.setattr(run_module, "evaluate", lambda *args: no_tests)
+
+    run_dir = run_module.run(config)
+
+    assert read_json(run_dir / "status.json")["judge_status"] == "skipped"
     judge_call.assert_not_called()
 
 

@@ -36,6 +36,19 @@ def test_missing_coverage_does_not_erase_completed_tests(config, tmp_path):
     assert read_json(tmp_path / "coverage.json")["status"] == "unavailable"
 
 
+def test_runner_receives_repository_pytest_plugins(config, tmp_path):
+    config.runtime.pytest_plugins = ["pytester"]
+    sandbox = Mock(helpers="/helpers")
+    sandbox.run.return_value = CommandResult(0, 1)
+    sandbox.download.side_effect = lambda *args, **kwargs: write_json(
+        tmp_path / "tests.json", {"status": "no_tests", "tests": {}}
+    )
+
+    run_tests(sandbox, config, ["oracle_tests"], tmp_path)
+
+    assert read_json(tmp_path / "runner.json")["pytest_plugins"] == ["pytester"]
+
+
 @pytest.mark.parametrize("timed_out,status", [(True, "timeout"), (False, "runner_error")])
 def test_missing_results_never_count_as_success(config, tmp_path, timed_out, status):
     sandbox = Mock(helpers="/helpers")

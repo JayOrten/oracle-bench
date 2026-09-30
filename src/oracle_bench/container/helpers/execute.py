@@ -1,10 +1,8 @@
-"""Container process supervisor (Python 3.9+); no benchmark-private inputs.
+"""Container process supervisor (Python 3.6+); no benchmark-private inputs.
 
 The Docker HTTP timeout does not stop an exec process. This helper gives the
 command its own process group, enforces its deadline, and leaves explicit status.
 """
-
-from __future__ import annotations
 
 import json
 import os
@@ -15,7 +13,7 @@ import time
 from pathlib import Path
 
 
-def run(timeout: str, stdin_path: str, status_path: str, argv: list[str]) -> int:
+def run(timeout: str, stdin_path: str, status_path: str, argv: list) -> int:
     started = time.monotonic()
     timed_out = False
     with open(stdin_path, "rb") as stdin:

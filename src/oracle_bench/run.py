@@ -132,9 +132,9 @@ def run(config: RunConfig) -> Path:
 
             judge_status = "disabled"
             if config.judge:
-                if submission["empty"]:
+                if submission["empty"] or result.no_tests:
                     judgment = skipped_judgment(
-                        "No generated test files were captured; no judge turn was run."
+                        "No generated tests were collected; no judge turn was run."
                     )
                     write_json(paths.judge.judgment, judgment.model_dump())
                 else:

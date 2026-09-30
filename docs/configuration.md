@@ -299,8 +299,11 @@ Oracle Bench substitutes those variables and freezes the exact delivered text as
 - **Type:** `localized` or `repository`
 - **Default:** `repository`
 
-`localized` bounds a SWE-bench assignment to production files and, when patch
-context identifies one unambiguously, an enclosing class or function. The prompt
+`localized` bounds a SWE-bench assignment to production files and the existing
+classes or functions that enclose each changed line. Enclosing definitions come
+from the patch's context and removed lines; the hunk header, which names the
+definition above the hunk, is used only when the hunk shows none. Names that
+only appear in added lines are never used. The prompt
 receives this location through `${test_target}`; repair contents, changed lines,
 reference tests, and expected behavior remain private. `repository` supplies no
 issue-derived location and is intended for small projects where repository-wide
@@ -355,12 +358,14 @@ Parent directory for timestamped run directories.
 
 `config.resolved.yaml` adds `runtime` and `toolchain` sections. They contain generated execution details rather than experiment input:
 
-- `runtime`: source image, platform, workdir, Python, rebuild command, coverage
-  roots, import probes, and repository-specific existing-test globs.
+- `runtime`: source image, platform, workdir, Python, optional source import path,
+  rebuild command, coverage roots, import probes, required pytest plugins, repository-specific
+  existing-test globs, and any test-tool overrides needed by that source image.
 - `toolchain`: Node image plus pinned Codex, Claude Code, OpenCode, pytest, and
   coverage versions. CLI versions come only from this locked toolchain; a run
-  cannot pin its own. Change `docker/package.json` and its lockfile to upgrade a
-  harness.
+  cannot pin its own. A source adapter can override pytest and coverage when its
+  Python interpreter cannot run the defaults. Change `docker/package.json` and
+  its lockfile to upgrade a harness.
 
 The resolved file also expands source, agent, task, and resource defaults and is
 the configuration consumed by `oracle-bench evaluate`. Edit the small input file

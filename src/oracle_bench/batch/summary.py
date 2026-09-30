@@ -226,9 +226,9 @@ def _headline_lines(summary: dict) -> list[str]:
         f"**{summary['judge']['valid_judgments']}** valid judgments "
         f"(**{_percent(summary['judge_tests_issue_yes_rate'])}**).",
         "",
-        "| Instance | State | Matrix detection | Attempts issue? | Attempt detail | No-attempt reason "
+        "| Instance | Run ID | State | Matrix detection | Attempts issue? | Attempt detail | No-attempt reason "
         "| Cheating | Generation cost | Judge cost |",
-        "|---|---|---:|---|---|---|---|---:|---:|",
+        "|---|---|---|---:|---|---|---|---|---:|---:|",
     ]
 
 
@@ -237,14 +237,18 @@ def _job_table_lines(jobs: list[dict]) -> list[str]:
     lines = []
     for job in jobs:
         instance = job.get("instance_id", Path(job["config"]).stem)
+        run_id = "—"
         if job.get("run_dir"):
-            report = Path(job["run_dir"]) / "report.md"
+            run_dir = Path(job["run_dir"])
+            run_id = f"`{run_dir.name}`"
+            report = run_dir / "report.md"
             instance = f"[{instance}]({report.as_posix()})"
         judge = job.get("judge", {})
         generation_cost = job.get("generation_cost_usd")
         judge_cost = judge.get("cost_usd")
         lines.append(
-            f"| {instance} | {job['state']} | {'yes' if job.get('detected') else 'no'} "
+            f"| {instance} | {run_id} | {job['state']} "
+            f"| {'yes' if job.get('detected') else 'no'} "
             f"| {judge.get('tests_issue') or judge.get('status', 'missing')} "
             f"| {judge.get('attempt_detail') or '—'} "
             f"| {judge.get('no_attempt_reason') or '—'} "

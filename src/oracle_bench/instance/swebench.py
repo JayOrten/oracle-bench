@@ -42,16 +42,18 @@ HUNK_HEADER = re.compile(r"^@@ .+ @@(?: (.*))?$")
 def localized_test_target(patch: str, source_roots: list[str]) -> str:
     """Derive an agent-safe code location without exposing repair semantics.
 
-    Unified diffs normally retain the enclosing definition in their context. When
-    they do not, the production file remains a stable and useful localization hint.
-    Added/removed content is deliberately ignored when finding symbols so a name
-    introduced by the repair cannot leak to the generation agent.
+    Each changed line is attributed to the definition enclosing it in the hunk's
+    context or removed lines. Added lines only close scopes, so a name introduced
+    by the repair cannot leak. The hunk header, which names the nearest definition
+    above the hunk rather than the edited one, is only a fallback.
     """
     roots = tuple(PurePosixPath(root) for root in source_roots)
     targets: dict[str, set[str]] = {}
     current: str | None = None
+    header: str | None = None
+    header_is_class = False
     scopes: list[tuple[int, str]] = []
-    hunk_has_symbol = False
+    scope_seen = False
 
     for line in patch.splitlines():
         match = DIFF_FILE.match(line)
@@ -63,34 +65,41 @@ def localized_test_target(patch: str, source_roots: list[str]) -> str:
                 targets.setdefault(current, set())
             else:
                 current = None
-            scopes = []
-            hunk_has_symbol = False
             continue
         hunk = HUNK_HEADER.match(line)
         if hunk:
+            scope = PYTHON_SCOPE.match(hunk.group(1) or "")
+            header = scope.group(2) if scope else None
+            header_is_class = bool(scope) and scope.group(0).lstrip().startswith("class")
             scopes = []
-            hunk_has_symbol = False
-            section = hunk.group(1) or ""
-            scope = PYTHON_SCOPE.match(section)
-            if current is not None and scope:
-                targets[current].add(scope.group(2))
-                hunk_has_symbol = True
+            scope_seen = False
             continue
-        if (
-            current is None
-            or hunk_has_symbol
-            or line.startswith(("+++", "---"))
-            or not line.startswith(" ")
-        ):
+        if current is None or line.startswith(("+++", "---")) or line[:1] not in " +-":
             continue
-        scope = PYTHON_SCOPE.match(line[1:])
-        if not scope:
+        content = line[1:]
+        if not content.strip():
             continue
-        indent, name = len(scope.group(1)), scope.group(2)
-        scopes = [(depth, value) for depth, value in scopes if depth < indent]
-        scopes.append((indent, name))
-        targets[current].add(".".join(value for _, value in scopes))
-        hunk_has_symbol = True
+        indent = len(content) - len(content.lstrip(" "))
+        scope = PYTHON_SCOPE.match(content)
+        # A re-added definition, such as a changed signature, stays in the same scope.
+        same = bool(scope) and (indent, scope.group(2)) in scopes
+        # Any line closes the scopes it dedents past; only existing code opens one.
+        scopes = [
+            (depth, name) for depth, name in scopes if depth < indent or (same and depth == indent)
+        ]
+        if scope and not line.startswith("+") and not same:
+            scopes.append((indent, scope.group(2)))
+            scope_seen = True
+        if line.startswith(("+", "-")):
+            names = [name for _, name in scopes]
+            # An indented definition right below a class header is that class's member.
+            if names and header_is_class and scopes[0][0] > 0:
+                names.insert(0, header)
+            # The header lies above the hunk, so it no longer applies once the hunk
+            # shows its own definitions.
+            symbol = ".".join(names) if names else None if scope_seen else header
+            if symbol:
+                targets[current].add(symbol)
 
     if not targets:
         raise ValueError("Golden patch does not modify a Python production source path")
@@ -120,11 +129,23 @@ def runtime_for(record: dict) -> RuntimeConfig:
     if repo not in REPOSITORY_LAYOUTS:
         raise ValueError(f"No tested SWE-bench runtime profile for repository {repo!r}")
     source_root, import_module, existing_test_globs = REPOSITORY_LAYOUTS[repo]
+    uses_python_36 = record["instance_id"] == "scikit-learn__scikit-learn-14710"
     return RuntimeConfig(
         image=image_for(record["instance_id"]),
         source_roots=[source_root],
         import_modules=[import_module],
         existing_test_globs=existing_test_globs,
+        # pytest is a src-layout project; its installed distribution may be a
+        # different version from the checked-out task revision.
+        pythonpath="/testbed/src" if repo == "pytest-dev/pytest" else None,
+        # The repository enables pytester through addopts, which the benchmark
+        # intentionally clears. Keep this required plugin without inheriting
+        # unrelated repository options or default test targets.
+        pytest_plugins=["pytester"] if repo == "pytest-dev/pytest" else [],
+        # This particular upstream image uses Python 3.6. The normal test
+        # toolchain requires a newer interpreter.
+        pytest_version="6.2.5" if uses_python_36 else None,
+        coverage_version="6.2" if uses_python_36 else None,
         # Official instance images already contain an installed checkout. Patches to
         # Python sources are visible through that editable install; rerunning a generic
         # pip build can require build-only dependencies absent from the final image.

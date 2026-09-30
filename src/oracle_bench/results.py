@@ -156,6 +156,11 @@ class PairedResult(ArtifactModel):
         return self.buggy_status == self.golden_status == "completed"
 
     @property
+    def no_tests(self) -> bool:
+        """Neither version collected a generated test, so there is nothing to judge."""
+        return self.buggy_status == self.golden_status == "no_tests"
+
+    @property
     def has_fail_on_buggy_pass_on_golden(self) -> bool:
         """Whether any completed test distinguishes the pair in the expected direction."""
         return self.matrix["fail_on_buggy_pass_on_golden"].count > 0

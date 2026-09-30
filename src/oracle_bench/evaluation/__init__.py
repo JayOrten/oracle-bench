@@ -50,6 +50,7 @@ def run_tests(
         "targets": targets,
         "source_roots": runtime.source_roots,
         "import_modules": runtime.import_modules,
+        "pytest_plugins": runtime.pytest_plugins,
     }
     write_json(directory / "runner.json", settings)
     sandbox.upload(directory / "runner.json", "/tmp/oracle-runner.json")

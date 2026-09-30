@@ -236,6 +236,8 @@ def create_sandbox_container(
         security_opt=["no-new-privileges"],
         network_mode=network_mode,
         labels={"oracle-bench.profile": profile.value, **(labels or {})},
+        # Every profile imports the same code, so the agent tests what evaluation runs.
+        environment={"PYTHONPATH": runtime.pythonpath} if runtime.pythonpath else None,
         use_config_proxy=False,
     )
 

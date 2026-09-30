@@ -1,6 +1,4 @@
-"""Finalize a disposable repository workspace after rebuilding (Python 3.8+)."""
-
-from __future__ import annotations
+"""Finalize a disposable repository workspace after rebuilding (Python 3.6+)."""
 
 import json
 import os
@@ -16,7 +14,7 @@ def git(*args: str) -> None:
     subprocess.run(["git", *args], check=True)
 
 
-def remove_existing_tests(root: Path, patterns: list[str]) -> None:
+def remove_existing_tests(root: Path, patterns: list) -> None:
     """Remove tests without deleting runtime support kept in test packages.
 
     A matched file is an explicit adapter declaration and is removed directly.

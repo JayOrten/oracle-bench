@@ -1,10 +1,8 @@
-"""Standalone runner copied into evaluation containers (Python 3.9+).
+"""Standalone runner copied into evaluation containers (Python 3.6+).
 
 Use pytest hooks instead of interpreting the process exit code as a test result.
 Write progress on every report so a crash/timeout leaves useful partial evidence.
 """
-
-from __future__ import annotations
 
 import json
 import os
@@ -125,8 +123,9 @@ print(json.dumps(origins))
 """
         checked = subprocess.run(
             [sys.executable, "-c", probe, *settings.get("import_modules", [])],
-            capture_output=True,
-            text=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            universal_newlines=True,
             check=False,
         )
         if checked.returncode:
@@ -157,7 +156,10 @@ print(json.dumps(origins))
             cov = None
         os.environ.pop("PYTEST_ADDOPTS", None)
         # Run generated targets only; don't inherit a repository's default targets/addopts.
-        arguments = ["-o", "addopts=", "-q", "--tb=short", *settings["targets"]]
+        arguments = ["-o", "addopts=", "-q", "--tb=short"]
+        for plugin in settings.get("pytest_plugins", []):
+            arguments.extend(["-p", plugin])
+        arguments.extend(settings["targets"])
         write(output / "command.json", [sys.executable, "-m", "pytest", *arguments])
         exit_code = int(pytest.main(arguments, plugins=[recorder]))
         recorder.data["exit_code"] = exit_code

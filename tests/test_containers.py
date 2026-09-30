@@ -20,6 +20,7 @@ from oracle_bench.container.images import (
     image_tag,
     inspect_harness_versions,
     prepare_contexts,
+    runtime_arguments,
 )
 from oracle_bench.container.lifecycle import setup_deadline
 from oracle_bench.container.sandbox import Profile, Sandbox, docker_client, open_sandbox
@@ -36,6 +37,18 @@ def config():
         existing_test_globs=["tests"],
     )
     return config
+
+
+def test_runtime_image_uses_source_specific_test_toolchain(config):
+    config.runtime.pytest_version = "6.2.5"
+    config.runtime.coverage_version = "6.2"
+    source = Mock(id="sha256:source")
+    harnesses = Mock(id="sha256:harnesses")
+
+    arguments = runtime_arguments(config, source, harnesses)
+
+    assert arguments["PYTEST_VERSION"] == "6.2.5"
+    assert arguments["COVERAGE_VERSION"] == "6.2"
 
 
 def archive_bytes(entries):
@@ -110,6 +123,18 @@ def test_security_profiles_and_cleanup(config, tmp_path, profile):
     assert options["security_opt"] == ["no-new-privileges"]
     assert "volumes" not in options and "mounts" not in options
     container.remove.assert_called_once_with(force=True)
+
+
+@pytest.mark.parametrize("profile", list(Profile))
+def test_every_profile_imports_the_repository_source_path(config, tmp_path, profile):
+    """Generation must import the same code evaluation runs, e.g. pytest's own src/."""
+    config.runtime.pythonpath = "/testbed/src"
+    client = Mock()
+    with open_sandbox(client, "image", config, profile, tmp_path / "log"):
+        pass
+    assert client.containers.create.call_args.kwargs["environment"] == {
+        "PYTHONPATH": "/testbed/src"
+    }
 
 
 def test_failed_start_is_cleaned_up_without_masking_failure(config, tmp_path):

@@ -4,8 +4,8 @@ import sys
 from oracle_bench.container.helpers.prepare import remove_existing_tests, replace_git_history
 
 
-def test_helper_annotations_are_not_evaluated_by_old_repository_python():
-    assert remove_existing_tests.__annotations__["patterns"] == "list[str]"
+def test_helper_annotations_work_on_old_repository_python():
+    assert remove_existing_tests.__annotations__["patterns"] is list
 
 
 def test_remove_existing_tests_expands_files_directories_and_nested_globs(tmp_path):

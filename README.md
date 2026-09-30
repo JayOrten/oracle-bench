@@ -144,6 +144,11 @@ See the [complete results and artifacts reference](docs/results.md) for the full
 directory layout, JSON fields, logs, evaluation artifacts, and reevaluation
 behavior.
 
+For initial batch plots, run `uv sync --extra dataset --extra dev --extra analysis`
+and open [notebooks/initial-results.ipynb](notebooks/initial-results.ipynb) with
+the project's `.venv` kernel. Set `BATCH_DIR` in its first code cell to choose
+which saved batch to inspect.
+
 ### Development
 
 The package lives in `src/oracle_bench/` and is organized by pipeline stage:

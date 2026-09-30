@@ -60,6 +60,23 @@ def test_unknown_repository_has_no_guessed_runtime():
         runtime_for({"instance_id": "example__project-1", "repo": "example/project"})
 
 
+def test_pytest_source_checkout_takes_precedence_over_installed_distribution():
+    runtime = runtime_for({"instance_id": "pytest-dev__pytest-5221", "repo": "pytest-dev/pytest"})
+    assert runtime.pythonpath == "/testbed/src"
+    assert runtime.pytest_plugins == ["pytester"]
+
+
+def test_python_36_instance_uses_compatible_evaluation_tools():
+    runtime = runtime_for(
+        {
+            "instance_id": "scikit-learn__scikit-learn-14710",
+            "repo": "scikit-learn/scikit-learn",
+        }
+    )
+    assert runtime.pytest_version == "6.2.5"
+    assert runtime.coverage_version == "6.2"
+
+
 def test_localized_target_ignores_test_files_and_new_symbol_names():
     patch = """diff --git a/pkg/worker.py b/pkg/worker.py
 --- a/pkg/worker.py
@@ -74,7 +91,42 @@ diff --git a/pkg/tests/test_worker.py b/pkg/tests/test_worker.py
 +def test_repair(): pass
 """
 
-    assert localized_test_target(patch, ["pkg"]) == "pkg/worker.py (Worker)"
+    assert localized_test_target(patch, ["pkg"]) == "pkg/worker.py (Worker.run)"
+
+
+def test_localized_target_names_the_edited_definition_not_the_hunk_header():
+    """Git names the definition above the hunk; the edit here is inside `clear`."""
+    patch = """diff --git a/pkg/fixture.py b/pkg/fixture.py
+--- a/pkg/fixture.py
++++ b/pkg/fixture.py
+@@ -10,5 +10,9 @@ def messages(self):
+ 
+     def clear(self):
+-        self.handler.reset()
++        self.handler.clear()
++
++    def repair_only_helper(self):
++        pass
+"""
+
+    assert localized_test_target(patch, ["pkg"]) == "pkg/fixture.py (clear)"
+
+
+def test_localized_target_keeps_a_changed_signature_in_its_own_scope():
+    patch = """diff --git a/pkg/rolling.py b/pkg/rolling.py
+--- a/pkg/rolling.py
++++ b/pkg/rolling.py
+@@ -20,4 +20,4 @@ def __init__(self):
+         self.labels = labels
+ 
+-    def __iter__(self) -> Iterator[int]:
++    def __iter__(self) -> Iterator[str]:
+         if self.ndim > 1:
+-            raise ValueError()
++            raise TypeError()
+"""
+
+    assert localized_test_target(patch, ["pkg"]) == "pkg/rolling.py (__iter__)"
 
 
 def test_localized_target_falls_back_to_production_file():

@@ -126,8 +126,8 @@ def runtime_arguments(
         "PROJECT_IMAGE": image_id(source),
         "PROJECT_PYTHON": runtime.python,
         "PROJECT_PYTHON_DIR": str(Path(runtime.python).parent),
-        "PYTEST_VERSION": config.toolchain.pytest_version,
-        "COVERAGE_VERSION": config.toolchain.coverage_version,
+        "PYTEST_VERSION": runtime.pytest_version or config.toolchain.pytest_version,
+        "COVERAGE_VERSION": runtime.coverage_version or config.toolchain.coverage_version,
     }
 
 

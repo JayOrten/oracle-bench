@@ -191,18 +191,22 @@ changed.
 
 ### `report.md`
 
-The human-readable summary. It identifies whether test generation covered the
-whole repository or a calculated localized target, then shows agent and evaluation
-completion states, submission compliance, the paired pass/fail matrix, non-binary
-outcomes, coverage, and links to artifacts that exist. When judging is configured,
-it also shows judge status, harness and model provenance, the issue-attempt
-answer and its conditional detail, the cheating audit, the rationale, and audit links. Generation
-and judge duration, usage, and cost are
-reported separately.
+The human-readable summary, in this order:
 
-The ground-truth section links the original issue and exact buggy-to-golden fix
-for manual analysis. These private artifacts are written on the host and are not
-mounted or copied into the generation container.
+- Title line: `completed` or `completed with errors`, followed by the reasons
+  (generation status, `no tests collected`, an incomplete evaluation, or
+  diagnostic-only), and any forbidden changes.
+- Pipeline: one row per stage (resolve, build, reference, generate, evaluate,
+  judge) with its parameters and result. Generation and judge rows name the
+  harness, version, model, provider, and limit.
+- Test outcomes: the paired matrix plus other outcomes, then coverage and failure
+  causes per version.
+- Judgment: the labels and rationale, or the judge's non-completed state.
+- Task classification: the central classification for the problem.
+- Usage: wall time, input and output tokens, and cost for generation and judge.
+- Files: links to the artifacts that exist, grouped by stage, including the
+  private ground truth. Ground truth is written on the host and never mounted or
+  copied into the generation container.
 
 `oracle-bench report runs/<run-id>` regenerates this file from saved data. It does
 not execute tests or call a model.
@@ -296,7 +300,8 @@ and the submission was compliant. `completed_with_errors` means the run retained
 results but one of those conditions failed. The independent `judge_status` is
 `disabled`, `completed`, `invalid_output`, `failed`, `timed_out`, `skipped`,
 `stale`, or `missing`. A configured judge is `skipped` without a model call when
-generation produces no test files. Tests captured from a timed-out or otherwise
+generation produces no test files, or when neither version collects a generated
+test (`no_tests`). Tests captured from a timed-out or otherwise
 incomplete generation are still evaluated and judged. Judge failure does not
 replace a completed evaluation state. An early exception records its stage and a
 failed state.
@@ -596,6 +601,10 @@ details, model provenance, token usage, duration, and cost. Runs without judge
 configuration are recorded as `disabled`; configured runs without a result are
 `missing`. Invalid, failed, timed-out, and stale judgments remain explicit and do
 not make an otherwise completed evaluation resumable.
+
+The Markdown job table shows each run ID as plain text alongside the linked
+instance name, so runs can be located under `runs/<run-id>` without following a
+Markdown link. Jobs that failed before creating a run show `—` instead.
 
 `summary.json` distinguishes three useful denominators:
 
