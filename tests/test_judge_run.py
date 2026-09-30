@@ -368,7 +368,7 @@ def test_empty_submission_is_rejected_before_docker(tmp_path, monkeypatch):
     docker = Mock()
     monkeypatch.setattr("oracle_bench.judge.run.docker_client", docker)
 
-    with pytest.raises(ValueError, match="empty"):
+    with pytest.raises(ValueError, match="no generated tests"):
         judge(paths)
 
     docker.assert_not_called()

@@ -1,7 +1,5 @@
 """Snapshot/export helper run inside a container; no third-party dependencies."""
 
-from __future__ import annotations
-
 import hashlib
 import json
 import os
@@ -13,7 +11,7 @@ from pathlib import Path
 IGNORED_DIRS = {".git", "__pycache__", ".pytest_cache", ".mypy_cache", ".ruff_cache"}
 
 
-def snapshot(root: Path) -> dict[str, dict]:
+def snapshot(root: Path) -> dict:
     result = {}
     for directory, dirs, files in os.walk(root, followlinks=False):
         # Include symlink directories as entries without traversing their targets.

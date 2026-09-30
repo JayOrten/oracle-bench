@@ -1,11 +1,9 @@
-"""Build and verify the two judge repository views (Python 3.8+).
+"""Build and verify the two judge repository views (Python 3.6+).
 
 Runs inside the disposable judge container under the repository's own Python,
 so it uses only the standard library. The host never trusts its own copy of the
 submission: `verify` rehashes what the container actually holds.
 """
-
-from __future__ import annotations
 
 import hashlib
 import json
@@ -14,7 +12,7 @@ import sys
 from pathlib import Path
 
 
-def copy_views(source: str, views: list[str]) -> None:
+def copy_views(source: str, views: list) -> None:
     """Replace both views with plain copies when Git worktrees are unavailable."""
     for view in views:
         shutil.rmtree(view, ignore_errors=True)
@@ -22,7 +20,7 @@ def copy_views(source: str, views: list[str]) -> None:
         shutil.copytree(source, view, symlinks=True)
 
 
-def verify_submission(expected: dict, views: list[str]) -> dict:
+def verify_submission(expected: dict, views: list) -> dict:
     """Hash every manifested file in each view, refusing anything that escapes it."""
     observed = {}
     for view in views:

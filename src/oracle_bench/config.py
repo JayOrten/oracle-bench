@@ -21,7 +21,7 @@ class ConfigModel(BaseModel):
 
 
 PositiveNumber = Annotated[float, Field(strict=True, gt=0, allow_inf_nan=False)]
-Version = Annotated[str, Field(strict=True, pattern=r"^\d+\.\d+\.\d+(?:[a-zA-Z0-9.+-]*)?$")]
+Version = Annotated[str, Field(strict=True, pattern=r"^\d+\.\d+(?:\.\d+)?(?:[a-zA-Z0-9.+-]*)?$")]
 ImageReference = Annotated[str, Field(strict=True, pattern=r"^[A-Za-z0-9_./:@-]+$")]
 NonBlank = Annotated[str, Field(strict=True, pattern=r"\S")]
 
@@ -195,6 +195,10 @@ class RuntimeConfig(ConfigModel):
     platform: str = "linux/amd64"
     workdir: ContainerPath = "/testbed"
     python: ContainerPath = "/opt/miniconda3/envs/testbed/bin/python"
+    pythonpath: ContainerPath | None = None
+    pytest_plugins: list[str] = Field(default_factory=list)
+    pytest_version: Version | None = None
+    coverage_version: Version | None = None
     rebuild: str = "python -m pip install --no-deps --no-build-isolation -e ."
 
 

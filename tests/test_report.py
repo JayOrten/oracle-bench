@@ -13,11 +13,11 @@ from oracle_bench.results import MATRIX_CELLS
 @pytest.mark.parametrize(
     ("scope", "target", "expected_scope"),
     [
-        ("repository", None, "Test-generation scope: **whole repository**."),
+        ("repository", None, "target: whole repository"),
         (
             "localized",
             "package/module.py (function_name)",
-            "Test-generation scope: **calculated localized target**.",
+            "target: package/module.py (function_name)",
         ),
     ],
 )
@@ -39,16 +39,11 @@ def test_report_renders_run_metadata(tmp_path, cost, scope, target, expected_sco
     (paths.ground_truth / "fix.patch").write_text("patch")
     text = report(paths).read_text()
     assert ("$0.0378" in text) == (cost is not None)
-    assert ("Monetary cost is unavailable" in text) == (cost is None)
-    assert "Existing repository test modules visible to agent: **yes**" in text
+    assert "existing tests visible" in text
     assert expected_scope in text
-    assert ("Calculated target: **package/module.py (function_name)**." in text) == (
-        scope == "localized"
-    )
-    assert "[Original issue](ground-truth/issue.md)" in text
-    assert "[Buggy-to-golden fix diff](ground-truth/fix.patch)" in text
-    assert "| buggy | 2 | 1 | 0 |" in text
-    assert "Status: **disabled**" in text
+    assert "- Ground truth: [issue](ground-truth/issue.md), [fix](ground-truth/fix.patch)" in text
+    assert "| buggy | — | 2 | 1 | 0 |" in text
+    assert "| Judge | — | disabled |" in text
 
 
 def report_results(**changes):
@@ -123,15 +118,15 @@ def test_report_renders_completed_judge_with_provenance_cost_and_supporting_file
 
     text = report(paths).read_text()
 
-    assert "Status: **completed**" in text
-    assert "| Do the generated tests attempt to test the issue? | `yes` |" in text
-    assert "| Attempt detail | `correct_assertion` |" in text
-    assert "| No-attempt reason | `null` |" in text
+    assert (
+        "| Judge | claude 2.1.263, judge-model, anthropic, 60 s limit | completed, tests issue: yes |"
+        in text
+    )
+    assert "| yes | correct_assertion | — | no |" in text
     assert "> The generated assertion reaches the issue" in text
-    assert "Model: `judge-model`" in text
-    assert "Generation wall time: 4.0s" in text and "$0.1250" in text
-    assert "Judge wall time: 3.0s" in text and "$0.0250" in text
-    assert "[Judge workspace contents](judge/workspace-spec.json)" in text
+    assert "| Generate | 4 s | 12 | — | $0.1250 |" in text
+    assert "| Judge | 3 s | 20 | — | $0.0250 |" in text
+    assert "[workspace](judge/workspace-spec.json)" in text
     for target in re.findall(r"\[[^]]+\]\(([^)]+)\)", text):
         assert (tmp_path / target).is_file(), target
 
@@ -141,19 +136,19 @@ def test_report_renders_completed_judge_with_provenance_cost_and_supporting_file
     [
         (
             {"status": "invalid_output", "error": "bad JSON"},
-            "Reason: bad JSON",
+            "invalid_output: bad JSON",
         ),
         (
             {"status": "failed", "error": "provider failed"},
-            "Reason: provider failed",
+            "failed: provider failed",
         ),
         (
             {"status": "timed_out", "error": "deadline"},
-            "Reason: deadline",
+            "timed_out: deadline",
         ),
         (
             {"status": "skipped", "reason": "generation failed"},
-            "Reason: generation failed",
+            "Skipped: generation failed",
         ),
         (
             {
@@ -161,7 +156,7 @@ def test_report_renders_completed_judge_with_provenance_cost_and_supporting_file
                 "reason": "Evaluation changed.",
                 "previous_judgment": completed_judgment(),
             },
-            "Previous issue-tested answer: `yes`.",
+            "Previous tests-issue answer: `yes`.",
         ),
     ],
 )
@@ -172,9 +167,8 @@ def test_report_renders_noncompleted_judge_states(tmp_path, judgment, expected):
 
     text = report(paths).read_text()
 
-    assert f"Status: **{judgment['status']}**" in text
+    assert f"| Judge | — | {judgment['status']}" in text
     assert expected in text
-    assert "| Issue-target alignment |" not in text
 
 
 def test_report_distinguishes_configured_missing_judgment(tmp_path):
@@ -184,7 +178,7 @@ def test_report_distinguishes_configured_missing_judgment(tmp_path):
 
     text = report(paths).read_text()
 
-    assert "Status: **missing**" in text
+    assert "| Judge | — | missing |" in text
     assert "no judgment is saved" in text
 
 
@@ -194,8 +188,8 @@ def test_report_renders_a_run_without_judge_configuration(tmp_path):
 
     text = report(paths).read_text()
 
-    assert "Status: **disabled**" in text
-    assert "not configured for generated-test judging" in text
+    assert "| Judge | — | disabled |" in text
+    assert "Disabled." in text
 
 
 def test_report_derives_diagnostic_status_from_submission_compliance(tmp_path):
@@ -211,25 +205,41 @@ def test_report_derives_diagnostic_status_from_submission_compliance(tmp_path):
 
     text = report(paths).read_text()
 
-    assert "**Diagnostic only:**" in text
-    assert "`src/application.py`" in text
+    assert "diagnostic only: edits outside the generated directory" in text
+    assert "- `src/application.py`" in text
 
 
-def test_report_explains_generation_timeout_and_labels_generated_test_results(tmp_path):
+@pytest.mark.parametrize(
+    ("changes", "expected"),
+    [
+        ({}, "**completed**\n"),
+        (
+            {"agent": {"status": "timeout", "duration_seconds": 60}},
+            "**completed with errors**: generation timeout\n",
+        ),
+        (
+            {
+                "agent": {"status": "timeout", "duration_seconds": 60},
+                "buggy_status": "no_tests",
+                "golden_status": "no_tests",
+            },
+            "**completed with errors**: generation timeout; no tests collected\n",
+        ),
+        (
+            {"golden_status": "infrastructure_error"},
+            "**completed with errors**: golden evaluation infrastructure_error\n",
+        ),
+    ],
+)
+def test_report_title_states_why_the_run_has_errors(tmp_path, changes, expected):
     paths = RunPaths.create(tmp_path)
-    paths.results.write_text(
-        json.dumps(report_results(agent={"status": "timeout", "duration_seconds": 60}))
-    )
+    paths.results.write_text(json.dumps(report_results(**changes)))
 
     text = report(paths).read_text()
 
-    assert "Overall result: **completed with errors**" in text
-    assert "generation ended with **timeout**" in text
-    assert "Any test files captured before it stopped were still evaluated" in text
-    assert "## Generated-test results" in text
-    assert "These outcomes describe the tests written by the generation agent" in text
-    assert "## Supporting files" in text
-    assert "Audit artifacts" not in text
+    assert expected in text
+    assert "## Pipeline" in text and "## Test outcomes" in text and "## Files" in text
+    assert "Limits of this exploratory run" not in text
 
 
 def test_report_does_not_regenerate_the_generation_transcript(tmp_path):
@@ -293,11 +303,10 @@ def test_report_renders_central_task_classification_and_provenance(tmp_path, mon
     assert "| Defect mechanisms | `control_logic, data_state` |" in text
     assert "| Code-only oracle availability | `repository_pattern` |" in text
     assert "> A nearby implementation establishes the expected behavior." in text
-    assert "Model: `classifier-model`" in text
-    assert "`wall_seconds=90`" in text
-    assert f"[Classification result]({attempt / 'classification.json'})" in text
-    assert f"[Classifier rubric]({attempt / 'inputs/rubric.md'})" in text
-    assert f"[Classifier trace]({attempt / 'agent/trace.jsonl'})" in text
+    assert "Classifier: codex 0.153.4, classifier-model, openrouter, 90 s limit." in text
+    assert f"[result]({attempt / 'classification.json'})" in text
+    assert f"[rubric]({attempt / 'inputs/rubric.md'})" in text
+    assert f"[trace]({attempt / 'agent/trace.jsonl'})" in text
 
 
 @pytest.mark.parametrize(
@@ -313,7 +322,7 @@ def test_report_renders_central_task_classification_and_provenance(tmp_path, mon
         ),
         (
             {"status": "invalid_artifact", "error": "latest attempt is incomplete"},
-            "Reason: latest attempt is incomplete",
+            "invalid_artifact: latest attempt is incomplete",
         ),
     ],
 )

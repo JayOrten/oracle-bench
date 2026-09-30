@@ -18,8 +18,8 @@ def submission(root, name="oracle_tests/test_generated.py", body=b"def test_gene
     return {name: digest(body)}
 
 
-def test_helper_annotations_are_not_evaluated_by_old_repository_python():
-    assert verify_submission.__annotations__["views"] == "list[str]"
+def test_helper_annotations_work_on_old_repository_python():
+    assert verify_submission.__annotations__["views"] is list
 
 
 def test_identical_views_hash_identically(tmp_path):

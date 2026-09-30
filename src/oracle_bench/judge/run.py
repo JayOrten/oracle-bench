@@ -54,8 +54,8 @@ def judge(config: RunConfig, paths: RunPaths) -> JudgmentResult:
     evaluation = read_evaluation_result(paths.results)
 
     manifest = verify_bundle(paths)
-    if manifest["empty"]:
-        raise ValueError("Cannot judge an empty generated-test submission")
+    if manifest["empty"] or evaluation.no_tests:
+        raise ValueError("Cannot judge a submission with no generated tests")
     with docker_client() as client:
         require_saved_image(client, image, "judging")
         judgment = judge_stage(

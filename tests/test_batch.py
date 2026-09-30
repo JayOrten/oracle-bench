@@ -142,6 +142,10 @@ def test_batch_continues_after_failure_and_aggregates_results(tmp_path):
     assert summary["detected"] == 1
     assert summary["detection_rate_attempted"] == 0.5
     assert read_json(batch_dir / "status.json")["state"] == "completed_with_errors"
+    report = (batch_dir / "report.md").read_text()
+    assert "| Instance | Run ID | State |" in report
+    assert "| `owner__two-2` | completed |" in report
+    assert "| — | failed |" in report
 
 
 def test_resume_skips_completed_jobs_and_retries_failed_job(tmp_path):
