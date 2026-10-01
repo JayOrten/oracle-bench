@@ -25,6 +25,7 @@ from oracle_bench.results import (
     read_evaluation_result,
     read_paired_result,
     read_run_cost,
+    read_version_result,
 )
 
 
@@ -33,7 +34,7 @@ def report(paths: RunPaths) -> Path:
     judgment = read_judgment_state(paths)
     judge_attempt = read_judge_attempt(paths.judge.result) if paths.judge.result.is_file() else None
     config = load_config(paths.config, resolved=True) if paths.config.is_file() else None
-    lines = _title_lines(results)
+    lines = _title_lines(paths, results)
     lines.extend(_pipeline_lines(paths, config, results, judgment, judge_attempt))
     lines.extend(_outcome_lines(results))
     lines.extend(_judge_lines(judgment))
@@ -44,7 +45,7 @@ def report(paths: RunPaths) -> Path:
     return paths.report
 
 
-def _title_lines(results: EvaluationResult) -> list[str]:
+def _title_lines(paths: RunPaths, results: EvaluationResult) -> list[str]:
     reasons = []
     if results.agent.status != "completed":
         reasons.append(f"generation {results.agent.status}")
@@ -75,11 +76,23 @@ def _title_lines(results: EvaluationResult) -> list[str]:
             *[f"- `{name}`" for name in results.forbidden_changes],
             "",
         ]
+    # Files that failed to collect do not stop the other files from counting.
+    uncollected = [
+        f"{version} {len(errors)}"
+        for version in VERSIONS
+        if (errors := _collection_errors(paths.evaluation / version / "tests.json"))
+    ]
+    if uncollected:
+        lines += ["Files that failed to collect: " + ", ".join(uncollected) + ".", ""]
     if results.agent.errors:
         error = results.agent.errors[-1]
         message = error.get("message") or error.get("error", {}).get("message", "See agent logs")
         lines += [f"Agent message: {message}", ""]
     return lines
+
+
+def _collection_errors(path: Path) -> list[dict]:
+    return read_version_result(path).collection_errors if path.is_file() else []
 
 
 def _pipeline_lines(

@@ -541,9 +541,16 @@ phases, including phase outcome, duration, and failure details. Outcomes preserv
 passes, failures, skips, expected failures, unexpected passes, and setup or
 teardown errors.
 
-Incomplete statuses include `no_tests`, `timeout`, `runner_error`, and
-`infrastructure_error`, with an `error` explanation. A failing assertion is an
-ordinary per-test failure and does not make the overall execution incomplete.
+Incomplete statuses include `no_tests`, `collection_error`, `timeout`,
+`runner_error`, and `infrastructure_error`, with an `error` explanation. A failing
+assertion is an ordinary per-test failure and does not make the overall execution
+incomplete.
+
+pytest runs with `--continue-on-collection-errors`. A file that fails to collect is
+listed in `collection_errors`, and the other files still run. The status is
+`completed` when any test ran, and `collection_error` only when collection errors
+left no test to run. The report names the versions with files that failed to
+collect.
 
 ### Coverage files
 
@@ -635,18 +642,19 @@ The Markdown job table shows each run ID as plain text alongside the linked
 instance name, so runs can be located under `runs/<run-id>` without following a
 Markdown link. Jobs that failed before creating a run show `—` instead.
 
-`summary.json` distinguishes three useful denominators:
+`summary.json` distinguishes three denominators:
 
 - `attempted`: jobs that started;
 - `completed_evaluations`: jobs whose buggy and golden executions both completed;
 - `judge.valid_judgments`: jobs with a normalized `completed` judgment.
 
 `matrix_detection_rate` is the fraction of completed evaluations with a compliant
-fail-on-buggy/pass-on-golden result. `judge_tests_issue_yes_rate` is
-the fraction of valid judgments whose `tests_issue` answer is `yes`. These
-metrics answer different questions and are reported separately.
-`detection_rate_attempted` reports the same detections over every attempted job,
-matching SWE-bench's resolved/submitted denominator.
+fail-on-buggy/pass-on-golden result. A non-compliant submission stays in the
+denominator and counts as not detected: editing files outside the generated
+directory is an agent failure. Runs without two completed evaluations, including
+runs that stopped before generation, are left out. `judge_tests_issue_yes_rate` is the fraction of valid judgments whose
+`tests_issue` answer is `yes`. These metrics answer different questions and are
+reported separately.
 
 The `judge` object contains status counts, per-facet label frequencies, and these
 cross-tabs:

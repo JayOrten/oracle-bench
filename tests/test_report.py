@@ -271,6 +271,21 @@ def test_report_title_states_why_the_run_has_errors(tmp_path, changes, expected)
     assert "Limits of this exploratory run" not in text
 
 
+def test_report_names_files_that_failed_to_collect(tmp_path):
+    paths = RunPaths.create(tmp_path)
+    paths.results.write_text(json.dumps(report_results()))
+    error = {"nodeid": "oracle_tests/test_broken.py", "details": "ImportError"}
+    write_json(
+        paths.evaluation / "golden/tests.json",
+        {"status": "completed", "collection_errors": [error]},
+    )
+
+    text = report(paths).read_text()
+
+    assert "**completed**\n" in text
+    assert "Files that failed to collect: golden 1." in text
+
+
 def test_report_does_not_regenerate_the_generation_transcript(tmp_path):
     paths = RunPaths.create(tmp_path)
     paths.results.write_text(json.dumps(report_results()))

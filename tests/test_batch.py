@@ -139,7 +139,9 @@ def test_batch_continues_after_failure_and_aggregates_results(tmp_path):
     assert summary["attempted"] == 2
     assert summary["completed_with_results"] == 1
     assert summary["detected"] == 1
-    assert summary["detection_rate_attempted"] == 0.5
+    assert summary["completed_evaluations"] == 1
+    assert summary["matrix_detection_rate"] == 1.0
+    assert "detection_rate_attempted" not in summary
     assert read_json(batch_dir / "status.json")["state"] == "completed_with_errors"
     report = (batch_dir / "report.md").read_text()
     assert "| Instance | Run ID | State |" in report
