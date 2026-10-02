@@ -1,0 +1,37 @@
+HEAD is now at 6cb783c00 Enable SIM105 (use contextlib.suppress)
+FF                                                                       [100%]
+=================================== FAILURES ===================================
+________________________ test_include_source_read_event ________________________
+tests/test_directive_other.py:169: in test_include_source_read_event
+    assert "baz/baz" in sources_reported
+E   AssertionError: assert 'baz/baz' in {'index': '.. include:: baz/baz.rst\n   :start-line: 4\n\n.. include:: text.txt\n   :literal:    \n'}
+--------------------------- Captured stdout teardown ---------------------------
+# testroot: root
+# builder: html
+# srcdir: /tmp/pytest-of-root/pytest-0/directive-include
+# outdir: /tmp/pytest-of-root/pytest-0/directive-include/_build/html
+# status: 
+[01mRunning Sphinx v7.2.0+/3868d3055[39;49;00m
+
+# warning: 
+
+________________ test_include_source_read_event_nested_includes ________________
+tests/test_directive_other.py:187: in test_include_source_read_event_nested_includes
+    assert doctree.children[1].rawsource == "The amazing foo."
+E   AssertionError: assert 'The #magical foo.' == 'The amazing foo.'
+E     - The amazing foo.
+E     + The #magical foo.
+--------------------------- Captured stdout teardown ---------------------------
+# testroot: root
+# builder: html
+# srcdir: /tmp/pytest-of-root/pytest-0/directive-include
+# outdir: /tmp/pytest-of-root/pytest-0/directive-include/_build/html
+# status: 
+[01mRunning Sphinx v7.2.0+/3868d3055[39;49;00m
+
+# warning: 
+
+=========================== short test summary info ============================
+FAILED tests/test_directive_other.py::test_include_source_read_event - Assert...
+FAILED tests/test_directive_other.py::test_include_source_read_event_nested_includes
+2 failed in 0.31s

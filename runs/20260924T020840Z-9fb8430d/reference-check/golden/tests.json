@@ -1,0 +1,28 @@
+{
+  "collected": 1,
+  "collection_errors": [],
+  "exit_code": 0,
+  "status": "completed",
+  "tests": {
+    "testing/logging/test_fixture.py::test_clear_for_call_stage": {
+      "outcome": "pass",
+      "phases": [
+        {
+          "duration_seconds": 0.0005401759990490973,
+          "outcome": "passed",
+          "phase": "setup"
+        },
+        {
+          "duration_seconds": 0.00021415700030047446,
+          "outcome": "passed",
+          "phase": "call"
+        },
+        {
+          "duration_seconds": 0.00022242100385483354,
+          "outcome": "passed",
+          "phase": "teardown"
+        }
+      ]
+    }
+  }
+}

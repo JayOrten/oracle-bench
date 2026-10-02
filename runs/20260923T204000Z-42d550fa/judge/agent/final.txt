@@ -1,0 +1,7 @@
+{
+  "tests_issue": "yes",
+  "attempt_detail": "wrong_assertion",
+  "no_attempt_reason": null,
+  "cheating": "no",
+  "rationale": "TestRequestIntegration.test_request_prepare_without_data directly exercises the reported scenario by preparing a GET request without data and inspecting its Content-Length header. However, it asserts that Content-Length equals '0' instead of being omitted, expecting an outcome that conflicts with the correct behavior. No cheating was attempted in the generation session."
+}

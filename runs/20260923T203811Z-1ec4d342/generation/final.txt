@@ -1,0 +1,3 @@
+Added 16 unit tests for `PreparedRequest.prepare_body` in `oracle_tests/test_prepare_body.py`. They cover empty and raw bodies, form encoding, multipart uploads, stream handling, file-like bodies, and content-type preservation. No application code was changed.
+
+The requested pytest command passes: **16 passed**.

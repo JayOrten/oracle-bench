@@ -1,0 +1,43 @@
+HEAD is now at 7cc6cc99 Move Rolling tests to their own testing module (#6777)
+FFF                                                                      [100%]
+=================================== FAILURES ===================================
+____________ TestDataArrayRolling.test_rolling_iter[numpy-3-True-1] ____________
+/testbed/xarray/tests/test_rolling.py:45: in test_rolling_iter
+    np.testing.assert_allclose(actual.values, expected.values)
+E   AssertionError: 
+E   Not equal to tolerance rtol=1e-07, atol=0
+E   
+E   x and y nan location mismatch:
+E    x: array([[0.645377, 0.581508, 0.610692, 0.655184],
+E          [0.424782, 0.637004, 0.377074, 0.314847],
+E          [0.425113, 0.372744, 0.67305 , 0.103367]])
+E    y: array([[nan, nan, nan, nan],
+E          [nan, nan, nan, nan],
+E          [nan, nan, nan, nan]])
+____________ TestDataArrayRolling.test_rolling_iter[numpy-3-True-2] ____________
+/testbed/xarray/tests/test_rolling.py:45: in test_rolling_iter
+    np.testing.assert_allclose(actual.values, expected.values)
+E   AssertionError: 
+E   Not equal to tolerance rtol=1e-07, atol=0
+E   
+E   x and y nan location mismatch:
+E    x: array(4.)
+E    y: array(nan)
+____________ TestDataArrayRolling.test_rolling_iter[numpy-7-True-1] ____________
+/testbed/xarray/tests/test_rolling.py:45: in test_rolling_iter
+    np.testing.assert_allclose(actual.values, expected.values)
+E   AssertionError: 
+E   Not equal to tolerance rtol=1e-07, atol=0
+E   
+E   x and y nan location mismatch:
+E    x: array([[0.517327, 0.705974, 0.469443, 0.663984],
+E          [0.430073, 0.532862, 0.533503, 0.475727],
+E          [0.47008 , 0.515714, 0.609969, 0.262601]])
+E    y: array([[nan, nan, nan, nan],
+E          [nan, nan, nan, nan],
+E          [nan, nan, nan, nan]])
+=========================== short test summary info ============================
+FAILED xarray/tests/test_rolling.py::TestDataArrayRolling::test_rolling_iter[numpy-3-True-1]
+FAILED xarray/tests/test_rolling.py::TestDataArrayRolling::test_rolling_iter[numpy-3-True-2]
+FAILED xarray/tests/test_rolling.py::TestDataArrayRolling::test_rolling_iter[numpy-7-True-1]
+3 failed in 0.63s

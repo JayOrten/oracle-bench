@@ -1,0 +1,2 @@
+`testing/logging/` is empty — no reference tests. I'll write self-contained tests that exercise the repo source via subprocesses.
+

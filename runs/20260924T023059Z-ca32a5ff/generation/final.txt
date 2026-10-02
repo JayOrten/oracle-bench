@@ -1,0 +1,31 @@
+I added 36 tests in `oracle_tests/test_check_early_stopping_scorer.py`. 32 pass and 4 fail. The 4 failures come from what looks like a real bug in `_check_early_stopping_scorer`, not from mistakes in the tests. I didn't touch the application code.
+
+**What the tests cover**
+- **Calling the method directly** (a fake scorer that records its calls, on a regressor):
+  - The scorer is called with the estimator itself plus the exact training and validation arrays, training data first.
+  - Scores build up across calls, and `validation_score_` stays empty when there's no validation set.
+  - The stop/continue decision uses the validation scores whenever a validation set exists, and the training scores otherwise.
+  - Fitting doesn't stop until there are `n_iter_no_change + 1` scores, and `tol` changes where the stopping point falls.
+  - Errors raised by the scorer are passed through.
+- **Through `fit()`:**
+  - A scorer that always returns the same value stops fitting after exactly `n_iter_no_change` iterations, with or without a validation set.
+  - The scorer receives binned `uint8` data with the right train/validation sizes.
+  - Datasets with more than 10,000 samples are scored on a 10,000-sample subset.
+  - Recorded train and validation scores match the scorer applied to the reconstructed train/validation split.
+  - `scoring=None` falls back to the estimator's own `score`.
+  - A large `tol` stops fitting early.
+  - With `warm_start`, a second fit keeps adding to the earlier scores.
+  - The classifier's accuracy scores stay between 0 and 1.
+
+**The bug behind the 4 failures**
+For classifiers, `fit` converts the targets to integer codes `0..n_classes-1` and passes those codes to the scorer. The scorer then compares them with `est.predict(X)`, which returns the original class labels:
+- **String labels** (`test_fit_classifier_scorer_with_string_labels[None]` and `[0.2]`): `fit` crashes with `TypeError: '<' not supported between instances of 'str' and 'float'`.
+- **Integer labels that aren't `0..n-1`**, e.g. `{1, 2}` (`test_fit_classifier_scorer_with_non_encoded_integer_labels`): nothing errors, but the scores are wrong. The last recorded training accuracy is 0.023, while `est.score(X, y)` gives 0.937.
+- **What the scorer receives** (`test_fit_classifier_scorer_receives_original_labels`): it gets `{0.0, 1.0, 2.0}` instead of `{'a', 'b', 'c'}`.
+
+These tests check the correct behaviour, so they should pass once the method converts the targets back (e.g. `self.classes_[y.astype(int)]`) before calling the scorer. If you need the suite to pass on the current code, I can mark those 4 as `xfail`.
+
+To run:
+```sh
+/opt/miniconda3/envs/testbed/bin/python -m pytest -o addopts= oracle_tests
+```

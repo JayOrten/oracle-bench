@@ -1,0 +1,7 @@
+Created `oracle_tests/test_prepare_body.py` — 48 tests covering `PreparedRequest.prepare_body` (requests/models.py:332), all passing. Coverage includes:
+
+- **Form encoding**: dict data → urlencoded body/content-type/length, unicode percent-encoding, `None` value skipping, doseq lists
+- **Raw data**: str/bytes pass-through (bytes gets urlencoded content-type on py3), read/seek/tell file-likes, `TypeError` for unmeasurable data
+- **Multipart files**: exact body/boundary reconstruction, filename guessing, explicit 3-tuple content-type, dict-data fields, str-data `TypeError`, multiple files
+- **Streams**: list/generator bodies, chunked encoding fallback, `len` attribute, `NotImplementedError` for stream+files, BytesIO quirk
+- **Header semantics**: case-insensitive content-type preservation, `Request.prepare()` integration

@@ -1,0 +1,9 @@
+{
+  "existing_test_globs": [
+    "xarray/tests"
+  ],
+  "generated_dir": "oracle_tests",
+  "hide": true,
+  "sanitize_history": false,
+  "workdir": "/testbed"
+}

@@ -1,0 +1,118 @@
+import numpy as np
+import pytest
+
+import xarray as xr
+from xarray.core.rolling import DataArrayRolling, DatasetRolling, Rolling
+
+
+@pytest.fixture
+def array():
+    return xr.DataArray(
+        np.arange(12).reshape(3, 4),
+        dims=("time", "place"),
+        coords={"time": [10, 20, 30], "place": ["a", "b", "c", "d"]},
+    )
+
+
+@pytest.fixture
+def dataset(array):
+    return xr.Dataset(
+        {
+            "both": array,
+            "time_only": ("time", [1, 2, 3]),
+            "place_only": ("place", [1, 2, 3, 4]),
+            "constant": 7,
+        }
+    )
+
+
+@pytest.mark.parametrize("kind", ["array", "dataset"])
+def test_init_preserves_window_order_and_defaults(kind, request):
+    obj = request.getfixturevalue(kind)
+    rolling = obj.rolling({"place": 2, "time": 3})
+
+    assert isinstance(rolling, DataArrayRolling if kind == "array" else DatasetRolling)
+    assert rolling.obj is obj
+    assert rolling.dim == ["place", "time"]
+    assert rolling.window == [2, 3]
+    assert rolling.center == [False, False]
+    assert rolling.min_periods == 6
+
+
+@pytest.mark.parametrize("kind", ["array", "dataset"])
+@pytest.mark.parametrize(
+    ("center", "expected"),
+    [(True, [True, True]), (False, [False, False]), ({"time": True}, [False, True])],
+)
+def test_init_normalizes_center_per_dimension(kind, center, expected, request):
+    obj = request.getfixturevalue(kind)
+
+    rolling = obj.rolling({"place": 2, "time": 3}, center=center, min_periods=1)
+
+    assert rolling.center == expected
+    assert rolling.min_periods == 1
+
+
+@pytest.mark.parametrize("kind", ["array", "dataset"])
+@pytest.mark.parametrize("window", [0, -2])
+def test_init_rejects_nonpositive_windows(kind, window, request):
+    obj = request.getfixturevalue(kind)
+
+    with pytest.raises(ValueError, match="window must be > 0"):
+        obj.rolling({"time": 2, "place": window})
+
+
+@pytest.mark.parametrize("kind", ["array", "dataset"])
+@pytest.mark.parametrize("min_periods", [0, -1])
+def test_init_rejects_nonpositive_min_periods(kind, min_periods, request):
+    obj = request.getfixturevalue(kind)
+
+    with pytest.raises(ValueError, match="min_periods must be greater than zero or None"):
+        obj.rolling(time=2, min_periods=min_periods)
+
+
+def test_base_init_accepts_single_element_window():
+    array = xr.DataArray([1, 2, 3], dims="time")
+
+    rolling = Rolling(array, {"time": 1})
+
+    assert rolling.dim == ["time"]
+    assert rolling.window == [1]
+    assert rolling.center == [False]
+    assert rolling.min_periods == 1
+
+
+def test_dataarray_init_exposes_rolling_dimension_labels(array):
+    rolling = array.rolling(time=2)
+
+    assert rolling.window_labels.identical(array["time"])
+
+
+@pytest.mark.parametrize("min_periods", [None, 1])
+def test_dataset_init_creates_only_relevant_variable_rollings(dataset, min_periods):
+    rolling = dataset.rolling(
+        {"place": 2, "time": 3},
+        center={"time": True},
+        min_periods=min_periods,
+    )
+
+    assert set(rolling.rollings) == {"both", "time_only", "place_only"}
+    for name, dims, windows, centers, default_min in [
+        ("both", ["place", "time"], [2, 3], [False, True], 6),
+        ("time_only", ["time"], [3], [True], 3),
+        ("place_only", ["place"], [2], [False], 2),
+    ]:
+        variable_rolling = rolling.rollings[name]
+        assert isinstance(variable_rolling, DataArrayRolling)
+        assert variable_rolling.obj.identical(dataset[name])
+        assert variable_rolling.dim == dims
+        assert variable_rolling.window == windows
+        assert variable_rolling.center == centers
+        assert variable_rolling.min_periods == (
+            default_min if min_periods is None else min_periods
+        )
+
+
+def test_dataset_init_rejects_unknown_dimension(dataset):
+    with pytest.raises(KeyError, match="unknown"):
+        dataset.rolling(unknown=2)

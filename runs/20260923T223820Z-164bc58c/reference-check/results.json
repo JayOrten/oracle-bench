@@ -1,0 +1,64 @@
+{
+  "buggy_status": "completed",
+  "failure_kinds": {
+    "buggy": {
+      "assertion": 2,
+      "exception": 0,
+      "unknown": 0
+    },
+    "golden": {
+      "assertion": 0,
+      "exception": 0,
+      "unknown": 0
+    }
+  },
+  "golden_status": "completed",
+  "matrix": {
+    "fail_on_both": {
+      "count": 0,
+      "test_ids": []
+    },
+    "fail_on_buggy_pass_on_golden": {
+      "count": 2,
+      "test_ids": [
+        "tests/test_directive_other.py::test_include_source_read_event",
+        "tests/test_directive_other.py::test_include_source_read_event_nested_includes"
+      ]
+    },
+    "pass_on_both": {
+      "count": 0,
+      "test_ids": []
+    },
+    "pass_on_buggy_fail_on_golden": {
+      "count": 0,
+      "test_ids": []
+    }
+  },
+  "other_outcomes": [],
+  "tests": [
+    {
+      "buggy": "fail",
+      "buggy_failure": {
+        "exception_type": "builtins.AssertionError",
+        "kind": "assertion",
+        "message": "assert 'baz/baz' in {'index': '.. include:: baz/baz.rst\\n   :start-line: 4\\n\\n.. include:: text.txt\\n   :literal:    \\n'}"
+      },
+      "cell": "fail_on_buggy_pass_on_golden",
+      "golden": "pass",
+      "golden_failure": null,
+      "test_id": "tests/test_directive_other.py::test_include_source_read_event"
+    },
+    {
+      "buggy": "fail",
+      "buggy_failure": {
+        "exception_type": "builtins.AssertionError",
+        "kind": "assertion",
+        "message": "assert 'The #magical foo.' == 'The amazing foo.'\n  - The amazing foo.\n  + The #magical foo."
+      },
+      "cell": "fail_on_buggy_pass_on_golden",
+      "golden": "pass",
+      "golden_failure": null,
+      "test_id": "tests/test_directive_other.py::test_include_source_read_event_nested_includes"
+    }
+  ]
+}

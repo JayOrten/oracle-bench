@@ -1,0 +1,218 @@
+diff --git a/oracle_tests/conftest.py b/oracle_tests/conftest.py
+new file mode 100644
+index 0000000..a908d58
+--- /dev/null
++++ b/oracle_tests/conftest.py
+@@ -0,0 +1,13 @@
++from pathlib import Path
++
++import pytest
++
++pytest_plugins = 'sphinx.testing.fixtures'
++
++# Exclude 'roots' dirs for pytest test collector
++collect_ignore = ['roots']
++
++
++@pytest.fixture(scope='session')
++def rootdir():
++    return Path(__file__).parent.absolute() / 'roots'
+diff --git a/oracle_tests/roots/test-include-basic/conf.py b/oracle_tests/roots/test-include-basic/conf.py
+new file mode 100644
+index 0000000..a45d22e
+--- /dev/null
++++ b/oracle_tests/roots/test-include-basic/conf.py
+@@ -0,0 +1 @@
++exclude_patterns = ['_build']
+diff --git a/oracle_tests/roots/test-include-basic/index.rst b/oracle_tests/roots/test-include-basic/index.rst
+new file mode 100644
+index 0000000..2ca53d9
+--- /dev/null
++++ b/oracle_tests/roots/test-include-basic/index.rst
+@@ -0,0 +1,10 @@
++Basic include
++=============
++
++.. include:: intro.rst
++
++.. include:: rootnote.txt
++
++.. toctree::
++
++   sub/doc
+diff --git a/oracle_tests/roots/test-include-basic/intro.rst b/oracle_tests/roots/test-include-basic/intro.rst
+new file mode 100644
+index 0000000..86bbba8
+--- /dev/null
++++ b/oracle_tests/roots/test-include-basic/intro.rst
+@@ -0,0 +1,4 @@
++Included Section
++----------------
++
++Some text from intro.
+diff --git a/oracle_tests/roots/test-include-basic/rootfile.rst b/oracle_tests/roots/test-include-basic/rootfile.rst
+new file mode 100644
+index 0000000..953bf95
+--- /dev/null
++++ b/oracle_tests/roots/test-include-basic/rootfile.rst
+@@ -0,0 +1,4 @@
++Root File Section
++-----------------
++
++Some text from the source directory root.
+diff --git a/oracle_tests/roots/test-include-basic/rootnote.txt b/oracle_tests/roots/test-include-basic/rootnote.txt
+new file mode 100644
+index 0000000..d4a6fc4
+--- /dev/null
++++ b/oracle_tests/roots/test-include-basic/rootnote.txt
+@@ -0,0 +1 @@
++Plain text from rootnote.
+diff --git a/oracle_tests/roots/test-include-basic/sub/doc.rst b/oracle_tests/roots/test-include-basic/sub/doc.rst
+new file mode 100644
+index 0000000..f7d5a67
+--- /dev/null
++++ b/oracle_tests/roots/test-include-basic/sub/doc.rst
+@@ -0,0 +1,6 @@
++Sub document
++============
++
++.. include:: /rootfile.rst
++
++.. include:: local.rst
+diff --git a/oracle_tests/roots/test-include-basic/sub/local.rst b/oracle_tests/roots/test-include-basic/sub/local.rst
+new file mode 100644
+index 0000000..62fe375
+--- /dev/null
++++ b/oracle_tests/roots/test-include-basic/sub/local.rst
+@@ -0,0 +1 @@
++Local text from sub/local.
+diff --git a/oracle_tests/roots/test-include-circular/a.rst b/oracle_tests/roots/test-include-circular/a.rst
+new file mode 100644
+index 0000000..da55f27
+--- /dev/null
++++ b/oracle_tests/roots/test-include-circular/a.rst
+@@ -0,0 +1 @@
++.. include:: index.rst
+diff --git a/oracle_tests/roots/test-include-circular/conf.py b/oracle_tests/roots/test-include-circular/conf.py
+new file mode 100644
+index 0000000..a45d22e
+--- /dev/null
++++ b/oracle_tests/roots/test-include-circular/conf.py
+@@ -0,0 +1 @@
++exclude_patterns = ['_build']
+diff --git a/oracle_tests/roots/test-include-circular/index.rst b/oracle_tests/roots/test-include-circular/index.rst
+new file mode 100644
+index 0000000..886e0ab
+--- /dev/null
++++ b/oracle_tests/roots/test-include-circular/index.rst
+@@ -0,0 +1,4 @@
++Circular include
++================
++
++.. include:: a.rst
+diff --git a/oracle_tests/roots/test-include-missing/conf.py b/oracle_tests/roots/test-include-missing/conf.py
+new file mode 100644
+index 0000000..a45d22e
+--- /dev/null
++++ b/oracle_tests/roots/test-include-missing/conf.py
+@@ -0,0 +1 @@
++exclude_patterns = ['_build']
+diff --git a/oracle_tests/roots/test-include-missing/index.rst b/oracle_tests/roots/test-include-missing/index.rst
+new file mode 100644
+index 0000000..c79d626
+--- /dev/null
++++ b/oracle_tests/roots/test-include-missing/index.rst
+@@ -0,0 +1,4 @@
++Missing include
++===============
++
++.. include:: notfound.txt
+diff --git a/oracle_tests/roots/test-include-options/code.py b/oracle_tests/roots/test-include-options/code.py
+new file mode 100644
+index 0000000..9e67bdd
+--- /dev/null
++++ b/oracle_tests/roots/test-include-options/code.py
+@@ -0,0 +1,2 @@
++def foo():
++    return 42
+diff --git a/oracle_tests/roots/test-include-options/conf.py b/oracle_tests/roots/test-include-options/conf.py
+new file mode 100644
+index 0000000..a45d22e
+--- /dev/null
++++ b/oracle_tests/roots/test-include-options/conf.py
+@@ -0,0 +1 @@
++exclude_patterns = ['_build']
+diff --git a/oracle_tests/roots/test-include-options/index.rst b/oracle_tests/roots/test-include-options/index.rst
+new file mode 100644
+index 0000000..c4c3b6a
+--- /dev/null
++++ b/oracle_tests/roots/test-include-options/index.rst
+@@ -0,0 +1,29 @@
++Include options
++===============
++
++.. include:: target.txt
++   :literal:
++
++.. include:: target.txt
++   :literal:
++   :start-after: START
++   :end-before: END
++
++.. include:: target.txt
++   :literal:
++   :start-line: 1
++   :end-line: 3
++
++.. include:: code.py
++   :literal:
++   :number-lines: 3
++
++.. include:: code.py
++   :code: python
++
++.. include:: target.txt
++   :literal:
++   :class: included-literal
++
++.. include:: spaced file.txt
++   :literal:
+diff --git a/oracle_tests/roots/test-include-options/spaced file.txt b/oracle_tests/roots/test-include-options/spaced file.txt
+new file mode 100644
+index 0000000..308ad98
+--- /dev/null
++++ b/oracle_tests/roots/test-include-options/spaced file.txt	
+@@ -0,0 +1 @@
++Text from spaced file.
+diff --git a/oracle_tests/roots/test-include-options/target.txt b/oracle_tests/roots/test-include-options/target.txt
+new file mode 100644
+index 0000000..9615b0e
+--- /dev/null
++++ b/oracle_tests/roots/test-include-options/target.txt
+@@ -0,0 +1,7 @@
++line0
++line1
++line2
++START
++middle
++END
++line6
+diff --git a/oracle_tests/roots/test-include-standard/conf.py b/oracle_tests/roots/test-include-standard/conf.py
+new file mode 100644
+index 0000000..a45d22e
+--- /dev/null
++++ b/oracle_tests/roots/test-include-standard/conf.py
+@@ -0,0 +1 @@
++exclude_patterns = ['_build']
+diff --git a/oracle_tests/roots/test-include-standard/index.rst b/oracle_tests/roots/test-include-standard/index.rst
+new file mode 100644
+index 0000000..128fc10
+--- /dev/null
++++ b/oracle_tests/roots/test-include-standard/index.rst
+@@ -0,0 +1,6 @@
++Standard include
++================
++
++.. include:: <isonum.txt>
++
++Copyright |copy| 2023 by the author.

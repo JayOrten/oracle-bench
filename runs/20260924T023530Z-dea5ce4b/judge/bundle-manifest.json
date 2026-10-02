@@ -1,0 +1,84 @@
+{
+  "artifacts": [
+    {
+      "destination": "/oracle-judge/buggy/oracle_tests/test_hist_gradient_boosting_early_stopping_scorer.py",
+      "sha256": "9d3ecd71708d51f632bfc7ddb161aaeabda956908dbda51881bcb951c8de2382",
+      "source": "submission/files/oracle_tests/test_hist_gradient_boosting_early_stopping_scorer.py"
+    },
+    {
+      "destination": "/oracle-judge/evidence/agent-session.log",
+      "sha256": "0bca08fbc5fcab9a9c0e3b6f311ff111b145463899fd18ddfa168a40dff221d0",
+      "source": "generation/session.log"
+    },
+    {
+      "destination": "/oracle-judge/evidence/buggy-output.log",
+      "sha256": "2d15da73bf7445211e3ee99e81853ee1a5564b62a10aa960dee69e70f60f543c",
+      "source": "evaluation/buggy/output.log"
+    },
+    {
+      "destination": "/oracle-judge/evidence/buggy-tests.json",
+      "sha256": "002cc2667e2939ce3f9a3bb2305b2e09369105a85d5cb0311c1df9bd079bc7d2",
+      "source": "evaluation/buggy/tests.json"
+    },
+    {
+      "destination": "/oracle-judge/evidence/golden-output.log",
+      "sha256": "01bff9eddf7198c4f198739d83e2bab3de1b07085a96c1856490cba691ef5edd",
+      "source": "evaluation/golden/output.log"
+    },
+    {
+      "destination": "/oracle-judge/evidence/golden-tests.json",
+      "sha256": "b5293130d97772382a813f022442a131bcf63eae353a9143bdcf22da6920b161",
+      "source": "evaluation/golden/tests.json"
+    },
+    {
+      "destination": "/oracle-judge/evidence/paired-results.json",
+      "sha256": "3ca8c3097e92cfdc5b6d25ed11caaf92c44b002c27848db3e4b8b64c8e0e93ac",
+      "source": "evaluation/results.json"
+    },
+    {
+      "destination": "/oracle-judge/evidence/submission-manifest.json",
+      "sha256": "a2fe594b8604e85837ba662393bee03eabc4c32cbbc9cfed2c6b8f8c0140c6b7",
+      "source": "derived/submission-manifest.json"
+    },
+    {
+      "destination": "/oracle-judge/evidence/workspace.diff",
+      "sha256": "bf2b2dd43e8bfaf76be6906d16a05af19e673cac40b255868ad1dd2a5f7e3e20",
+      "source": "generation/workspace.diff"
+    },
+    {
+      "destination": "/oracle-judge/golden/oracle_tests/test_hist_gradient_boosting_early_stopping_scorer.py",
+      "sha256": "9d3ecd71708d51f632bfc7ddb161aaeabda956908dbda51881bcb951c8de2382",
+      "source": "submission/files/oracle_tests/test_hist_gradient_boosting_early_stopping_scorer.py"
+    },
+    {
+      "destination": "/oracle-judge/instance/fix.patch",
+      "sha256": "ea508aad267a71daf749414322ad3af3ea2efea674592cb2eedb8b7575c617d9",
+      "source": "ground-truth/fix.patch"
+    },
+    {
+      "destination": "/oracle-judge/instance/issue.md",
+      "sha256": "1e4596e0e90fb0e2325acdff4e9ae5a07053706c7ba35ca7b8914ee7d91e6d55",
+      "source": "ground-truth/issue.md"
+    },
+    {
+      "destination": "/oracle-judge/instance/metadata.json",
+      "sha256": "c3b01d726a7942576acb9912439e3019cff2e0ab515ec33c7079a0e87dff6453",
+      "source": "derived/metadata.json"
+    },
+    {
+      "destination": "/oracle-judge/instance/reference-tests.patch",
+      "sha256": "3404f15c5fbf8733f16069417e3784f719f88396e74fe363abaf670d4b5baa82",
+      "source": "derived/reference-tests.patch"
+    },
+    {
+      "destination": "/oracle-judge/instructions.md",
+      "sha256": "690acb4a0b962db229b0d8b290db135add0f542b24136095fc651250e109c328",
+      "source": "derived/instructions.md"
+    },
+    {
+      "destination": "/oracle-judge/rubric.md",
+      "sha256": "d3a3ce852576de7d07b6ba815b97f89ed7ba39140378b74634e232f7fbb27aab",
+      "source": "judge/rubric.md"
+    }
+  ]
+}

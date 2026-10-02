@@ -1,0 +1,9 @@
+{
+  "existing_test_globs": [
+    "tests"
+  ],
+  "generated_dir": "oracle_tests",
+  "hide": false,
+  "sanitize_history": false,
+  "workdir": "/testbed"
+}

@@ -1,0 +1,18 @@
+HEAD is now at aa55975c7 Doc: Clear mailbox before deleting the user (#10068)
+F                                                                        [100%]
+=================================== FAILURES ===================================
+__________________________ test_clear_for_call_stage ___________________________
+testing/logging/test_fixture.py:183: in test_clear_for_call_stage
+    assert caplog.get_records("call") == []
+E   assert [<LogRecord: ..."a_call_log">] == []
+E     Left contains one more item: <LogRecord: test_fixture, 20, /testbed/testing/logging/test_fixture.py, 176, "a_call_log">
+E     Use -v to get more diff
+------------------------------ Captured log setup ------------------------------
+INFO     test_fixture:test_fixture.py:157 a_setup_log
+------------------------------ Captured log call -------------------------------
+INFO     test_fixture:test_fixture.py:176 a_call_log
+---------------------------- Captured log teardown -----------------------------
+INFO     test_fixture:test_fixture.py:159 a_teardown_log
+=========================== short test summary info ============================
+FAILED testing/logging/test_fixture.py::test_clear_for_call_stage - assert [<...
+1 failed in 0.03s

@@ -1,0 +1,13 @@
+{
+  "import_modules": [
+    "matplotlib"
+  ],
+  "output": "/tmp/oracle-results",
+  "source_roots": [
+    "lib/matplotlib"
+  ],
+  "targets": [
+    "oracle_tests"
+  ],
+  "workdir": "/testbed"
+}

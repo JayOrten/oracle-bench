@@ -1,0 +1,28 @@
+{
+  "collected": 1,
+  "collection_errors": [],
+  "exit_code": 0,
+  "status": "completed",
+  "tests": {
+    "test_requests.py::RequestsTestCase::test_no_content_length": {
+      "outcome": "pass",
+      "phases": [
+        {
+          "duration_seconds": 0.0001900040006148629,
+          "outcome": "passed",
+          "phase": "setup"
+        },
+        {
+          "duration_seconds": 0.0010519950010348111,
+          "outcome": "passed",
+          "phase": "call"
+        },
+        {
+          "duration_seconds": 0.00013256999955046922,
+          "outcome": "passed",
+          "phase": "teardown"
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,38 @@
+HEAD is now at 4b6273b87 ENH Native support for missing values in GBDTs (#13911)
+F                                                                        [100%]
+=================================== FAILURES ===================================
+___________________ test_string_target_early_stopping[None] ____________________
+sklearn/ensemble/_hist_gradient_boosting/tests/test_gradient_boosting.py:428: in test_string_target_early_stopping
+    gbrt.fit(X, y)
+sklearn/ensemble/_hist_gradient_boosting/gradient_boosting.py:254: in fit
+    X_binned_val, y_val,
+sklearn/ensemble/_hist_gradient_boosting/gradient_boosting.py:430: in _check_early_stopping_scorer
+    self.scorer_(self, X_binned_small_train, y_small_train)
+sklearn/metrics/scorer.py:241: in _passthrough_scorer
+    return estimator.score(*args, **kwargs)
+sklearn/base.py:368: in score
+    return accuracy_score(y, self.predict(X), sample_weight=sample_weight)
+sklearn/metrics/classification.py:176: in accuracy_score
+    y_type, y_true, y_pred = _check_targets(y_true, y_pred)
+sklearn/metrics/classification.py:94: in _check_targets
+    unique_values = np.union1d(y_true, y_pred)
+<__array_function__ internals>:6: in union1d
+    ???
+/opt/miniconda3/envs/testbed/lib/python3.6/site-packages/numpy/lib/arraysetops.py:749: in union1d
+    return unique(np.concatenate((ar1, ar2), axis=None))
+<__array_function__ internals>:6: in unique
+    ???
+/opt/miniconda3/envs/testbed/lib/python3.6/site-packages/numpy/lib/arraysetops.py:261: in unique
+    ret = _unique1d(ar, return_index, return_inverse, return_counts)
+/opt/miniconda3/envs/testbed/lib/python3.6/site-packages/numpy/lib/arraysetops.py:322: in _unique1d
+    ar.sort()
+E   TypeError: '<' not supported between instances of 'str' and 'float'
+=============================== warnings summary ===============================
+../opt/miniconda3/envs/testbed/lib/python3.6/importlib/_bootstrap.py:219
+  /opt/miniconda3/envs/testbed/lib/python3.6/importlib/_bootstrap.py:219: RuntimeWarning: numpy.ufunc size changed, may indicate binary incompatibility. Expected 192 from C header, got 216 from PyObject
+    return f(*args, **kwds)
+
+-- Docs: https://docs.pytest.org/en/stable/warnings.html
+=========================== short test summary info ============================
+FAILED sklearn/ensemble/_hist_gradient_boosting/tests/test_gradient_boosting.py::test_string_target_early_stopping[None]
+1 failed, 1 warning in 0.54s

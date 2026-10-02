@@ -1,0 +1,39 @@
+{
+  "collected": 1,
+  "collection_errors": [],
+  "exit_code": 1,
+  "status": "completed",
+  "tests": {
+    "test_requests.py::RequestsTestCase::test_no_content_length": {
+      "failure": {
+        "exception_type": "builtins.AssertionError",
+        "kind": "assertion",
+        "message": "False is not true"
+      },
+      "outcome": "fail",
+      "phases": [
+        {
+          "duration_seconds": 0.00022880499818711542,
+          "outcome": "passed",
+          "phase": "setup"
+        },
+        {
+          "details": "test_requests.py:63: in test_no_content_length\n    self.assertTrue('Content-Length' not in get_req.headers)\nE   AssertionError: False is not true",
+          "duration_seconds": 0.0012896400003228337,
+          "failure": {
+            "exception_type": "builtins.AssertionError",
+            "kind": "assertion",
+            "message": "False is not true"
+          },
+          "outcome": "failed",
+          "phase": "call"
+        },
+        {
+          "duration_seconds": 0.0001404510003339965,
+          "outcome": "passed",
+          "phase": "teardown"
+        }
+      ]
+    }
+  }
+}

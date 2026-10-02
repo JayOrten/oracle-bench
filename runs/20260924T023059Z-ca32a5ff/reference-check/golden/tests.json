@@ -1,0 +1,28 @@
+{
+  "collected": 1,
+  "collection_errors": [],
+  "exit_code": 0,
+  "status": "completed",
+  "tests": {
+    "sklearn/ensemble/_hist_gradient_boosting/tests/test_gradient_boosting.py::test_string_target_early_stopping[None]": {
+      "outcome": "pass",
+      "phases": [
+        {
+          "duration_seconds": 0.00026896599592873827,
+          "outcome": "passed",
+          "phase": "setup"
+        },
+        {
+          "duration_seconds": 0.39480986099806614,
+          "outcome": "passed",
+          "phase": "call"
+        },
+        {
+          "duration_seconds": 0.00016365999908884987,
+          "outcome": "passed",
+          "phase": "teardown"
+        }
+      ]
+    }
+  }
+}

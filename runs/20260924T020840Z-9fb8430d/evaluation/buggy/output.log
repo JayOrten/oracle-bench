@@ -1,0 +1,64 @@
+HEAD is now at aa55975c7 Doc: Clear mailbox before deleting the user (#10068)
+.................................FF.....                                 [100%]
+=================================== FAILURES ===================================
+_________ TestCaplogClear.test_get_records_call_consistent_after_clear _________
+oracle_tests/test_logging_messages_reset.py:356: in test_get_records_call_consistent_after_clear
+    verify_consistency()
+oracle_tests/test_logging_messages_reset.py:349: in verify_consistency
+    assert caplog.get_records("call") == caplog.records
+E   assert [<LogRecord: ...log_message">] == []
+E     Left contains one more item: <LogRecord: test_logging_messages_reset, 20, /testbed/oracle_tests/test_logging_messages_reset.py, 353, "a_call_log_message">
+E     Use -v to get more diff
+------------------------------ Captured log call -------------------------------
+INFO     test_logging_messages_reset:test_logging_messages_reset.py:353 a_call_log_message
+____________________ test_clear_in_call_keeps_setup_records ____________________
+/testbed/oracle_tests/test_logging_messages_reset.py:390: in test_clear_in_call_keeps_setup_records
+    result.assert_outcomes(passed=1)
+E   AssertionError: assert {'errors': 0,...pped': 0, ...} == {'errors': 0,...pped': 0, ...}
+E     Omitting 4 identical items, use -vv to show
+E     Differing items:
+E     {'passed': 0} != {'passed': 1}
+E     {'failed': 1} != {'failed': 0}
+E     Use -v to get more diff
+----------------------------- Captured stdout call -----------------------------
+============================= test session starts ==============================
+platform linux -- Python 3.9.20, pytest-7.2.0.dev157+gaa55975c7, pluggy-0.13.1
+rootdir: /tmp/pytest-of-root/pytest-0/test_clear_in_call_keeps_setup_records0
+collected 1 item
+
+test_clear_in_call_keeps_setup_records.py F                              [100%]
+
+=================================== FAILURES ===================================
+___________________________________ test_it ____________________________________
+
+logging_during_setup = None
+caplog = <_pytest.logging.LogCaptureFixture object at 0x7f9814276130>
+
+    def test_it(logging_during_setup, caplog):
+        logger.info("a_call_log")
+        assert [r.getMessage() for r in caplog.get_records("setup")] == ["a_setup_log"]
+        assert caplog.messages == ["a_call_log"]
+    
+        caplog.clear()
+    
+        assert [r.getMessage() for r in caplog.get_records("setup")] == ["a_setup_log"]
+>       assert caplog.get_records("call") == []
+E       assert [<LogRecord: ..."a_call_log">] == []
+E         Left contains one more item: <LogRecord: test_clear_in_call_keeps_setup_records, 20, /tmp/pytest-of-root/pytest-0/test_clear_in_call_keeps_setup_records0/test_clear_in_call_keeps_setup_records.py, 13, "a_call_log">
+E         Use -v to get more diff
+
+test_clear_in_call_keeps_setup_records.py:20: AssertionError
+------------------------------ Captured log setup ------------------------------
+INFO     test_clear_in_call_keeps_setup_records:test_clear_in_call_keeps_setup_records.py:9 a_setup_log
+------------------------------ Captured log call -------------------------------
+INFO     test_clear_in_call_keeps_setup_records:test_clear_in_call_keeps_setup_records.py:13 a_call_log
+=========================== short test summary info ============================
+FAILED test_clear_in_call_keeps_setup_records.py::test_it - assert [<LogRecor...
+============================== 1 failed in 0.01s ===============================
+------------------------------ Captured log call -------------------------------
+INFO     test_clear_in_call_keeps_setup_records:test_clear_in_call_keeps_setup_records.py:9 a_setup_log
+INFO     test_clear_in_call_keeps_setup_records:test_clear_in_call_keeps_setup_records.py:13 a_call_log
+=========================== short test summary info ============================
+FAILED oracle_tests/test_logging_messages_reset.py::TestCaplogClear::test_get_records_call_consistent_after_clear
+FAILED oracle_tests/test_logging_messages_reset.py::test_clear_in_call_keeps_setup_records
+2 failed, 38 passed in 0.35s

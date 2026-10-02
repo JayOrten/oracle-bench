@@ -1,0 +1,148 @@
+{
+  "collected": 7,
+  "collection_errors": [],
+  "exit_code": 0,
+  "status": "completed",
+  "tests": {
+    "oracle_tests/test_logging_messages_reset.py::test_caplog_clear_resets_messages_records_and_text_but_capture_continues": {
+      "outcome": "pass",
+      "phases": [
+        {
+          "duration_seconds": 0.00017592099902685732,
+          "outcome": "passed",
+          "phase": "setup"
+        },
+        {
+          "duration_seconds": 0.00023149299522629008,
+          "outcome": "passed",
+          "phase": "call"
+        },
+        {
+          "duration_seconds": 0.00013593600306194276,
+          "outcome": "passed",
+          "phase": "teardown"
+        }
+      ]
+    },
+    "oracle_tests/test_logging_messages_reset.py::test_handler_reset_replaces_records_and_stream_without_changing_configuration": {
+      "outcome": "pass",
+      "phases": [
+        {
+          "duration_seconds": 9.38949960982427e-05,
+          "outcome": "passed",
+          "phase": "setup"
+        },
+        {
+          "duration_seconds": 0.00017158700211439282,
+          "outcome": "passed",
+          "phase": "call"
+        },
+        {
+          "duration_seconds": 9.064600453712046e-05,
+          "outcome": "passed",
+          "phase": "teardown"
+        }
+      ]
+    },
+    "oracle_tests/test_logging_messages_reset.py::test_live_logging_null_handler_reset_is_safe": {
+      "outcome": "pass",
+      "phases": [
+        {
+          "duration_seconds": 0.00010531000589253381,
+          "outcome": "passed",
+          "phase": "setup"
+        },
+        {
+          "duration_seconds": 0.00018329500016989186,
+          "outcome": "passed",
+          "phase": "call"
+        },
+        {
+          "duration_seconds": 8.676099969306961e-05,
+          "outcome": "passed",
+          "phase": "teardown"
+        }
+      ]
+    },
+    "oracle_tests/test_logging_messages_reset.py::test_live_logging_reset_restores_initial_newline_for_next_test": {
+      "outcome": "pass",
+      "phases": [
+        {
+          "duration_seconds": 0.0001006460006465204,
+          "outcome": "passed",
+          "phase": "setup"
+        },
+        {
+          "duration_seconds": 0.00017187200137414038,
+          "outcome": "passed",
+          "phase": "call"
+        },
+        {
+          "duration_seconds": 8.578800043324009e-05,
+          "outcome": "passed",
+          "phase": "teardown"
+        }
+      ]
+    },
+    "oracle_tests/test_logging_messages_reset.py::test_messages_are_a_fresh_list_and_do_not_change_captured_records": {
+      "outcome": "pass",
+      "phases": [
+        {
+          "duration_seconds": 0.00018846199964173138,
+          "outcome": "passed",
+          "phase": "setup"
+        },
+        {
+          "duration_seconds": 0.00020080599642824382,
+          "outcome": "passed",
+          "phase": "call"
+        },
+        {
+          "duration_seconds": 0.00011028700100723654,
+          "outcome": "passed",
+          "phase": "teardown"
+        }
+      ]
+    },
+    "oracle_tests/test_logging_messages_reset.py::test_messages_exclude_exception_and_stack_information": {
+      "outcome": "pass",
+      "phases": [
+        {
+          "duration_seconds": 0.0002832219979609363,
+          "outcome": "passed",
+          "phase": "setup"
+        },
+        {
+          "duration_seconds": 0.0008649359951959923,
+          "outcome": "passed",
+          "phase": "call"
+        },
+        {
+          "duration_seconds": 0.00012179899931652471,
+          "outcome": "passed",
+          "phase": "teardown"
+        }
+      ]
+    },
+    "oracle_tests/test_logging_messages_reset.py::test_messages_interpolate_arguments_without_formatter_decoration": {
+      "outcome": "pass",
+      "phases": [
+        {
+          "duration_seconds": 0.0004295900071156211,
+          "outcome": "passed",
+          "phase": "setup"
+        },
+        {
+          "duration_seconds": 0.0004422799975145608,
+          "outcome": "passed",
+          "phase": "call"
+        },
+        {
+          "duration_seconds": 0.00017097000090871006,
+          "outcome": "passed",
+          "phase": "teardown"
+        }
+      ]
+    }
+  }
+}

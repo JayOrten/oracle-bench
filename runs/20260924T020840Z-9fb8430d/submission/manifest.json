@@ -1,0 +1,16 @@
+{
+  "compliant": true,
+  "empty": false,
+  "files": {
+    "oracle_tests/conftest.py": {
+      "mode": 420,
+      "sha256": "e400583d07eea51b5434005d6af4c7d138932724e4d8aba6c03c933273dd080a"
+    },
+    "oracle_tests/test_logging_messages_reset.py": {
+      "mode": 420,
+      "sha256": "55c5956403b51f0c7aa5eeeec759fbc1ddfa72153200b783d8dfb1d5b93d105f"
+    }
+  },
+  "forbidden_changes": [],
+  "sha256": "7bf165e1e1d6152d68ad4b1454a9f03e4f4f216acc47f23767172d5a21c5759a"
+}

@@ -1,0 +1,24 @@
+I added 97 unit tests for `_AxesBase.__clear` in `lib/matplotlib/axes/_base.py`, and they all pass with the command you gave. No application code was changed.
+
+**Files**
+- `oracle_tests/conftest.py`: switches to the non-interactive Agg backend, resets matplotlib's settings (`rcParams`) to defaults for each test, and closes figures afterwards.
+- `oracle_tests/test_axes_clear.py`: the tests. Most of them run twice through a fixture, once via `clear()` and once via `cla()`, since both end up in `__clear`.
+
+**What the tests check**
+- **Removed content:** clearing empties the axes' child list and all of its sub-lists (lines, patches, collections, images, texts), plus containers, legend, child/inset axes, `_current_image`, `_projection_init` and `_mouseover_set`. The axes is also marked as needing a redraw, and plotting and drawing still work afterwards.
+- **Limits and scales:** limits go back to (0, 1) with autoscaling on, and old data limits are ignored. Log/symlog scales go back to linear, and the scale transform (`transScale`) is updated to match. Margins, `_tight` and `use_sticky_edges` are reset.
+- **Callbacks:** the callback registry is replaced, so old `xlim_changed`/`ylim_changed` handlers stop firing. Only the three `*lim_changed` signals are accepted.
+- **Behaviour driven by `rcParams`:** minor-tick locators, grid on/off including which axis and which ticks, title font size and weight, title y position with the `_autotitlepos` flag, and title padding.
+- **Titles:** new empty centre/left/right title objects with the right alignment, positions and transforms. Each title gets its own copy of the font properties.
+- **Background patch:** a new patch is generated through `_gen_axes_patch` (checked with a custom subclass). It keeps the facecolor, has no edge and a line width of 0, uses `transAxes`, and becomes visible again. Clearing also turns the axis back on, and the spine objects survive.
+- **Colour cycle:** the line and fill colour cycles restart, and a custom `set_prop_cycle` is dropped.
+- **Shared axes:**
+  - Sharing survives a clear, including limits, scale, and the locator/formatter objects shared with the leader axes.
+  - For axes that share with another, the x/y axis visibility and the patch visibility are kept, which covers `twiny`.
+  - Clearing the leader axes resets the limits of its followers too.
+  - Autoscaling after a clear takes the other shared axes' data into account.
+  - Clearing still works after a shared axes has been removed from the figure.
+- **`clear()`/`cla()` dispatch:** a subclass that overrides `clear` is still reached through `cla()`. A subclass that overrides `cla` raises a `PendingDeprecationWarning` and is reached through `clear()`, and its own subclasses inherit that routing. A plain subclass raises no warning.
+- **Integration:** `Figure.clear`, `plt.cla`, and clearing a polar axes.
+
+One behaviour you might not expect: on an axes that doesn't share with another, clearing does not restore a hidden x/y axis to visible. That comes from `Axis.clear`, and the tests don't assert anything about it.

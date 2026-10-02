@@ -1,0 +1,26 @@
+{
+  "cost_usd": null,
+  "duration_seconds": 121.60586350900121,
+  "errors": [],
+  "exit_code": 0,
+  "harness": "codex",
+  "harness_version": "0.153.4",
+  "limit": {
+    "kind": "wall_seconds",
+    "value": 300.0
+  },
+  "model": "google/gemini-3.8-flash",
+  "provider": "openrouter",
+  "status": "completed",
+  "timed_out": false,
+  "turn_completed": true,
+  "turn_failed": false,
+  "unparsed_trace_lines": 0,
+  "usage": {
+    "cache_write_input_tokens": 0,
+    "cached_input_tokens": 534861,
+    "input_tokens": 751882,
+    "output_tokens": 6035,
+    "reasoning_output_tokens": 4106
+  }
+}

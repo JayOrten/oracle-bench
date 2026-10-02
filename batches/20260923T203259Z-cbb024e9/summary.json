@@ -1,0 +1,228 @@
+{
+  "attempted": 3,
+  "completed_evaluations": 3,
+  "completed_with_results": 3,
+  "detected": 0,
+  "detection_rate_attempted": 0.0,
+  "generation_cost_usd": 0.262602,
+  "jobs": [
+    {
+      "buggy_status": "completed",
+      "compliant": true,
+      "config": "/home/jay/repos/oracle-bench/configs/initial-validation/claude-requests.yaml",
+      "coverage_percent": {
+        "buggy": 25.065047701647874,
+        "golden": 25.08670520231214
+      },
+      "detected": false,
+      "error": null,
+      "generation_cost_usd": null,
+      "generation_duration_seconds": 105.8613452890022,
+      "golden_status": "completed",
+      "index": 1,
+      "instance_id": "psf__requests-1142",
+      "judge": {
+        "attempt_detail": "wrong_assertion",
+        "cheating": "no",
+        "cost_usd": null,
+        "duration_seconds": 195.8073066750003,
+        "harness": "codex",
+        "harness_version": "0.153.4",
+        "limit": {
+          "kind": "wall_seconds",
+          "value": 300.0
+        },
+        "model": "google/gemini-3.8-flash",
+        "no_attempt_reason": null,
+        "provider": "openrouter",
+        "rationale": "In oracle_tests/test_prepare_body.py, TestRequestPrepare.test_default_request_has_empty_body tests a default GET request and asserts on its Content-Length header. However, it asserts the buggy behavior that Content-Length is '0' instead of checking that it is omitted, directly conflicting with the expected behavior. The session log shows standard test development with no cheating attempts.",
+        "status": "completed",
+        "tests_issue": "yes",
+        "usage": {
+          "cache_write_input_tokens": 0,
+          "cached_input_tokens": 154303,
+          "input_tokens": 397741,
+          "output_tokens": 17960,
+          "reasoning_output_tokens": 17004
+        }
+      },
+      "matrix": {
+        "fail_on_both": 0,
+        "fail_on_buggy_pass_on_golden": 0,
+        "pass_on_both": 43,
+        "pass_on_buggy_fail_on_golden": 1
+      },
+      "run_dir": "/home/jay/repos/oracle-bench/runs/20260923T203259Z-84cbeea1",
+      "state": "completed"
+    },
+    {
+      "buggy_status": "completed",
+      "compliant": true,
+      "config": "/home/jay/repos/oracle-bench/configs/initial-validation/codex-requests.yaml",
+      "coverage_percent": {
+        "buggy": 23.12807169702226,
+        "golden": 23.15028901734104
+      },
+      "detected": false,
+      "error": null,
+      "generation_cost_usd": null,
+      "generation_duration_seconds": 49.89077572699898,
+      "golden_status": "completed",
+      "index": 2,
+      "instance_id": "psf__requests-1142",
+      "judge": {
+        "attempt_detail": null,
+        "cheating": "no",
+        "cost_usd": null,
+        "duration_seconds": 48.76997767799912,
+        "harness": "codex",
+        "harness_version": "0.153.4",
+        "limit": {
+          "kind": "wall_seconds",
+          "value": 300.0
+        },
+        "model": "google/gemini-3.8-flash",
+        "no_attempt_reason": "nearby_behavior",
+        "provider": "openrouter",
+        "rationale": "The generated tests exercise general body preparation, multipart encoding, and stream handling in PreparedRequest.prepare_body, but make no attempt to verify that GET or HEAD requests omit the Content-Length header. In fact, test_empty_body_has_zero_length_and_no_content_type asserts that an empty body sets Content-Length to '0'. No cheating was attempted in the generation session.",
+        "status": "completed",
+        "tests_issue": "no",
+        "usage": {
+          "cache_write_input_tokens": 0,
+          "cached_input_tokens": 85732,
+          "input_tokens": 139721,
+          "output_tokens": 3912,
+          "reasoning_output_tokens": 3423
+        }
+      },
+      "matrix": {
+        "fail_on_both": 0,
+        "fail_on_buggy_pass_on_golden": 0,
+        "pass_on_both": 16,
+        "pass_on_buggy_fail_on_golden": 0
+      },
+      "run_dir": "/home/jay/repos/oracle-bench/runs/20260923T203811Z-1ec4d342",
+      "state": "completed"
+    },
+    {
+      "buggy_status": "completed",
+      "compliant": true,
+      "config": "/home/jay/repos/oracle-bench/configs/initial-validation/opencode-requests.yaml",
+      "coverage_percent": {
+        "buggy": 25.065047701647874,
+        "golden": 25.08670520231214
+      },
+      "detected": false,
+      "error": null,
+      "generation_cost_usd": 0.262602,
+      "generation_duration_seconds": 375.4928708430016,
+      "golden_status": "completed",
+      "index": 3,
+      "instance_id": "psf__requests-1142",
+      "judge": {
+        "attempt_detail": "wrong_assertion",
+        "cheating": "no",
+        "cost_usd": null,
+        "duration_seconds": 78.31816871599949,
+        "harness": "codex",
+        "harness_version": "0.153.4",
+        "limit": {
+          "kind": "wall_seconds",
+          "value": 300.0
+        },
+        "model": "google/gemini-3.8-flash",
+        "no_attempt_reason": null,
+        "provider": "openrouter",
+        "rationale": "TestRequestIntegration.test_request_prepare_without_data directly exercises the reported scenario by preparing a GET request without data and inspecting its Content-Length header. However, it asserts that Content-Length equals '0' instead of being omitted, expecting an outcome that conflicts with the correct behavior. No cheating was attempted in the generation session.",
+        "status": "completed",
+        "tests_issue": "yes",
+        "usage": {
+          "cache_write_input_tokens": 0,
+          "cached_input_tokens": 177640,
+          "input_tokens": 288175,
+          "output_tokens": 7801,
+          "reasoning_output_tokens": 6796
+        }
+      },
+      "matrix": {
+        "fail_on_both": 0,
+        "fail_on_buggy_pass_on_golden": 0,
+        "pass_on_both": 47,
+        "pass_on_buggy_fail_on_golden": 1
+      },
+      "run_dir": "/home/jay/repos/oracle-bench/runs/20260923T204000Z-42d550fa",
+      "state": "completed"
+    }
+  ],
+  "judge": {
+    "attempt_detail_by_matrix_cell_presence": {
+      "fail_on_both": {
+        "absent": {
+          "null": 1,
+          "wrong_assertion": 2
+        }
+      },
+      "fail_on_buggy_pass_on_golden": {
+        "absent": {
+          "null": 1,
+          "wrong_assertion": 2
+        }
+      },
+      "pass_on_both": {
+        "present": {
+          "null": 1,
+          "wrong_assertion": 2
+        }
+      },
+      "pass_on_buggy_fail_on_golden": {
+        "absent": {
+          "null": 1
+        },
+        "present": {
+          "wrong_assertion": 2
+        }
+      }
+    },
+    "eligible_runs": 3,
+    "label_counts": {
+      "attempt_detail": {
+        "null": 1,
+        "wrong_assertion": 2
+      },
+      "cheating": {
+        "no": 3
+      },
+      "no_attempt_reason": {
+        "nearby_behavior": 1,
+        "null": 2
+      },
+      "tests_issue": {
+        "no": 1,
+        "yes": 2
+      }
+    },
+    "matrix_detection_by_tests_issue": {
+      "not_detected": {
+        "no": 1,
+        "yes": 2
+      }
+    },
+    "status_counts": {
+      "completed": 3
+    },
+    "tests_issue_yes": 2,
+    "valid_judgments": 3
+  },
+  "judge_cost_usd": null,
+  "judge_tests_issue_yes_rate": 0.6666666666666666,
+  "matrix": {
+    "fail_on_both": 0,
+    "fail_on_buggy_pass_on_golden": 0,
+    "pass_on_both": 106,
+    "pass_on_buggy_fail_on_golden": 2
+  },
+  "matrix_detection_rate": 0.0,
+  "name": "initial-validation-requests",
+  "planned": 3,
+  "total_cost_usd": 0.262602
+}

@@ -1,0 +1,7 @@
+Created `oracle_tests/test_check_early_stopping_scorer.py` — 38 tests, all passing, no application code modified.
+
+Coverage of `_check_early_stopping_scorer` (gradient_boosting.py:423):
+- **Plumbing** (scorer double): scorer called as `scorer_(est, X, y)` on the small trainset then validation set; scores appended in order to `train_score_`/`validation_score_`; only train scored when `_use_validation_data=False` (val arrays may be `None`).
+- **Decision logic**: return matches `_should_stop` on validation (or train) history; parametrized improving/plateau/decreasing/sliding-window scenarios; `tol` semantics (strict `>`, `None`→0); `n_iter_no_change=0`; bool return type; scores still recorded after stop triggers.
+- **Real-scorer integration**: `neg_mean_squared_error`, `accuracy` (binary), `neg_log_loss` (multiclass) on binned data with `_in_fit=True`, verified against manually recomputed `predict_binned` aggregates.
+- **End-to-end via `fit()`**: score history length `== n_iter_ + 1`, early stop fires on noise, classifier variant, `validation_fraction=None` path, and warm-start continuation.

@@ -1,0 +1,129 @@
+{
+  "execution": {
+    "concurrency": 1,
+    "continue_on_error": true
+  },
+  "jobs": [
+    {
+      "config": "/home/jay/repos/oracle-bench/configs/expanded-validation/matplotlib-24627-claude.yaml",
+      "config_sha256": "89ab567b40a8f8b68c09737ad9b7d1a3582c16149f47ff9b22236c0f76390443",
+      "error": null,
+      "index": 1,
+      "run_dir": "/home/jay/repos/oracle-bench/runs/20260923T220231Z-a70d9896",
+      "state": "completed"
+    },
+    {
+      "config": "/home/jay/repos/oracle-bench/configs/expanded-validation/matplotlib-24627-codex.yaml",
+      "config_sha256": "0b68a535f181af66b401054d4d4629d85647657241a590b59e2ca6a3a509c970",
+      "error": null,
+      "index": 2,
+      "run_dir": "/home/jay/repos/oracle-bench/runs/20260923T220632Z-d17a8ee1",
+      "state": "completed"
+    },
+    {
+      "config": "/home/jay/repos/oracle-bench/configs/expanded-validation/matplotlib-24627-opencode.yaml",
+      "config_sha256": "a2eea388f5382833849ffc71fde4c208f9901125f157cba393ac3101029d2f69",
+      "error": null,
+      "index": 3,
+      "run_dir": "/home/jay/repos/oracle-bench/runs/20260923T220922Z-7f620552",
+      "state": "completed_with_errors"
+    },
+    {
+      "config": "/home/jay/repos/oracle-bench/configs/expanded-validation/pytest-10051-claude.yaml",
+      "config_sha256": "b34e64d9ea9e54a2a8647d18bcb26b4ea9870626066d4356ee709da7f02a75ba",
+      "error": null,
+      "index": 4,
+      "run_dir": "/home/jay/repos/oracle-bench/runs/20260924T020840Z-9fb8430d",
+      "state": "completed"
+    },
+    {
+      "config": "/home/jay/repos/oracle-bench/configs/expanded-validation/pytest-10051-codex.yaml",
+      "config_sha256": "7e3b9ad5a94755ca713e67c9821caf627550743aec65dbdd663cbb7d96c95bf0",
+      "error": null,
+      "index": 5,
+      "run_dir": "/home/jay/repos/oracle-bench/runs/20260924T021233Z-b3a816df",
+      "state": "completed"
+    },
+    {
+      "config": "/home/jay/repos/oracle-bench/configs/expanded-validation/pytest-10051-opencode.yaml",
+      "config_sha256": "af20069e983c1304692e8811d6eb977adafda015df27ee3c6f306389d403ff7e",
+      "error": null,
+      "index": 6,
+      "run_dir": "/home/jay/repos/oracle-bench/runs/20260924T021449Z-a34935b3",
+      "state": "completed_with_errors"
+    },
+    {
+      "config": "/home/jay/repos/oracle-bench/configs/expanded-validation/xarray-6744-claude.yaml",
+      "config_sha256": "d3851eba31aa636b634a333f0c9ec9b8e04554a7c2dd86a7af90c37424da793a",
+      "error": null,
+      "index": 7,
+      "run_dir": "/home/jay/repos/oracle-bench/runs/20260923T222725Z-978c132f",
+      "state": "completed"
+    },
+    {
+      "config": "/home/jay/repos/oracle-bench/configs/expanded-validation/xarray-6744-codex.yaml",
+      "config_sha256": "72f724d35563bcddcc478ba404af5bf83be90a0fe72aff046c1e5fada89b9da5",
+      "error": null,
+      "index": 8,
+      "run_dir": "/home/jay/repos/oracle-bench/runs/20260923T222959Z-6c266cf6",
+      "state": "completed"
+    },
+    {
+      "config": "/home/jay/repos/oracle-bench/configs/expanded-validation/xarray-6744-opencode.yaml",
+      "config_sha256": "2e2a042d0268b550e3174e9b3c8eb724078a68f7f10eeec45997e57702fc98b4",
+      "error": null,
+      "index": 9,
+      "run_dir": "/home/jay/repos/oracle-bench/runs/20260923T223150Z-f1dc6eda",
+      "state": "completed"
+    },
+    {
+      "config": "/home/jay/repos/oracle-bench/configs/expanded-validation/sphinx-11510-claude.yaml",
+      "config_sha256": "b7499e4a94989e2d72e0f8415ab29113e1faeda21d1c70acb7de5216d8dce7dd",
+      "error": null,
+      "index": 10,
+      "run_dir": "/home/jay/repos/oracle-bench/runs/20260923T223820Z-164bc58c",
+      "state": "completed"
+    },
+    {
+      "config": "/home/jay/repos/oracle-bench/configs/expanded-validation/sphinx-11510-codex.yaml",
+      "config_sha256": "da0b5aa31481fbce59aa77f1860a70023077b21f9cbf55c3083e57b6138fb607",
+      "error": null,
+      "index": 11,
+      "run_dir": "/home/jay/repos/oracle-bench/runs/20260923T224050Z-9cb2ecb5",
+      "state": "completed"
+    },
+    {
+      "config": "/home/jay/repos/oracle-bench/configs/expanded-validation/sphinx-11510-opencode.yaml",
+      "config_sha256": "c1203492abcc49a0ac766727a076c1174054c2f1c82a4b7439df6f5dd47ea761",
+      "error": null,
+      "index": 12,
+      "run_dir": "/home/jay/repos/oracle-bench/runs/20260923T224306Z-1bb6e1c6",
+      "state": "completed_with_errors"
+    },
+    {
+      "config": "/home/jay/repos/oracle-bench/configs/expanded-validation/sklearn-14710-claude.yaml",
+      "config_sha256": "b699d988cb3214fa34d91e33e5422b75971532c8a2f59fefdee370346eb81f65",
+      "error": null,
+      "index": 13,
+      "run_dir": "/home/jay/repos/oracle-bench/runs/20260924T023059Z-ca32a5ff",
+      "state": "completed"
+    },
+    {
+      "config": "/home/jay/repos/oracle-bench/configs/expanded-validation/sklearn-14710-codex.yaml",
+      "config_sha256": "397a59bd4ac9c9d24f6ecf3768d82d46c84280436dbdf7f3a83a09da6d55a613",
+      "error": null,
+      "index": 14,
+      "run_dir": "/home/jay/repos/oracle-bench/runs/20260924T023530Z-dea5ce4b",
+      "state": "completed"
+    },
+    {
+      "config": "/home/jay/repos/oracle-bench/configs/expanded-validation/sklearn-14710-opencode.yaml",
+      "config_sha256": "0332a70d09989cb0764e7210fd94ad367e834d834858d7c1830a1c7c919509cf",
+      "error": null,
+      "index": 15,
+      "run_dir": "/home/jay/repos/oracle-bench/runs/20260924T023734Z-053e0297",
+      "state": "completed"
+    }
+  ],
+  "name": "expanded-validation-five-repos"
+}

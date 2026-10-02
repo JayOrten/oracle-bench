@@ -1,0 +1,10 @@
+[
+  "/opt/miniconda3/envs/testbed/bin/python",
+  "-m",
+  "pytest",
+  "-o",
+  "addopts=",
+  "-q",
+  "--tb=short",
+  "lib/matplotlib/tests/test_axes.py::test_cla_clears_children_axes_and_fig"
+]

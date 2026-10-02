@@ -1,0 +1,34 @@
+I added 49 unit tests in `oracle_tests/test_rolling_init.py`, and they all pass with the command you gave. I didn't change any application code.
+
+The tests cover each constructor in `xarray/core/rolling.py`:
+
+- **`Rolling.__init__`** (tested through `DataArrayRolling`):
+  - how `dim` and `window` are filled in, and that the order of dimensions is kept
+  - `min_periods` defaults to the product of the window sizes; a value you pass is used as given
+  - `window <= 0` and `min_periods <= 0` both raise `ValueError`, and a bad window is reported before a bad `min_periods`
+  - `center` given as one value applies to every dimension; given as a mapping, missing dimensions default to `False` and unknown keys are ignored
+  - `repr`, `len` and `ndim` are consistent with the constructed state
+- **`DataArrayRolling.__init__`**:
+  - `window_labels` comes from the first rolling dimension, including when that dimension has no coordinate
+  - an unknown dimension raises `KeyError`
+  - it gives the same result as `DataArray.rolling`, and the constructed object's `sum()` works
+- **`DatasetRolling.__init__`**:
+  - a per-variable rolling object is created only for variables that use one of the rolling dimensions
+  - each of those gets the right subset of windows and `center` values
+  - when `min_periods` is left as `None`, each per-variable object works out its own default (e.g. 3 rather than the dataset-level 6)
+  - an unknown dimension raises `KeyError`
+  - invalid values are rejected, and the result matches `Dataset.rolling`
+- **`Coarsen.__init__`** (the base constructor for `DataArrayCoarsen` and `DatasetCoarsen`):
+  - `windows`, `boundary` and `side` are stored as given
+  - a single `coord_func` (string or callable) is applied to every dimension
+  - coordinates that aren't dimensions default to `duck_array_ops.mean`
+  - a `coord_func` mapping is filled in with `mean` for anything missing
+  - missing dimensions raise `ValueError` naming them
+  - `repr` and consistency with `DataArray.coarsen` are also checked
+
+Two tests pin down current behaviour that may not be intended:
+
+- In the `DatasetRolling` case, a per-variable object can end up with a different default `min_periods` than the dataset itself. A test asserts that.
+- `Coarsen` fills defaults into the `coord_func` mapping you pass in, rather than into a copy. No test checks that directly, but `test_mapping_coord_func_extra_keys_kept` depends on the current behaviour.
+
+If either behaviour is changed on purpose later, update those tests.

@@ -1,0 +1,12 @@
+{
+  "compliant": true,
+  "empty": false,
+  "files": {
+    "oracle_tests/test_prepare_body.py": {
+      "mode": 420,
+      "sha256": "4c683f056f5a3fac1f114a889580a773461b64a6e4660e44917e155da571e50f"
+    }
+  },
+  "forbidden_changes": [],
+  "sha256": "857b582369192edfee657c4b95fd5864e2f85251b520b5d541685fd499335875"
+}

@@ -1,0 +1,36 @@
+{
+  "buggy_status": "runner_error",
+  "failure_kinds": {
+    "buggy": {
+      "assertion": 0,
+      "exception": 0,
+      "unknown": 0
+    },
+    "golden": {
+      "assertion": 0,
+      "exception": 0,
+      "unknown": 0
+    }
+  },
+  "golden_status": "runner_error",
+  "matrix": {
+    "fail_on_both": {
+      "count": 0,
+      "test_ids": []
+    },
+    "fail_on_buggy_pass_on_golden": {
+      "count": 0,
+      "test_ids": []
+    },
+    "pass_on_both": {
+      "count": 0,
+      "test_ids": []
+    },
+    "pass_on_buggy_fail_on_golden": {
+      "count": 0,
+      "test_ids": []
+    }
+  },
+  "other_outcomes": [],
+  "tests": []
+}

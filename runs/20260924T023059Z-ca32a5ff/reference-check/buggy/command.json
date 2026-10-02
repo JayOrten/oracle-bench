@@ -1,0 +1,10 @@
+[
+  "/opt/miniconda3/envs/testbed/bin/python",
+  "-m",
+  "pytest",
+  "-o",
+  "addopts=",
+  "-q",
+  "--tb=short",
+  "sklearn/ensemble/_hist_gradient_boosting/tests/test_gradient_boosting.py::test_string_target_early_stopping[None]"
+]

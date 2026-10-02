@@ -1,0 +1,33 @@
+{
+  "execution": {
+    "concurrency": 1,
+    "continue_on_error": true
+  },
+  "jobs": [
+    {
+      "config": "/home/jay/repos/oracle-bench/configs/initial-validation/claude-requests.yaml",
+      "config_sha256": "e9d1a0428e06ad1bac7b37a6bea1c691f5234478bde10c5e2356e371e8b4a69f",
+      "error": null,
+      "index": 1,
+      "run_dir": "/home/jay/repos/oracle-bench/runs/20260923T203259Z-84cbeea1",
+      "state": "completed"
+    },
+    {
+      "config": "/home/jay/repos/oracle-bench/configs/initial-validation/codex-requests.yaml",
+      "config_sha256": "eed796fd0616a87bedaceff401a897892425cdafcc1016e3b5f59fabde41ca83",
+      "error": null,
+      "index": 2,
+      "run_dir": "/home/jay/repos/oracle-bench/runs/20260923T203811Z-1ec4d342",
+      "state": "completed"
+    },
+    {
+      "config": "/home/jay/repos/oracle-bench/configs/initial-validation/opencode-requests.yaml",
+      "config_sha256": "5e43c204f24fd6007e78e9fd560356915001199cbf6f711d2bd4e253c7960ebe",
+      "error": null,
+      "index": 3,
+      "run_dir": "/home/jay/repos/oracle-bench/runs/20260923T204000Z-42d550fa",
+      "state": "completed"
+    }
+  ],
+  "name": "initial-validation-requests"
+}

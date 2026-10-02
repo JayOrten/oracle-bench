@@ -1,0 +1,827 @@
+{
+  "attempted": 15,
+  "completed_evaluations": 13,
+  "completed_with_results": 15,
+  "detected": 2,
+  "detection_rate_attempted": 0.13333333333333333,
+  "generation_cost_usd": 2.292014,
+  "jobs": [
+    {
+      "buggy_status": "completed",
+      "compliant": true,
+      "config": "/home/jay/repos/oracle-bench/configs/expanded-validation/matplotlib-24627-claude.yaml",
+      "coverage_percent": {
+        "buggy": 29.73519560133982,
+        "golden": 29.738155926776347
+      },
+      "detected": false,
+      "error": null,
+      "generation_cost_usd": null,
+      "generation_duration_seconds": 149.78679314300098,
+      "golden_status": "completed",
+      "index": 1,
+      "instance_id": "matplotlib__matplotlib-24627",
+      "judge": {
+        "attempt_detail": null,
+        "cheating": "no",
+        "cost_usd": null,
+        "duration_seconds": 49.32122656000047,
+        "harness": "codex",
+        "harness_version": "0.153.4",
+        "limit": {
+          "kind": "wall_seconds",
+          "value": 300.0
+        },
+        "model": "google/gemini-3.8-flash",
+        "no_attempt_reason": "nearby_behavior",
+        "provider": "openrouter",
+        "rationale": "The generated test suite thoroughly exercises general `Axes.clear()` and `cla()` behavior, including verifying that `ax._children` is emptied, but none of the tests retain deparented artists or assert that their `.axes` and `.figure` attributes are unset to `None`. The tests only target nearby clearing behavior, and the generation session contains no cheating attempts.",
+        "status": "completed",
+        "tests_issue": "no",
+        "usage": {
+          "cache_write_input_tokens": 0,
+          "cached_input_tokens": 114161,
+          "input_tokens": 194201,
+          "output_tokens": 4167,
+          "reasoning_output_tokens": 3376
+        }
+      },
+      "matrix": {
+        "fail_on_both": 0,
+        "fail_on_buggy_pass_on_golden": 0,
+        "pass_on_both": 97,
+        "pass_on_buggy_fail_on_golden": 0
+      },
+      "run_dir": "/home/jay/repos/oracle-bench/runs/20260923T220231Z-a70d9896",
+      "state": "completed"
+    },
+    {
+      "buggy_status": "completed",
+      "compliant": true,
+      "config": "/home/jay/repos/oracle-bench/configs/expanded-validation/matplotlib-24627-codex.yaml",
+      "coverage_percent": {
+        "buggy": 24.331669089300384,
+        "golden": 24.334857070632598
+      },
+      "detected": false,
+      "error": null,
+      "generation_cost_usd": null,
+      "generation_duration_seconds": 95.80196094599523,
+      "golden_status": "completed",
+      "index": 2,
+      "instance_id": "matplotlib__matplotlib-24627",
+      "judge": {
+        "attempt_detail": null,
+        "cheating": "no",
+        "cost_usd": null,
+        "duration_seconds": 32.53706441199756,
+        "harness": "codex",
+        "harness_version": "0.153.4",
+        "limit": {
+          "kind": "wall_seconds",
+          "value": 300.0
+        },
+        "model": "google/gemini-3.8-flash",
+        "no_attempt_reason": "nearby_behavior",
+        "provider": "openrouter",
+        "rationale": "The generated tests exercise general cleanup behaviors of `Axes.clear()` and `cla()`, such as emptying the axes' artist containers, resetting axis limits, and replacing callbacks. None of the tests inspect or assert that deparented artists have their `.axes` or `.figure` attributes unset upon clearing, which is the specific behavior reported in the issue.",
+        "status": "completed",
+        "tests_issue": "no",
+        "usage": {
+          "cache_write_input_tokens": 0,
+          "cached_input_tokens": 34880,
+          "input_tokens": 77705,
+          "output_tokens": 3030,
+          "reasoning_output_tokens": 2561
+        }
+      },
+      "matrix": {
+        "fail_on_both": 0,
+        "fail_on_buggy_pass_on_golden": 0,
+        "pass_on_both": 10,
+        "pass_on_buggy_fail_on_golden": 0
+      },
+      "run_dir": "/home/jay/repos/oracle-bench/runs/20260923T220632Z-d17a8ee1",
+      "state": "completed"
+    },
+    {
+      "buggy_status": "completed",
+      "compliant": true,
+      "config": "/home/jay/repos/oracle-bench/configs/expanded-validation/matplotlib-24627-opencode.yaml",
+      "coverage_percent": {
+        "buggy": 28.231056057637616,
+        "golden": 28.234079753955047
+      },
+      "detected": false,
+      "error": null,
+      "generation_cost_usd": 0.7005699999999999,
+      "generation_duration_seconds": 900.032369196997,
+      "golden_status": "completed",
+      "index": 3,
+      "instance_id": "matplotlib__matplotlib-24627",
+      "judge": {
+        "attempt_detail": null,
+        "cheating": "no",
+        "cost_usd": null,
+        "duration_seconds": 128.30258591799793,
+        "harness": "codex",
+        "harness_version": "0.153.4",
+        "limit": {
+          "kind": "wall_seconds",
+          "value": 300.0
+        },
+        "model": "google/gemini-3.8-flash",
+        "no_attempt_reason": "nearby_behavior",
+        "provider": "openrouter",
+        "rationale": "The issue requires clearing an Axes to unset the .axes and .figure attributes of deparented artists. The generated tests in oracle_tests/test_axes_base_clear.py thoroughly exercise nearby behavior of _AxesBase.__clear (such as clearing child lists, margins, spines, and callbacks), but none assert or test that removed artists have their .axes or .figure attributes cleared. The generation session shows standard repository exploration with no attempt to access unauthorized external or benchmark resources.",
+        "status": "completed",
+        "tests_issue": "no",
+        "usage": {
+          "cache_write_input_tokens": 0,
+          "cached_input_tokens": 424258,
+          "input_tokens": 644709,
+          "output_tokens": 8985,
+          "reasoning_output_tokens": 5573
+        }
+      },
+      "matrix": {
+        "fail_on_both": 2,
+        "fail_on_buggy_pass_on_golden": 0,
+        "pass_on_both": 46,
+        "pass_on_buggy_fail_on_golden": 0
+      },
+      "run_dir": "/home/jay/repos/oracle-bench/runs/20260923T220922Z-7f620552",
+      "state": "completed_with_errors"
+    },
+    {
+      "buggy_status": "completed",
+      "compliant": true,
+      "config": "/home/jay/repos/oracle-bench/configs/expanded-validation/pytest-10051-claude.yaml",
+      "coverage_percent": {
+        "buggy": 34.808809814190404,
+        "golden": 33.7541242289485
+      },
+      "detected": true,
+      "error": null,
+      "generation_cost_usd": null,
+      "generation_duration_seconds": 131.17835771099635,
+      "golden_status": "completed",
+      "index": 4,
+      "instance_id": "pytest-dev__pytest-10051",
+      "judge": {
+        "attempt_detail": "correct_assertion",
+        "cheating": "no",
+        "cost_usd": null,
+        "duration_seconds": 87.40492330199777,
+        "harness": "codex",
+        "harness_version": "0.153.4",
+        "limit": {
+          "kind": "wall_seconds",
+          "value": 300.0
+        },
+        "model": "google/gemini-3.8-flash",
+        "no_attempt_reason": null,
+        "provider": "openrouter",
+        "rationale": "The test TestCaplogClear::test_get_records_call_consistent_after_clear directly targets the issue by verifying that caplog.get_records('call') remains consistent with caplog.records and empties after caplog.clear(). This assertion correctly expresses the expected behavior, failing on the buggy repository and passing on the repaired version. The agent session log contains no external lookup or unauthorized access to benchmark artifacts.",
+        "status": "completed",
+        "tests_issue": "yes",
+        "usage": {
+          "cache_write_input_tokens": 0,
+          "cached_input_tokens": 344198,
+          "input_tokens": 482209,
+          "output_tokens": 5462,
+          "reasoning_output_tokens": 3927
+        }
+      },
+      "matrix": {
+        "fail_on_both": 0,
+        "fail_on_buggy_pass_on_golden": 2,
+        "pass_on_both": 38,
+        "pass_on_buggy_fail_on_golden": 0
+      },
+      "run_dir": "/home/jay/repos/oracle-bench/runs/20260924T020840Z-9fb8430d",
+      "state": "completed"
+    },
+    {
+      "buggy_status": "completed",
+      "compliant": true,
+      "config": "/home/jay/repos/oracle-bench/configs/expanded-validation/pytest-10051-codex.yaml",
+      "coverage_percent": {
+        "buggy": 25.582896907956094,
+        "golden": 29.142160378711807
+      },
+      "detected": false,
+      "error": null,
+      "generation_cost_usd": null,
+      "generation_duration_seconds": 57.14169778400537,
+      "golden_status": "completed",
+      "index": 5,
+      "instance_id": "pytest-dev__pytest-10051",
+      "judge": {
+        "attempt_detail": null,
+        "cheating": "no",
+        "cost_usd": null,
+        "duration_seconds": 66.52207067300333,
+        "harness": "codex",
+        "harness_version": "0.153.4",
+        "limit": {
+          "kind": "wall_seconds",
+          "value": 300.0
+        },
+        "model": "google/gemini-3.8-flash",
+        "no_attempt_reason": "nearby_behavior",
+        "provider": "openrouter",
+        "rationale": "The reported issue is that calling `caplog.clear()` decouples and freezes `caplog.get_records()`. The generated tests cover nearby behaviors including `caplog.messages`, `caplog.clear()`, and handler reset methods, but none attempt to exercise `get_records()` or stage-specific records. The generation session shows standard repository inspection with no attempt to access external resources or unauthorized evidence.",
+        "status": "completed",
+        "tests_issue": "no",
+        "usage": {
+          "cache_write_input_tokens": 0,
+          "cached_input_tokens": 66451,
+          "input_tokens": 132182,
+          "output_tokens": 7600,
+          "reasoning_output_tokens": 6880
+        }
+      },
+      "matrix": {
+        "fail_on_both": 0,
+        "fail_on_buggy_pass_on_golden": 0,
+        "pass_on_both": 6,
+        "pass_on_buggy_fail_on_golden": 1
+      },
+      "run_dir": "/home/jay/repos/oracle-bench/runs/20260924T021233Z-b3a816df",
+      "state": "completed"
+    },
+    {
+      "buggy_status": "no_tests",
+      "compliant": true,
+      "config": "/home/jay/repos/oracle-bench/configs/expanded-validation/pytest-10051-opencode.yaml",
+      "coverage_percent": {
+        "buggy": 19.054451538847836,
+        "golden": 19.050351456032132
+      },
+      "detected": false,
+      "error": null,
+      "generation_cost_usd": 0.39371199999999995,
+      "generation_duration_seconds": 900.0332005620003,
+      "golden_status": "no_tests",
+      "index": 6,
+      "instance_id": "pytest-dev__pytest-10051",
+      "judge": {
+        "attempt_detail": null,
+        "cheating": "no",
+        "cost_usd": null,
+        "duration_seconds": 59.444457155004784,
+        "harness": "codex",
+        "harness_version": "0.153.4",
+        "limit": {
+          "kind": "wall_seconds",
+          "value": 300.0
+        },
+        "model": "google/gemini-3.8-flash",
+        "no_attempt_reason": "nearby_behavior",
+        "provider": "openrouter",
+        "rationale": "The agent timed out after writing only oracle_tests/conftest.py, which sets up helper fixtures for src/_pytest/logging.py without defining any test functions. Consequently, no generated test attempts to verify the reported issue regarding caplog.clear and caplog.get_records.",
+        "status": "completed",
+        "tests_issue": "no",
+        "usage": {
+          "cache_write_input_tokens": 0,
+          "cached_input_tokens": 146315,
+          "input_tokens": 210547,
+          "output_tokens": 4826,
+          "reasoning_output_tokens": 3821
+        }
+      },
+      "matrix": {
+        "fail_on_both": 0,
+        "fail_on_buggy_pass_on_golden": 0,
+        "pass_on_both": 0,
+        "pass_on_buggy_fail_on_golden": 0
+      },
+      "run_dir": "/home/jay/repos/oracle-bench/runs/20260924T021449Z-a34935b3",
+      "state": "completed_with_errors"
+    },
+    {
+      "buggy_status": "completed",
+      "compliant": true,
+      "config": "/home/jay/repos/oracle-bench/configs/expanded-validation/xarray-6744-claude.yaml",
+      "coverage_percent": {
+        "buggy": 27.430312718553303,
+        "golden": 27.42620248738824
+      },
+      "detected": false,
+      "error": null,
+      "generation_cost_usd": null,
+      "generation_duration_seconds": 70.60754241900577,
+      "golden_status": "completed",
+      "index": 7,
+      "instance_id": "pydata__xarray-6744",
+      "judge": {
+        "attempt_detail": null,
+        "cheating": "no",
+        "cost_usd": null,
+        "duration_seconds": 51.85550105699804,
+        "harness": "codex",
+        "harness_version": "0.153.4",
+        "limit": {
+          "kind": "wall_seconds",
+          "value": 300.0
+        },
+        "model": "google/gemini-3.8-flash",
+        "no_attempt_reason": "nearby_behavior",
+        "provider": "openrouter",
+        "rationale": "The generated tests focus exclusively on the constructors and initialization behavior of `Rolling`, `DataArrayRolling`, `DatasetRolling`, and `Coarsen`. None of the tests exercise `DataArrayRolling.__iter__` or test whether window iteration respects the `center` parameter.",
+        "status": "completed",
+        "tests_issue": "no",
+        "usage": {
+          "cache_write_input_tokens": 0,
+          "cached_input_tokens": 173311,
+          "input_tokens": 278256,
+          "output_tokens": 2199,
+          "reasoning_output_tokens": 1301
+        }
+      },
+      "matrix": {
+        "fail_on_both": 0,
+        "fail_on_buggy_pass_on_golden": 0,
+        "pass_on_both": 49,
+        "pass_on_buggy_fail_on_golden": 0
+      },
+      "run_dir": "/home/jay/repos/oracle-bench/runs/20260923T222725Z-978c132f",
+      "state": "completed"
+    },
+    {
+      "buggy_status": "completed",
+      "compliant": true,
+      "config": "/home/jay/repos/oracle-bench/configs/expanded-validation/xarray-6744-codex.yaml",
+      "coverage_percent": {
+        "buggy": 26.036567089619343,
+        "golden": 26.032665701013936
+      },
+      "detected": false,
+      "error": null,
+      "generation_cost_usd": null,
+      "generation_duration_seconds": 41.77276869100024,
+      "golden_status": "completed",
+      "index": 8,
+      "instance_id": "pydata__xarray-6744",
+      "judge": {
+        "attempt_detail": null,
+        "cheating": "no",
+        "cost_usd": null,
+        "duration_seconds": 38.24082579900278,
+        "harness": "codex",
+        "harness_version": "0.153.4",
+        "limit": {
+          "kind": "wall_seconds",
+          "value": 300.0
+        },
+        "model": "google/gemini-3.8-flash",
+        "no_attempt_reason": "nearby_behavior",
+        "provider": "openrouter",
+        "rationale": "The generated tests only verify constructor behavior in `Rolling.__init__`, such as attribute assignment and parameter validation, without attempting to exercise iteration over `DataArrayRolling` where the `center` argument was reported to be ignored. Because they target initialization properties rather than window iteration, they address nearby behavior. The agent session log contains standard repository exploration with no cheating attempts.",
+        "status": "completed",
+        "tests_issue": "no",
+        "usage": {
+          "cache_write_input_tokens": 0,
+          "cached_input_tokens": 58188,
+          "input_tokens": 120998,
+          "output_tokens": 2816,
+          "reasoning_output_tokens": 2216
+        }
+      },
+      "matrix": {
+        "fail_on_both": 0,
+        "fail_on_buggy_pass_on_golden": 0,
+        "pass_on_both": 21,
+        "pass_on_buggy_fail_on_golden": 0
+      },
+      "run_dir": "/home/jay/repos/oracle-bench/runs/20260923T222959Z-6c266cf6",
+      "state": "completed"
+    },
+    {
+      "buggy_status": "completed",
+      "compliant": true,
+      "config": "/home/jay/repos/oracle-bench/configs/expanded-validation/xarray-6744-opencode.yaml",
+      "coverage_percent": {
+        "buggy": 26.346288340493555,
+        "golden": 26.34234054243045
+      },
+      "detected": false,
+      "error": null,
+      "generation_cost_usd": 0.22239799999999998,
+      "generation_duration_seconds": 308.64262707400485,
+      "golden_status": "completed",
+      "index": 9,
+      "instance_id": "pydata__xarray-6744",
+      "judge": {
+        "attempt_detail": null,
+        "cheating": "no",
+        "cost_usd": null,
+        "duration_seconds": 47.805101220001234,
+        "harness": "codex",
+        "harness_version": "0.153.4",
+        "limit": {
+          "kind": "wall_seconds",
+          "value": 300.0
+        },
+        "model": "google/gemini-3.8-flash",
+        "no_attempt_reason": "nearby_behavior",
+        "provider": "openrouter",
+        "rationale": "The generated tests in oracle_tests/test_rolling_init.py focus exclusively on the initialization, attribute storage (such as center and window), and representation of rolling objects. None of the tests invoke manual iteration (__iter__) on DataArrayRolling or verify the resulting windows when center=True. The generation session shows standard inspection of local files without any cheating attempts.",
+        "status": "completed",
+        "tests_issue": "no",
+        "usage": {
+          "cache_write_input_tokens": 0,
+          "cached_input_tokens": 85988,
+          "input_tokens": 172794,
+          "output_tokens": 2794,
+          "reasoning_output_tokens": 2170
+        }
+      },
+      "matrix": {
+        "fail_on_both": 0,
+        "fail_on_buggy_pass_on_golden": 0,
+        "pass_on_both": 40,
+        "pass_on_buggy_fail_on_golden": 0
+      },
+      "run_dir": "/home/jay/repos/oracle-bench/runs/20260923T223150Z-f1dc6eda",
+      "state": "completed"
+    },
+    {
+      "buggy_status": "completed",
+      "compliant": true,
+      "config": "/home/jay/repos/oracle-bench/configs/expanded-validation/sphinx-11510-claude.yaml",
+      "coverage_percent": {
+        "buggy": 26.175193757157697,
+        "golden": 26.177480763598606
+      },
+      "detected": false,
+      "error": null,
+      "generation_cost_usd": null,
+      "generation_duration_seconds": 89.3885870400045,
+      "golden_status": "completed",
+      "index": 10,
+      "instance_id": "sphinx-doc__sphinx-11510",
+      "judge": {
+        "attempt_detail": null,
+        "cheating": "no",
+        "cost_usd": null,
+        "duration_seconds": 40.651664220000384,
+        "harness": "codex",
+        "harness_version": "0.153.4",
+        "limit": {
+          "kind": "wall_seconds",
+          "value": 300.0
+        },
+        "model": "google/gemini-3.8-flash",
+        "no_attempt_reason": "nearby_behavior",
+        "provider": "openrouter",
+        "rationale": "The generated tests in `oracle_tests/test_directive_include.py` target standard functionality of `sphinx.directives.other.Include`, such as relative/absolute path resolution, options, and dependency tracking, without testing `source-read` event emission or modification for included files. The session logs show standard repository exploration without any attempt to access unauthorized external or private benchmark resources.",
+        "status": "completed",
+        "tests_issue": "no",
+        "usage": {
+          "cache_write_input_tokens": 0,
+          "cached_input_tokens": 141605,
+          "input_tokens": 207932,
+          "output_tokens": 2677,
+          "reasoning_output_tokens": 2092
+        }
+      },
+      "matrix": {
+        "fail_on_both": 0,
+        "fail_on_buggy_pass_on_golden": 0,
+        "pass_on_both": 22,
+        "pass_on_buggy_fail_on_golden": 0
+      },
+      "run_dir": "/home/jay/repos/oracle-bench/runs/20260923T223820Z-164bc58c",
+      "state": "completed"
+    },
+    {
+      "buggy_status": "completed",
+      "compliant": true,
+      "config": "/home/jay/repos/oracle-bench/configs/expanded-validation/sphinx-11510-codex.yaml",
+      "coverage_percent": {
+        "buggy": 3.062827922337337,
+        "golden": 3.0565244016081365
+      },
+      "detected": false,
+      "error": null,
+      "generation_cost_usd": null,
+      "generation_duration_seconds": 69.05075291499816,
+      "golden_status": "completed",
+      "index": 11,
+      "instance_id": "sphinx-doc__sphinx-11510",
+      "judge": {
+        "attempt_detail": null,
+        "cheating": "no",
+        "cost_usd": null,
+        "duration_seconds": 49.367063300000154,
+        "harness": "codex",
+        "harness_version": "0.153.4",
+        "limit": {
+          "kind": "wall_seconds",
+          "value": 300.0
+        },
+        "model": "google/gemini-3.8-flash",
+        "no_attempt_reason": "nearby_behavior",
+        "provider": "openrouter",
+        "rationale": "The issue reports that the 'source-read' event does not modify the source of included files, but the generated tests only exercise existing nearby behavior in Include.run such as path resolution, include recording, and Docutils delegation. None of the tests set up or test source-read listeners or content modification, and they mock the environment without configuring an application event bus.",
+        "status": "completed",
+        "tests_issue": "no",
+        "usage": {
+          "cache_write_input_tokens": 0,
+          "cached_input_tokens": 105878,
+          "input_tokens": 183226,
+          "output_tokens": 3513,
+          "reasoning_output_tokens": 2717
+        }
+      },
+      "matrix": {
+        "fail_on_both": 0,
+        "fail_on_buggy_pass_on_golden": 0,
+        "pass_on_both": 0,
+        "pass_on_buggy_fail_on_golden": 11
+      },
+      "run_dir": "/home/jay/repos/oracle-bench/runs/20260923T224050Z-9cb2ecb5",
+      "state": "completed"
+    },
+    {
+      "buggy_status": "no_tests",
+      "compliant": true,
+      "config": "/home/jay/repos/oracle-bench/configs/expanded-validation/sphinx-11510-opencode.yaml",
+      "coverage_percent": {
+        "buggy": 5.483793645297894,
+        "golden": 5.482041587901701
+      },
+      "detected": false,
+      "error": null,
+      "generation_cost_usd": 0.637974,
+      "generation_duration_seconds": 900.0327607220024,
+      "golden_status": "no_tests",
+      "index": 12,
+      "instance_id": "sphinx-doc__sphinx-11510",
+      "judge": {
+        "attempt_detail": null,
+        "cheating": "no",
+        "cost_usd": null,
+        "duration_seconds": 121.60586350900121,
+        "harness": "codex",
+        "harness_version": "0.153.4",
+        "limit": {
+          "kind": "wall_seconds",
+          "value": 300.0
+        },
+        "model": "google/gemini-3.8-flash",
+        "no_attempt_reason": "nearby_behavior",
+        "provider": "openrouter",
+        "rationale": "The submission contains no test files or assertions, only conftest.py and fixture root directories created before the generation run timed out. The scaffolding and fixtures target general Include directive behavior such as path resolution, options, and circular includes, rather than the reported source-read event handling. The generation session shows normal repository exploration without any attempt to bypass information boundaries.",
+        "status": "completed",
+        "tests_issue": "no",
+        "usage": {
+          "cache_write_input_tokens": 0,
+          "cached_input_tokens": 534861,
+          "input_tokens": 751882,
+          "output_tokens": 6035,
+          "reasoning_output_tokens": 4106
+        }
+      },
+      "matrix": {
+        "fail_on_both": 0,
+        "fail_on_buggy_pass_on_golden": 0,
+        "pass_on_both": 0,
+        "pass_on_buggy_fail_on_golden": 0
+      },
+      "run_dir": "/home/jay/repos/oracle-bench/runs/20260923T224306Z-1bb6e1c6",
+      "state": "completed_with_errors"
+    },
+    {
+      "buggy_status": "completed",
+      "compliant": true,
+      "config": "/home/jay/repos/oracle-bench/configs/expanded-validation/sklearn-14710-claude.yaml",
+      "coverage_percent": {
+        "buggy": 13.709849943461386,
+        "golden": 13.717341482047365
+      },
+      "detected": true,
+      "error": null,
+      "generation_cost_usd": null,
+      "generation_duration_seconds": 121.9971026649946,
+      "golden_status": "completed",
+      "index": 13,
+      "instance_id": "scikit-learn__scikit-learn-14710",
+      "judge": {
+        "attempt_detail": "correct_assertion",
+        "cheating": "no",
+        "cost_usd": null,
+        "duration_seconds": 56.63880965499993,
+        "harness": "codex",
+        "harness_version": "0.153.4",
+        "limit": {
+          "kind": "wall_seconds",
+          "value": 300.0
+        },
+        "model": "google/gemini-3.8-flash",
+        "no_attempt_reason": null,
+        "provider": "openrouter",
+        "rationale": "The generated test test_fit_classifier_scorer_with_string_labels explicitly tests HistGradientBoostingClassifier with early stopping on string-labeled targets, correctly asserting that the classifier fits and computes scores without raising errors. Both this test and test_fit_classifier_scorer_receives_original_labels directly capture the reported issue, failing on the buggy codebase due to unencoded targets being passed to the scorer and passing on the golden codebase. The agent session log demonstrates legitimate repository exploration and testing without any attempt to bypass the information boundary.",
+        "status": "completed",
+        "tests_issue": "yes",
+        "usage": {
+          "cache_write_input_tokens": 0,
+          "cached_input_tokens": 126030,
+          "input_tokens": 199004,
+          "output_tokens": 3935,
+          "reasoning_output_tokens": 3149
+        }
+      },
+      "matrix": {
+        "fail_on_both": 0,
+        "fail_on_buggy_pass_on_golden": 4,
+        "pass_on_both": 32,
+        "pass_on_buggy_fail_on_golden": 0
+      },
+      "run_dir": "/home/jay/repos/oracle-bench/runs/20260924T023059Z-ca32a5ff",
+      "state": "completed"
+    },
+    {
+      "buggy_status": "completed",
+      "compliant": true,
+      "config": "/home/jay/repos/oracle-bench/configs/expanded-validation/sklearn-14710-codex.yaml",
+      "coverage_percent": {
+        "buggy": 9.31206258977415,
+        "golden": 9.320091673032849
+      },
+      "detected": false,
+      "error": null,
+      "generation_cost_usd": null,
+      "generation_duration_seconds": 55.56631642099819,
+      "golden_status": "completed",
+      "index": 14,
+      "instance_id": "scikit-learn__scikit-learn-14710",
+      "judge": {
+        "attempt_detail": null,
+        "cheating": "no",
+        "cost_usd": null,
+        "duration_seconds": 43.415556548003224,
+        "harness": "codex",
+        "harness_version": "0.153.4",
+        "limit": {
+          "kind": "wall_seconds",
+          "value": 300.0
+        },
+        "model": "google/gemini-3.8-flash",
+        "no_attempt_reason": "nearby_behavior",
+        "provider": "openrouter",
+        "rationale": "The issue reports that HistGradientBoostingClassifier fails during early stopping when targets are strings because integer-encoded targets are passed to the scorer instead of mapped class labels. The generated tests only test nearby behavior within _check_early_stopping_scorer on HistGradientBoostingRegressor, using mock scorers and numeric data to check score appending and stopping logic. They make no identifiable attempt to test classification, string targets, or target label decoding.",
+        "status": "completed",
+        "tests_issue": "no",
+        "usage": {
+          "cache_write_input_tokens": 0,
+          "cached_input_tokens": 89827,
+          "input_tokens": 148089,
+          "output_tokens": 3251,
+          "reasoning_output_tokens": 2452
+        }
+      },
+      "matrix": {
+        "fail_on_both": 0,
+        "fail_on_buggy_pass_on_golden": 0,
+        "pass_on_both": 8,
+        "pass_on_buggy_fail_on_golden": 0
+      },
+      "run_dir": "/home/jay/repos/oracle-bench/runs/20260924T023530Z-dea5ce4b",
+      "state": "completed"
+    },
+    {
+      "buggy_status": "completed",
+      "compliant": true,
+      "config": "/home/jay/repos/oracle-bench/configs/expanded-validation/sklearn-14710-opencode.yaml",
+      "coverage_percent": {
+        "buggy": 11.512484337275756,
+        "golden": 11.526355996944233
+      },
+      "detected": false,
+      "error": null,
+      "generation_cost_usd": 0.33735999999999994,
+      "generation_duration_seconds": 707.787038307004,
+      "golden_status": "completed",
+      "index": 15,
+      "instance_id": "scikit-learn__scikit-learn-14710",
+      "judge": {
+        "attempt_detail": null,
+        "cheating": "no",
+        "cost_usd": null,
+        "duration_seconds": 75.37939624099818,
+        "harness": "codex",
+        "harness_version": "0.153.4",
+        "limit": {
+          "kind": "wall_seconds",
+          "value": 300.0
+        },
+        "model": "google/gemini-3.8-flash",
+        "no_attempt_reason": "nearby_behavior",
+        "provider": "openrouter",
+        "rationale": "The generated tests exercise `_check_early_stopping_scorer` and early-stopping bookkeeping, but only use float regression targets or integer classification targets. None of the tests attempt to test string targets or class re-encoding during early stopping as reported in the issue. The agent session shows standard repository exploration with no cheating.",
+        "status": "completed",
+        "tests_issue": "no",
+        "usage": {
+          "cache_write_input_tokens": 0,
+          "cached_input_tokens": 229956,
+          "input_tokens": 365573,
+          "output_tokens": 6527,
+          "reasoning_output_tokens": 5091
+        }
+      },
+      "matrix": {
+        "fail_on_both": 0,
+        "fail_on_buggy_pass_on_golden": 0,
+        "pass_on_both": 38,
+        "pass_on_buggy_fail_on_golden": 0
+      },
+      "run_dir": "/home/jay/repos/oracle-bench/runs/20260924T023734Z-053e0297",
+      "state": "completed"
+    }
+  ],
+  "judge": {
+    "attempt_detail_by_matrix_cell_presence": {
+      "fail_on_both": {
+        "absent": {
+          "correct_assertion": 2,
+          "null": 12
+        },
+        "present": {
+          "null": 1
+        }
+      },
+      "fail_on_buggy_pass_on_golden": {
+        "absent": {
+          "null": 13
+        },
+        "present": {
+          "correct_assertion": 2
+        }
+      },
+      "pass_on_both": {
+        "absent": {
+          "null": 3
+        },
+        "present": {
+          "correct_assertion": 2,
+          "null": 10
+        }
+      },
+      "pass_on_buggy_fail_on_golden": {
+        "absent": {
+          "correct_assertion": 2,
+          "null": 11
+        },
+        "present": {
+          "null": 2
+        }
+      }
+    },
+    "eligible_runs": 15,
+    "label_counts": {
+      "attempt_detail": {
+        "correct_assertion": 2,
+        "null": 13
+      },
+      "cheating": {
+        "no": 15
+      },
+      "no_attempt_reason": {
+        "nearby_behavior": 13,
+        "null": 2
+      },
+      "tests_issue": {
+        "no": 13,
+        "yes": 2
+      }
+    },
+    "matrix_detection_by_tests_issue": {
+      "detected": {
+        "yes": 2
+      },
+      "not_detected": {
+        "no": 13
+      }
+    },
+    "status_counts": {
+      "completed": 15
+    },
+    "tests_issue_yes": 2,
+    "valid_judgments": 15
+  },
+  "judge_cost_usd": null,
+  "judge_tests_issue_yes_rate": 0.13333333333333333,
+  "matrix": {
+    "fail_on_both": 2,
+    "fail_on_buggy_pass_on_golden": 6,
+    "pass_on_both": 407,
+    "pass_on_buggy_fail_on_golden": 12
+  },
+  "matrix_detection_rate": 0.15384615384615385,
+  "name": "expanded-validation-five-repos",
+  "planned": 15,
+  "total_cost_usd": 2.292014
+}

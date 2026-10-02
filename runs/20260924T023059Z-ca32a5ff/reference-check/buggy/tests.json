@@ -1,0 +1,39 @@
+{
+  "collected": 1,
+  "collection_errors": [],
+  "exit_code": 1,
+  "status": "completed",
+  "tests": {
+    "sklearn/ensemble/_hist_gradient_boosting/tests/test_gradient_boosting.py::test_string_target_early_stopping[None]": {
+      "failure": {
+        "exception_type": "builtins.TypeError",
+        "kind": "exception",
+        "message": "'<' not supported between instances of 'str' and 'float'"
+      },
+      "outcome": "fail",
+      "phases": [
+        {
+          "duration_seconds": 0.0003234010000596754,
+          "outcome": "passed",
+          "phase": "setup"
+        },
+        {
+          "details": "sklearn/ensemble/_hist_gradient_boosting/tests/test_gradient_boosting.py:428: in test_string_target_early_stopping\n    gbrt.fit(X, y)\nsklearn/ensemble/_hist_gradient_boosting/gradient_boosting.py:254: in fit\n    X_binned_val, y_val,\nsklearn/ensemble/_hist_gradient_boosting/gradient_boosting.py:430: in _check_early_stopping_scorer\n    self.scorer_(self, X_binned_small_train, y_small_train)\nsklearn/metrics/scorer.py:241: in _passthrough_scorer\n    return estimator.score(*args, **kwargs)\nsklearn/base.py:368: in score\n    return accuracy_score(y, self.predict(X), sample_weight=sample_weight)\nsklearn/metrics/classification.py:176: in accuracy_score\n    y_type, y_true, y_pred = _check_targets(y_true, y_pred)\nsklearn/metrics/classification.py:94: in _check_targets\n    unique_values = np.union1d(y_true, y_pred)\n<__array_function__ internals>:6: in union1d\n    ???\n/opt/miniconda3/envs/testbed/lib/python3.6/site-packages/numpy/lib/arraysetops.py:749: in union1d\n    return unique(np.concatenate((ar1, ar2), axis=None))\n<__array_function__ internals>:6: in unique\n    ???\n/opt/miniconda3/envs/testbed/lib/python3.6/site-packages/numpy/lib/arraysetops.py:261: in unique\n    ret = _unique1d(ar, return_index, return_inverse, return_counts)\n/opt/miniconda3/envs/testbed/lib/python3.6/site-packages/numpy/lib/arraysetops.py:322: in _unique1d\n    ar.sort()\nE   TypeError: '<' not supported between instances of 'str' and 'float'",
+          "duration_seconds": 0.002352105002501048,
+          "failure": {
+            "exception_type": "builtins.TypeError",
+            "kind": "exception",
+            "message": "'<' not supported between instances of 'str' and 'float'"
+          },
+          "outcome": "failed",
+          "phase": "call"
+        },
+        {
+          "duration_seconds": 0.00012239699572091922,
+          "outcome": "passed",
+          "phase": "teardown"
+        }
+      ]
+    }
+  }
+}

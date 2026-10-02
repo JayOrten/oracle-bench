@@ -1,0 +1,12 @@
+[
+  "/opt/miniconda3/envs/testbed/bin/python",
+  "-m",
+  "pytest",
+  "-o",
+  "addopts=",
+  "-q",
+  "--tb=short",
+  "-p",
+  "pytester",
+  "testing/logging/test_fixture.py::test_clear_for_call_stage"
+]

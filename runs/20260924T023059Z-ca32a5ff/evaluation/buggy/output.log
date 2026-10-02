@@ -1,0 +1,87 @@
+HEAD is now at 4b6273b87 ENH Native support for missing values in GBDTs (#13911)
+................................FFFF                                     [100%]
+=================================== FAILURES ===================================
+__________ test_fit_classifier_scorer_with_non_encoded_integer_labels __________
+oracle_tests/test_check_early_stopping_scorer.py:369: in test_fit_classifier_scorer_with_non_encoded_integer_labels
+    assert_allclose(est.train_score_[-1], est.score(X, y))
+E   AssertionError: 
+E   Not equal to tolerance rtol=1e-07, atol=0
+E   
+E   Mismatched elements: 1 / 1 (100%)
+E   Max absolute difference: 0.91333333
+E   Max relative difference: 0.97508897
+E    x: array(0.023333)
+E    y: array(0.936667)
+_____________ test_fit_classifier_scorer_with_string_labels[None] ______________
+oracle_tests/test_check_early_stopping_scorer.py:380: in test_fit_classifier_scorer_with_string_labels
+    est.fit(X, y)
+sklearn/ensemble/_hist_gradient_boosting/gradient_boosting.py:254: in fit
+    X_binned_val, y_val,
+sklearn/ensemble/_hist_gradient_boosting/gradient_boosting.py:430: in _check_early_stopping_scorer
+    self.scorer_(self, X_binned_small_train, y_small_train)
+sklearn/metrics/scorer.py:98: in __call__
+    **self._kwargs)
+sklearn/metrics/classification.py:176: in accuracy_score
+    y_type, y_true, y_pred = _check_targets(y_true, y_pred)
+sklearn/metrics/classification.py:94: in _check_targets
+    unique_values = np.union1d(y_true, y_pred)
+<__array_function__ internals>:6: in union1d
+    ???
+/opt/miniconda3/envs/testbed/lib/python3.6/site-packages/numpy/lib/arraysetops.py:749: in union1d
+    return unique(np.concatenate((ar1, ar2), axis=None))
+<__array_function__ internals>:6: in unique
+    ???
+/opt/miniconda3/envs/testbed/lib/python3.6/site-packages/numpy/lib/arraysetops.py:261: in unique
+    ret = _unique1d(ar, return_index, return_inverse, return_counts)
+/opt/miniconda3/envs/testbed/lib/python3.6/site-packages/numpy/lib/arraysetops.py:322: in _unique1d
+    ar.sort()
+E   TypeError: '<' not supported between instances of 'str' and 'float'
+______________ test_fit_classifier_scorer_with_string_labels[0.2] ______________
+oracle_tests/test_check_early_stopping_scorer.py:380: in test_fit_classifier_scorer_with_string_labels
+    est.fit(X, y)
+sklearn/ensemble/_hist_gradient_boosting/gradient_boosting.py:254: in fit
+    X_binned_val, y_val,
+sklearn/ensemble/_hist_gradient_boosting/gradient_boosting.py:430: in _check_early_stopping_scorer
+    self.scorer_(self, X_binned_small_train, y_small_train)
+sklearn/metrics/scorer.py:98: in __call__
+    **self._kwargs)
+sklearn/metrics/classification.py:176: in accuracy_score
+    y_type, y_true, y_pred = _check_targets(y_true, y_pred)
+sklearn/metrics/classification.py:94: in _check_targets
+    unique_values = np.union1d(y_true, y_pred)
+<__array_function__ internals>:6: in union1d
+    ???
+/opt/miniconda3/envs/testbed/lib/python3.6/site-packages/numpy/lib/arraysetops.py:749: in union1d
+    return unique(np.concatenate((ar1, ar2), axis=None))
+<__array_function__ internals>:6: in unique
+    ???
+/opt/miniconda3/envs/testbed/lib/python3.6/site-packages/numpy/lib/arraysetops.py:261: in unique
+    ret = _unique1d(ar, return_index, return_inverse, return_counts)
+/opt/miniconda3/envs/testbed/lib/python3.6/site-packages/numpy/lib/arraysetops.py:322: in _unique1d
+    ar.sort()
+E   TypeError: '<' not supported between instances of 'str' and 'float'
+_____________ test_fit_classifier_scorer_receives_original_labels ______________
+oracle_tests/test_check_early_stopping_scorer.py:406: in test_fit_classifier_scorer_receives_original_labels
+    assert label_set == {'a', 'b', 'c'}
+E   AssertionError: assert {0.0, 1.0, 2.0} == {'a', 'b', 'c'}
+E     Extra items in the left set:
+E     0.0
+E     1.0
+E     2.0
+E     Extra items in the right set:
+E     'a'
+E     'c'...
+E     
+E     ...Full output truncated (5 lines hidden), use '-vv' to show
+=============================== warnings summary ===============================
+../opt/miniconda3/envs/testbed/lib/python3.6/importlib/_bootstrap.py:219
+  /opt/miniconda3/envs/testbed/lib/python3.6/importlib/_bootstrap.py:219: RuntimeWarning: numpy.ufunc size changed, may indicate binary incompatibility. Expected 192 from C header, got 216 from PyObject
+    return f(*args, **kwds)
+
+-- Docs: https://docs.pytest.org/en/stable/warnings.html
+=========================== short test summary info ============================
+FAILED oracle_tests/test_check_early_stopping_scorer.py::test_fit_classifier_scorer_with_non_encoded_integer_labels
+FAILED oracle_tests/test_check_early_stopping_scorer.py::test_fit_classifier_scorer_with_string_labels[None]
+FAILED oracle_tests/test_check_early_stopping_scorer.py::test_fit_classifier_scorer_with_string_labels[0.2]
+FAILED oracle_tests/test_check_early_stopping_scorer.py::test_fit_classifier_scorer_receives_original_labels
+4 failed, 32 passed, 1 warning in 49.34s

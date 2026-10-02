@@ -1,0 +1,15 @@
+[
+  "claude",
+  "--print",
+  "--output-format",
+  "stream-json",
+  "--verbose",
+  "--no-session-persistence",
+  "--safe-mode",
+  "--strict-mcp-config",
+  "--dangerously-skip-permissions",
+  "--model",
+  "anthropic/claude-opus-5.5@preset/oracle-anthropic-first",
+  "--tools",
+  "Bash,Read,Write,Edit,Glob,Grep"
+]

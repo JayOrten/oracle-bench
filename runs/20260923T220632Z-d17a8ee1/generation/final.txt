@@ -1,0 +1,3 @@
+Added 10 unit tests in `oracle_tests/test_axes_clear.py:1` covering artist removal, state resets, callbacks, rcParams, title and patch rebuilding, and shared axes. No application code was changed.
+
+Validation: `/opt/miniconda3/envs/testbed/bin/python -m pytest -o addopts= oracle_tests` — 10 passed.

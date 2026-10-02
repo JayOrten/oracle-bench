@@ -1,0 +1,1948 @@
+{
+  "collected": 97,
+  "collection_errors": [],
+  "exit_code": 0,
+  "status": "completed",
+  "tests": {
+    "oracle_tests/test_axes_clear.py::test_clear_after_removing_shared_sibling[cla]": {
+      "outcome": "pass",
+      "phases": [
+        {
+          "duration_seconds": 0.0014367999974638224,
+          "outcome": "passed",
+          "phase": "setup"
+        },
+        {
+          "duration_seconds": 0.04790345900255488,
+          "outcome": "passed",
+          "phase": "call"
+        },
+        {
+          "duration_seconds": 0.00013588299771072343,
+          "outcome": "passed",
+          "phase": "teardown"
+        }
+      ]
+    },
+    "oracle_tests/test_axes_clear.py::test_clear_after_removing_shared_sibling[clear]": {
+      "outcome": "pass",
+      "phases": [
+        {
+          "duration_seconds": 0.0014542120043188334,
+          "outcome": "passed",
+          "phase": "setup"
+        },
+        {
+          "duration_seconds": 0.047903640996082686,
+          "outcome": "passed",
+          "phase": "call"
+        },
+        {
+          "duration_seconds": 0.00017094999930122867,
+          "outcome": "passed",
+          "phase": "teardown"
+        }
+      ]
+    },
+    "oracle_tests/test_axes_clear.py::test_clear_and_cla_are_equivalent": {
+      "outcome": "pass",
+      "phases": [
+        {
+          "duration_seconds": 0.0013098340059514157,
+          "outcome": "passed",
+          "phase": "setup"
+        },
+        {
+          "duration_seconds": 0.05582051100645913,
+          "outcome": "passed",
+          "phase": "call"
+        },
+        {
+          "duration_seconds": 0.0001323830001638271,
+          "outcome": "passed",
+          "phase": "teardown"
+        }
+      ]
+    },
+    "oracle_tests/test_axes_clear.py::test_clear_axis_clipped_to_patch[cla]": {
+      "outcome": "pass",
+      "phases": [
+        {
+          "duration_seconds": 0.0013878609970561229,
+          "outcome": "passed",
+          "phase": "setup"
+        },
+        {
+          "duration_seconds": 0.027576893000514247,
+          "outcome": "passed",
+          "phase": "call"
+        },
+        {
+          "duration_seconds": 0.00013372999819694087,
+          "outcome": "passed",
+          "phase": "teardown"
+        }
+      ]
+    },
+    "oracle_tests/test_axes_clear.py::test_clear_axis_clipped_to_patch[clear]": {
+      "outcome": "pass",
+      "phases": [
+        {
+          "duration_seconds": 0.0014593529995181598,
+          "outcome": "passed",
+          "phase": "setup"
+        },
+        {
+          "duration_seconds": 0.027285128002404235,
+          "outcome": "passed",
+          "phase": "call"
+        },
+        {
+          "duration_seconds": 0.00015415300003951415,
+          "outcome": "passed",
+          "phase": "teardown"
+        }
+      ]
+    },
+    "oracle_tests/test_axes_clear.py::test_clear_callback_registry_signals[cla]": {
+      "outcome": "pass",
+      "phases": [
+        {
+          "duration_seconds": 0.0013395299974945374,
+          "outcome": "passed",
+          "phase": "setup"
+        },
+        {
+          "duration_seconds": 0.041942474999814294,
+          "outcome": "passed",
+          "phase": "call"
+        },
+        {
+          "duration_seconds": 0.00015915299445623532,
+          "outcome": "passed",
+          "phase": "teardown"
+        }
+      ]
+    },
+    "oracle_tests/test_axes_clear.py::test_clear_callback_registry_signals[clear]": {
+      "outcome": "pass",
+      "phases": [
+        {
+          "duration_seconds": 0.0013583720065071248,
+          "outcome": "passed",
+          "phase": "setup"
+        },
+        {
+          "duration_seconds": 0.027034211001591757,
+          "outcome": "passed",
+          "phase": "call"
+        },
+        {
+          "duration_seconds": 0.00013193599443184212,
+          "outcome": "passed",
+          "phase": "teardown"
+        }
+      ]
+    },
+    "oracle_tests/test_axes_clear.py::test_clear_discards_custom_prop_cycle[cla]": {
+      "outcome": "pass",
+      "phases": [
+        {
+          "duration_seconds": 0.0013141669987817295,
+          "outcome": "passed",
+          "phase": "setup"
+        },
+        {
+          "duration_seconds": 0.027906223003810737,
+          "outcome": "passed",
+          "phase": "call"
+        },
+        {
+          "duration_seconds": 0.0001315889967372641,
+          "outcome": "passed",
+          "phase": "teardown"
+        }
+      ]
+    },
+    "oracle_tests/test_axes_clear.py::test_clear_discards_custom_prop_cycle[clear]": {
+      "outcome": "pass",
+      "phases": [
+        {
+          "duration_seconds": 0.001473108000936918,
+          "outcome": "passed",
+          "phase": "setup"
+        },
+        {
+          "duration_seconds": 0.028395233995979652,
+          "outcome": "passed",
+          "phase": "call"
+        },
+        {
+          "duration_seconds": 0.00013630899775307626,
+          "outcome": "passed",
+          "phase": "teardown"
+        }
+      ]
+    },
+    "oracle_tests/test_axes_clear.py::test_clear_grid_follows_rcparams[cla]": {
+      "outcome": "pass",
+      "phases": [
+        {
+          "duration_seconds": 0.0013961710064904764,
+          "outcome": "passed",
+          "phase": "setup"
+        },
+        {
+          "duration_seconds": 0.03608741399511928,
+          "outcome": "passed",
+          "phase": "call"
+        },
+        {
+          "duration_seconds": 0.00013442499766824767,
+          "outcome": "passed",
+          "phase": "teardown"
+        }
+      ]
+    },
+    "oracle_tests/test_axes_clear.py::test_clear_grid_follows_rcparams[clear]": {
+      "outcome": "pass",
+      "phases": [
+        {
+          "duration_seconds": 0.0014537980023305863,
+          "outcome": "passed",
+          "phase": "setup"
+        },
+        {
+          "duration_seconds": 0.03572279699437786,
+          "outcome": "passed",
+          "phase": "call"
+        },
+        {
+          "duration_seconds": 0.00013543300156015903,
+          "outcome": "passed",
+          "phase": "teardown"
+        }
+      ]
+    },
+    "oracle_tests/test_axes_clear.py::test_clear_grid_rcparams_both_axes[cla]": {
+      "outcome": "pass",
+      "phases": [
+        {
+          "duration_seconds": 0.001423232002707664,
+          "outcome": "passed",
+          "phase": "setup"
+        },
+        {
+          "duration_seconds": 0.03625306199683109,
+          "outcome": "passed",
+          "phase": "call"
+        },
+        {
+          "duration_seconds": 0.00015070600056787953,
+          "outcome": "passed",
+          "phase": "teardown"
+        }
+      ]
+    },
+    "oracle_tests/test_axes_clear.py::test_clear_grid_rcparams_both_axes[clear]": {
+      "outcome": "pass",
+      "phases": [
+        {
+          "duration_seconds": 0.001411258999723941,
+          "outcome": "passed",
+          "phase": "setup"
+        },
+        {
+          "duration_seconds": 0.0700817780016223,
+          "outcome": "passed",
+          "phase": "call"
+        },
+        {
+          "duration_seconds": 0.0001438959952793084,
+          "outcome": "passed",
+          "phase": "teardown"
+        }
+      ]
+    },
+    "oracle_tests/test_axes_clear.py::test_clear_ignores_existing_data_limits[cla]": {
+      "outcome": "pass",
+      "phases": [
+        {
+          "duration_seconds": 0.0014557769973180257,
+          "outcome": "passed",
+          "phase": "setup"
+        },
+        {
+          "duration_seconds": 0.028710279999359045,
+          "outcome": "passed",
+          "phase": "call"
+        },
+        {
+          "duration_seconds": 0.0001509909998276271,
+          "outcome": "passed",
+          "phase": "teardown"
+        }
+      ]
+    },
+    "oracle_tests/test_axes_clear.py::test_clear_ignores_existing_data_limits[clear]": {
+      "outcome": "pass",
+      "phases": [
+        {
+          "duration_seconds": 0.0013585609995061532,
+          "outcome": "passed",
+          "phase": "setup"
+        },
+        {
+          "duration_seconds": 0.04504666299908422,
+          "outcome": "passed",
+          "phase": "call"
+        },
+        {
+          "duration_seconds": 0.00013488299737218767,
+          "outcome": "passed",
+          "phase": "teardown"
+        }
+      ]
+    },
+    "oracle_tests/test_axes_clear.py::test_clear_is_idempotent_and_marks_stale[cla]": {
+      "outcome": "pass",
+      "phases": [
+        {
+          "duration_seconds": 0.001433198995073326,
+          "outcome": "passed",
+          "phase": "setup"
+        },
+        {
+          "duration_seconds": 0.11769413900037762,
+          "outcome": "passed",
+          "phase": "call"
+        },
+        {
+          "duration_seconds": 0.00013830099487677217,
+          "outcome": "passed",
+          "phase": "teardown"
+        }
+      ]
+    },
+    "oracle_tests/test_axes_clear.py::test_clear_is_idempotent_and_marks_stale[clear]": {
+      "outcome": "pass",
+      "phases": [
+        {
+          "duration_seconds": 0.001478336998843588,
+          "outcome": "passed",
+          "phase": "setup"
+        },
+        {
+          "duration_seconds": 0.0927903609990608,
+          "outcome": "passed",
+          "phase": "call"
+        },
+        {
+          "duration_seconds": 0.00013776100240647793,
+          "outcome": "passed",
+          "phase": "teardown"
+        }
+      ]
+    },
+    "oracle_tests/test_axes_clear.py::test_clear_leader_of_shared_axes[cla]": {
+      "outcome": "pass",
+      "phases": [
+        {
+          "duration_seconds": 0.0013337960044736974,
+          "outcome": "passed",
+          "phase": "setup"
+        },
+        {
+          "duration_seconds": 0.03776116900553461,
+          "outcome": "passed",
+          "phase": "call"
+        },
+        {
+          "duration_seconds": 0.000133225999888964,
+          "outcome": "passed",
+          "phase": "teardown"
+        }
+      ]
+    },
+    "oracle_tests/test_axes_clear.py::test_clear_leader_of_shared_axes[clear]": {
+      "outcome": "pass",
+      "phases": [
+        {
+          "duration_seconds": 0.0013543140012188815,
+          "outcome": "passed",
+          "phase": "setup"
+        },
+        {
+          "duration_seconds": 0.037989028001902625,
+          "outcome": "passed",
+          "phase": "call"
+        },
+        {
+          "duration_seconds": 0.00013646200386574492,
+          "outcome": "passed",
+          "phase": "teardown"
+        }
+      ]
+    },
+    "oracle_tests/test_axes_clear.py::test_clear_minor_locator_follows_rcparams[cla]": {
+      "outcome": "pass",
+      "phases": [
+        {
+          "duration_seconds": 0.0014057810039957985,
+          "outcome": "passed",
+          "phase": "setup"
+        },
+        {
+          "duration_seconds": 0.04413357199518941,
+          "outcome": "passed",
+          "phase": "call"
+        },
+        {
+          "duration_seconds": 0.00014493799972115085,
+          "outcome": "passed",
+          "phase": "teardown"
+        }
+      ]
+    },
+    "oracle_tests/test_axes_clear.py::test_clear_minor_locator_follows_rcparams[clear]": {
+      "outcome": "pass",
+      "phases": [
+        {
+          "duration_seconds": 0.0013595359996543266,
+          "outcome": "passed",
+          "phase": "setup"
+        },
+        {
+          "duration_seconds": 0.04341771500185132,
+          "outcome": "passed",
+          "phase": "call"
+        },
+        {
+          "duration_seconds": 0.00019542699737939984,
+          "outcome": "passed",
+          "phase": "teardown"
+        }
+      ]
+    },
+    "oracle_tests/test_axes_clear.py::test_clear_regenerates_patch[cla]": {
+      "outcome": "pass",
+      "phases": [
+        {
+          "duration_seconds": 0.0013614080016850494,
+          "outcome": "passed",
+          "phase": "setup"
+        },
+        {
+          "duration_seconds": 0.0271171089989366,
+          "outcome": "passed",
+          "phase": "call"
+        },
+        {
+          "duration_seconds": 0.00014156500401441008,
+          "outcome": "passed",
+          "phase": "teardown"
+        }
+      ]
+    },
+    "oracle_tests/test_axes_clear.py::test_clear_regenerates_patch[clear]": {
+      "outcome": "pass",
+      "phases": [
+        {
+          "duration_seconds": 0.0013512829973478802,
+          "outcome": "passed",
+          "phase": "setup"
+        },
+        {
+          "duration_seconds": 0.027473138994537294,
+          "outcome": "passed",
+          "phase": "call"
+        },
+        {
+          "duration_seconds": 0.00013267999747768044,
+          "outcome": "passed",
+          "phase": "teardown"
+        }
+      ]
+    },
+    "oracle_tests/test_axes_clear.py::test_clear_removes_all_children[cla]": {
+      "outcome": "pass",
+      "phases": [
+        {
+          "duration_seconds": 0.0013647640007548034,
+          "outcome": "passed",
+          "phase": "setup"
+        },
+        {
+          "duration_seconds": 0.03269886899943231,
+          "outcome": "passed",
+          "phase": "call"
+        },
+        {
+          "duration_seconds": 0.00013040500198258087,
+          "outcome": "passed",
+          "phase": "teardown"
+        }
+      ]
+    },
+    "oracle_tests/test_axes_clear.py::test_clear_removes_all_children[clear]": {
+      "outcome": "pass",
+      "phases": [
+        {
+          "duration_seconds": 0.0014930290053598583,
+          "outcome": "passed",
+          "phase": "setup"
+        },
+        {
+          "duration_seconds": 0.03708740200090688,
+          "outcome": "passed",
+          "phase": "call"
+        },
+        {
+          "duration_seconds": 0.00016560099902562797,
+          "outcome": "passed",
+          "phase": "teardown"
+        }
+      ]
+    },
+    "oracle_tests/test_axes_clear.py::test_clear_replaces_callback_registry[cla]": {
+      "outcome": "pass",
+      "phases": [
+        {
+          "duration_seconds": 0.0013367709980229847,
+          "outcome": "passed",
+          "phase": "setup"
+        },
+        {
+          "duration_seconds": 0.026913781999610364,
+          "outcome": "passed",
+          "phase": "call"
+        },
+        {
+          "duration_seconds": 0.0001266999970539473,
+          "outcome": "passed",
+          "phase": "teardown"
+        }
+      ]
+    },
+    "oracle_tests/test_axes_clear.py::test_clear_replaces_callback_registry[clear]": {
+      "outcome": "pass",
+      "phases": [
+        {
+          "duration_seconds": 0.0013715770037379116,
+          "outcome": "passed",
+          "phase": "setup"
+        },
+        {
+          "duration_seconds": 0.027503693003382068,
+          "outcome": "passed",
+          "phase": "call"
+        },
+        {
+          "duration_seconds": 0.000126623002870474,
+          "outcome": "passed",
+          "phase": "teardown"
+        }
+      ]
+    },
+    "oracle_tests/test_axes_clear.py::test_clear_resets_axis_labels[cla]": {
+      "outcome": "pass",
+      "phases": [
+        {
+          "duration_seconds": 0.0013501319990609773,
+          "outcome": "passed",
+          "phase": "setup"
+        },
+        {
+          "duration_seconds": 0.02759224799956428,
+          "outcome": "passed",
+          "phase": "call"
+        },
+        {
+          "duration_seconds": 0.0001317630012636073,
+          "outcome": "passed",
+          "phase": "teardown"
+        }
+      ]
+    },
+    "oracle_tests/test_axes_clear.py::test_clear_resets_axis_labels[clear]": {
+      "outcome": "pass",
+      "phases": [
+        {
+          "duration_seconds": 0.0013462970018736087,
+          "outcome": "passed",
+          "phase": "setup"
+        },
+        {
+          "duration_seconds": 0.02702277999924263,
+          "outcome": "passed",
+          "phase": "call"
+        },
+        {
+          "duration_seconds": 0.0001252879956155084,
+          "outcome": "passed",
+          "phase": "teardown"
+        }
+      ]
+    },
+    "oracle_tests/test_axes_clear.py::test_clear_resets_containers_and_child_axes[cla]": {
+      "outcome": "pass",
+      "phases": [
+        {
+          "duration_seconds": 0.0014772100039408542,
+          "outcome": "passed",
+          "phase": "setup"
+        },
+        {
+          "duration_seconds": 0.04231697099748999,
+          "outcome": "passed",
+          "phase": "call"
+        },
+        {
+          "duration_seconds": 0.00016661100380588323,
+          "outcome": "passed",
+          "phase": "teardown"
+        }
+      ]
+    },
+    "oracle_tests/test_axes_clear.py::test_clear_resets_containers_and_child_axes[clear]": {
+      "outcome": "pass",
+      "phases": [
+        {
+          "duration_seconds": 0.0013941810029791668,
+          "outcome": "passed",
+          "phase": "setup"
+        },
+        {
+          "duration_seconds": 0.041071648003708106,
+          "outcome": "passed",
+          "phase": "call"
+        },
+        {
+          "duration_seconds": 0.00014077800005907193,
+          "outcome": "passed",
+          "phase": "teardown"
+        }
+      ]
+    },
+    "oracle_tests/test_axes_clear.py::test_clear_resets_current_image_and_projection_init[cla]": {
+      "outcome": "pass",
+      "phases": [
+        {
+          "duration_seconds": 0.0014336699969135225,
+          "outcome": "passed",
+          "phase": "setup"
+        },
+        {
+          "duration_seconds": 0.02955968199967174,
+          "outcome": "passed",
+          "phase": "call"
+        },
+        {
+          "duration_seconds": 0.0001983719994314015,
+          "outcome": "passed",
+          "phase": "teardown"
+        }
+      ]
+    },
+    "oracle_tests/test_axes_clear.py::test_clear_resets_current_image_and_projection_init[clear]": {
+      "outcome": "pass",
+      "phases": [
+        {
+          "duration_seconds": 0.0014601779985241592,
+          "outcome": "passed",
+          "phase": "setup"
+        },
+        {
+          "duration_seconds": 0.06001754700264428,
+          "outcome": "passed",
+          "phase": "call"
+        },
+        {
+          "duration_seconds": 0.0001442520006094128,
+          "outcome": "passed",
+          "phase": "teardown"
+        }
+      ]
+    },
+    "oracle_tests/test_axes_clear.py::test_clear_resets_custom_locators_and_formatters[cla]": {
+      "outcome": "pass",
+      "phases": [
+        {
+          "duration_seconds": 0.0013270580020616762,
+          "outcome": "passed",
+          "phase": "setup"
+        },
+        {
+          "duration_seconds": 0.026919399002508726,
+          "outcome": "passed",
+          "phase": "call"
+        },
+        {
+          "duration_seconds": 0.0001288130006287247,
+          "outcome": "passed",
+          "phase": "teardown"
+        }
+      ]
+    },
+    "oracle_tests/test_axes_clear.py::test_clear_resets_custom_locators_and_formatters[clear]": {
+      "outcome": "pass",
+      "phases": [
+        {
+          "duration_seconds": 0.0013998940048622899,
+          "outcome": "passed",
+          "phase": "setup"
+        },
+        {
+          "duration_seconds": 0.027335842001775745,
+          "outcome": "passed",
+          "phase": "call"
+        },
+        {
+          "duration_seconds": 0.00012480200530262664,
+          "outcome": "passed",
+          "phase": "teardown"
+        }
+      ]
+    },
+    "oracle_tests/test_axes_clear.py::test_clear_resets_fill_cycle[cla]": {
+      "outcome": "pass",
+      "phases": [
+        {
+          "duration_seconds": 0.0014650369994342327,
+          "outcome": "passed",
+          "phase": "setup"
+        },
+        {
+          "duration_seconds": 0.02849523499753559,
+          "outcome": "passed",
+          "phase": "call"
+        },
+        {
+          "duration_seconds": 0.00012869000056525692,
+          "outcome": "passed",
+          "phase": "teardown"
+        }
+      ]
+    },
+    "oracle_tests/test_axes_clear.py::test_clear_resets_fill_cycle[clear]": {
+      "outcome": "pass",
+      "phases": [
+        {
+          "duration_seconds": 0.001368756995361764,
+          "outcome": "passed",
+          "phase": "setup"
+        },
+        {
+          "duration_seconds": 0.031069523000041954,
+          "outcome": "passed",
+          "phase": "call"
+        },
+        {
+          "duration_seconds": 0.00012765899737132713,
+          "outcome": "passed",
+          "phase": "teardown"
+        }
+      ]
+    },
+    "oracle_tests/test_axes_clear.py::test_clear_resets_limits_and_autoscale[cla]": {
+      "outcome": "pass",
+      "phases": [
+        {
+          "duration_seconds": 0.0014322120041470043,
+          "outcome": "passed",
+          "phase": "setup"
+        },
+        {
+          "duration_seconds": 0.02950655500171706,
+          "outcome": "passed",
+          "phase": "call"
+        },
+        {
+          "duration_seconds": 0.00015600200276821852,
+          "outcome": "passed",
+          "phase": "teardown"
+        }
+      ]
+    },
+    "oracle_tests/test_axes_clear.py::test_clear_resets_limits_and_autoscale[clear]": {
+      "outcome": "pass",
+      "phases": [
+        {
+          "duration_seconds": 0.0014146179964882322,
+          "outcome": "passed",
+          "phase": "setup"
+        },
+        {
+          "duration_seconds": 0.02922265300003346,
+          "outcome": "passed",
+          "phase": "call"
+        },
+        {
+          "duration_seconds": 0.00013470999692799523,
+          "outcome": "passed",
+          "phase": "teardown"
+        }
+      ]
+    },
+    "oracle_tests/test_axes_clear.py::test_clear_resets_margins_from_rcparams[cla]": {
+      "outcome": "pass",
+      "phases": [
+        {
+          "duration_seconds": 0.0013710869970964268,
+          "outcome": "passed",
+          "phase": "setup"
+        },
+        {
+          "duration_seconds": 0.027508952996868175,
+          "outcome": "passed",
+          "phase": "call"
+        },
+        {
+          "duration_seconds": 0.0001571910033817403,
+          "outcome": "passed",
+          "phase": "teardown"
+        }
+      ]
+    },
+    "oracle_tests/test_axes_clear.py::test_clear_resets_margins_from_rcparams[clear]": {
+      "outcome": "pass",
+      "phases": [
+        {
+          "duration_seconds": 0.0013545170004363172,
+          "outcome": "passed",
+          "phase": "setup"
+        },
+        {
+          "duration_seconds": 0.027247327998338733,
+          "outcome": "passed",
+          "phase": "call"
+        },
+        {
+          "duration_seconds": 0.0001345899945590645,
+          "outcome": "passed",
+          "phase": "teardown"
+        }
+      ]
+    },
+    "oracle_tests/test_axes_clear.py::test_clear_resets_mouseover_set[cla]": {
+      "outcome": "pass",
+      "phases": [
+        {
+          "duration_seconds": 0.001515085001301486,
+          "outcome": "passed",
+          "phase": "setup"
+        },
+        {
+          "duration_seconds": 0.028605710998817813,
+          "outcome": "passed",
+          "phase": "call"
+        },
+        {
+          "duration_seconds": 0.00015681999502703547,
+          "outcome": "passed",
+          "phase": "teardown"
+        }
+      ]
+    },
+    "oracle_tests/test_axes_clear.py::test_clear_resets_mouseover_set[clear]": {
+      "outcome": "pass",
+      "phases": [
+        {
+          "duration_seconds": 0.001445848000003025,
+          "outcome": "passed",
+          "phase": "setup"
+        },
+        {
+          "duration_seconds": 0.02865127999393735,
+          "outcome": "passed",
+          "phase": "call"
+        },
+        {
+          "duration_seconds": 0.00014436899800784886,
+          "outcome": "passed",
+          "phase": "teardown"
+        }
+      ]
+    },
+    "oracle_tests/test_axes_clear.py::test_clear_resets_property_cycle[cla]": {
+      "outcome": "pass",
+      "phases": [
+        {
+          "duration_seconds": 0.0015026279943413101,
+          "outcome": "passed",
+          "phase": "setup"
+        },
+        {
+          "duration_seconds": 0.02978044700284954,
+          "outcome": "passed",
+          "phase": "call"
+        },
+        {
+          "duration_seconds": 0.0001351609971607104,
+          "outcome": "passed",
+          "phase": "teardown"
+        }
+      ]
+    },
+    "oracle_tests/test_axes_clear.py::test_clear_resets_property_cycle[clear]": {
+      "outcome": "pass",
+      "phases": [
+        {
+          "duration_seconds": 0.0014467159999185242,
+          "outcome": "passed",
+          "phase": "setup"
+        },
+        {
+          "duration_seconds": 0.059664050000719726,
+          "outcome": "passed",
+          "phase": "call"
+        },
+        {
+          "duration_seconds": 0.00014982900029281154,
+          "outcome": "passed",
+          "phase": "teardown"
+        }
+      ]
+    },
+    "oracle_tests/test_axes_clear.py::test_clear_resets_scale_to_linear[cla]": {
+      "outcome": "pass",
+      "phases": [
+        {
+          "duration_seconds": 0.0013265180023154244,
+          "outcome": "passed",
+          "phase": "setup"
+        },
+        {
+          "duration_seconds": 0.02747694600111572,
+          "outcome": "passed",
+          "phase": "call"
+        },
+        {
+          "duration_seconds": 0.00014591099898098037,
+          "outcome": "passed",
+          "phase": "teardown"
+        }
+      ]
+    },
+    "oracle_tests/test_axes_clear.py::test_clear_resets_scale_to_linear[clear]": {
+      "outcome": "pass",
+      "phases": [
+        {
+          "duration_seconds": 0.001444782996259164,
+          "outcome": "passed",
+          "phase": "setup"
+        },
+        {
+          "duration_seconds": 0.03451885899994522,
+          "outcome": "passed",
+          "phase": "call"
+        },
+        {
+          "duration_seconds": 0.0001395720028085634,
+          "outcome": "passed",
+          "phase": "teardown"
+        }
+      ]
+    },
+    "oracle_tests/test_axes_clear.py::test_clear_resets_tight_and_sticky_edges[cla]": {
+      "outcome": "pass",
+      "phases": [
+        {
+          "duration_seconds": 0.001369587000226602,
+          "outcome": "passed",
+          "phase": "setup"
+        },
+        {
+          "duration_seconds": 0.027143348001118284,
+          "outcome": "passed",
+          "phase": "call"
+        },
+        {
+          "duration_seconds": 0.00013313400268089026,
+          "outcome": "passed",
+          "phase": "teardown"
+        }
+      ]
+    },
+    "oracle_tests/test_axes_clear.py::test_clear_resets_tight_and_sticky_edges[clear]": {
+      "outcome": "pass",
+      "phases": [
+        {
+          "duration_seconds": 0.001356379005301278,
+          "outcome": "passed",
+          "phase": "setup"
+        },
+        {
+          "duration_seconds": 0.027126601999043487,
+          "outcome": "passed",
+          "phase": "call"
+        },
+        {
+          "duration_seconds": 0.0001310379957430996,
+          "outcome": "passed",
+          "phase": "teardown"
+        }
+      ]
+    },
+    "oracle_tests/test_axes_clear.py::test_clear_resets_titles[cla]": {
+      "outcome": "pass",
+      "phases": [
+        {
+          "duration_seconds": 0.0014384669993887655,
+          "outcome": "passed",
+          "phase": "setup"
+        },
+        {
+          "duration_seconds": 0.029170123998483177,
+          "outcome": "passed",
+          "phase": "call"
+        },
+        {
+          "duration_seconds": 0.00012721099483314902,
+          "outcome": "passed",
+          "phase": "teardown"
+        }
+      ]
+    },
+    "oracle_tests/test_axes_clear.py::test_clear_resets_titles[clear]": {
+      "outcome": "pass",
+      "phases": [
+        {
+          "duration_seconds": 0.0014327109965961426,
+          "outcome": "passed",
+          "phase": "setup"
+        },
+        {
+          "duration_seconds": 0.062449664997984655,
+          "outcome": "passed",
+          "phase": "call"
+        },
+        {
+          "duration_seconds": 0.00015655199968023226,
+          "outcome": "passed",
+          "phase": "teardown"
+        }
+      ]
+    },
+    "oracle_tests/test_axes_clear.py::test_clear_shared_autoscale_picks_up_sibling_data[cla]": {
+      "outcome": "pass",
+      "phases": [
+        {
+          "duration_seconds": 0.0013502169967978261,
+          "outcome": "passed",
+          "phase": "setup"
+        },
+        {
+          "duration_seconds": 0.039024009005515836,
+          "outcome": "passed",
+          "phase": "call"
+        },
+        {
+          "duration_seconds": 0.0001287139966734685,
+          "outcome": "passed",
+          "phase": "teardown"
+        }
+      ]
+    },
+    "oracle_tests/test_axes_clear.py::test_clear_shared_autoscale_picks_up_sibling_data[clear]": {
+      "outcome": "pass",
+      "phases": [
+        {
+          "duration_seconds": 0.001366013995721005,
+          "outcome": "passed",
+          "phase": "setup"
+        },
+        {
+          "duration_seconds": 0.03950448100658832,
+          "outcome": "passed",
+          "phase": "call"
+        },
+        {
+          "duration_seconds": 0.0001277289993595332,
+          "outcome": "passed",
+          "phase": "teardown"
+        }
+      ]
+    },
+    "oracle_tests/test_axes_clear.py::test_clear_shared_keeps_scale_of_leader[cla]": {
+      "outcome": "pass",
+      "phases": [
+        {
+          "duration_seconds": 0.001347007004369516,
+          "outcome": "passed",
+          "phase": "setup"
+        },
+        {
+          "duration_seconds": 0.03798854399792617,
+          "outcome": "passed",
+          "phase": "call"
+        },
+        {
+          "duration_seconds": 0.00013994199980515987,
+          "outcome": "passed",
+          "phase": "teardown"
+        }
+      ]
+    },
+    "oracle_tests/test_axes_clear.py::test_clear_shared_keeps_scale_of_leader[clear]": {
+      "outcome": "pass",
+      "phases": [
+        {
+          "duration_seconds": 0.0013630600005853921,
+          "outcome": "passed",
+          "phase": "setup"
+        },
+        {
+          "duration_seconds": 0.03815265099547105,
+          "outcome": "passed",
+          "phase": "call"
+        },
+        {
+          "duration_seconds": 0.0001467039983253926,
+          "outcome": "passed",
+          "phase": "teardown"
+        }
+      ]
+    },
+    "oracle_tests/test_axes_clear.py::test_clear_shared_preserves_axis_visibility[cla]": {
+      "outcome": "pass",
+      "phases": [
+        {
+          "duration_seconds": 0.0014269809980760328,
+          "outcome": "passed",
+          "phase": "setup"
+        },
+        {
+          "duration_seconds": 0.03895372899569338,
+          "outcome": "passed",
+          "phase": "call"
+        },
+        {
+          "duration_seconds": 0.00014369800192071125,
+          "outcome": "passed",
+          "phase": "teardown"
+        }
+      ]
+    },
+    "oracle_tests/test_axes_clear.py::test_clear_shared_preserves_axis_visibility[clear]": {
+      "outcome": "pass",
+      "phases": [
+        {
+          "duration_seconds": 0.0014173300005495548,
+          "outcome": "passed",
+          "phase": "setup"
+        },
+        {
+          "duration_seconds": 0.03768841399869416,
+          "outcome": "passed",
+          "phase": "call"
+        },
+        {
+          "duration_seconds": 0.00014950300101190805,
+          "outcome": "passed",
+          "phase": "teardown"
+        }
+      ]
+    },
+    "oracle_tests/test_axes_clear.py::test_clear_shared_preserves_patch_visibility[cla-sharex]": {
+      "outcome": "pass",
+      "phases": [
+        {
+          "duration_seconds": 0.001469716000428889,
+          "outcome": "passed",
+          "phase": "setup"
+        },
+        {
+          "duration_seconds": 0.03712277799786534,
+          "outcome": "passed",
+          "phase": "call"
+        },
+        {
+          "duration_seconds": 0.00016386399511247873,
+          "outcome": "passed",
+          "phase": "teardown"
+        }
+      ]
+    },
+    "oracle_tests/test_axes_clear.py::test_clear_shared_preserves_patch_visibility[cla-sharey]": {
+      "outcome": "pass",
+      "phases": [
+        {
+          "duration_seconds": 0.0013979509967612103,
+          "outcome": "passed",
+          "phase": "setup"
+        },
+        {
+          "duration_seconds": 0.037203137995675206,
+          "outcome": "passed",
+          "phase": "call"
+        },
+        {
+          "duration_seconds": 0.00013860000035492703,
+          "outcome": "passed",
+          "phase": "teardown"
+        }
+      ]
+    },
+    "oracle_tests/test_axes_clear.py::test_clear_shared_preserves_patch_visibility[clear-sharex]": {
+      "outcome": "pass",
+      "phases": [
+        {
+          "duration_seconds": 0.0014530799962813035,
+          "outcome": "passed",
+          "phase": "setup"
+        },
+        {
+          "duration_seconds": 0.03724654799589189,
+          "outcome": "passed",
+          "phase": "call"
+        },
+        {
+          "duration_seconds": 0.00015218900080071762,
+          "outcome": "passed",
+          "phase": "teardown"
+        }
+      ]
+    },
+    "oracle_tests/test_axes_clear.py::test_clear_shared_preserves_patch_visibility[clear-sharey]": {
+      "outcome": "pass",
+      "phases": [
+        {
+          "duration_seconds": 0.0013739459973294288,
+          "outcome": "passed",
+          "phase": "setup"
+        },
+        {
+          "duration_seconds": 0.052320447997772135,
+          "outcome": "passed",
+          "phase": "call"
+        },
+        {
+          "duration_seconds": 0.00016584600234637037,
+          "outcome": "passed",
+          "phase": "teardown"
+        }
+      ]
+    },
+    "oracle_tests/test_axes_clear.py::test_clear_shared_preserves_visible_axis[cla]": {
+      "outcome": "pass",
+      "phases": [
+        {
+          "duration_seconds": 0.0014090319964452647,
+          "outcome": "passed",
+          "phase": "setup"
+        },
+        {
+          "duration_seconds": 0.03833288000168977,
+          "outcome": "passed",
+          "phase": "call"
+        },
+        {
+          "duration_seconds": 0.00017662299796938896,
+          "outcome": "passed",
+          "phase": "teardown"
+        }
+      ]
+    },
+    "oracle_tests/test_axes_clear.py::test_clear_shared_preserves_visible_axis[clear]": {
+      "outcome": "pass",
+      "phases": [
+        {
+          "duration_seconds": 0.0014084209979046136,
+          "outcome": "passed",
+          "phase": "setup"
+        },
+        {
+          "duration_seconds": 0.038416977993620094,
+          "outcome": "passed",
+          "phase": "call"
+        },
+        {
+          "duration_seconds": 0.00014155200187815353,
+          "outcome": "passed",
+          "phase": "teardown"
+        }
+      ]
+    },
+    "oracle_tests/test_axes_clear.py::test_clear_shared_x_keeps_sharing[cla]": {
+      "outcome": "pass",
+      "phases": [
+        {
+          "duration_seconds": 0.0013610899986815639,
+          "outcome": "passed",
+          "phase": "setup"
+        },
+        {
+          "duration_seconds": 0.037863537996599916,
+          "outcome": "passed",
+          "phase": "call"
+        },
+        {
+          "duration_seconds": 0.00013439800386549905,
+          "outcome": "passed",
+          "phase": "teardown"
+        }
+      ]
+    },
+    "oracle_tests/test_axes_clear.py::test_clear_shared_x_keeps_sharing[clear]": {
+      "outcome": "pass",
+      "phases": [
+        {
+          "duration_seconds": 0.0013315060059539974,
+          "outcome": "passed",
+          "phase": "setup"
+        },
+        {
+          "duration_seconds": 0.03844652500265511,
+          "outcome": "passed",
+          "phase": "call"
+        },
+        {
+          "duration_seconds": 0.00012849199993070215,
+          "outcome": "passed",
+          "phase": "teardown"
+        }
+      ]
+    },
+    "oracle_tests/test_axes_clear.py::test_clear_shared_y_keeps_sharing[cla]": {
+      "outcome": "pass",
+      "phases": [
+        {
+          "duration_seconds": 0.0013167860015528277,
+          "outcome": "passed",
+          "phase": "setup"
+        },
+        {
+          "duration_seconds": 0.03728775500349002,
+          "outcome": "passed",
+          "phase": "call"
+        },
+        {
+          "duration_seconds": 0.00013357299758354202,
+          "outcome": "passed",
+          "phase": "teardown"
+        }
+      ]
+    },
+    "oracle_tests/test_axes_clear.py::test_clear_shared_y_keeps_sharing[clear]": {
+      "outcome": "pass",
+      "phases": [
+        {
+          "duration_seconds": 0.001373892999254167,
+          "outcome": "passed",
+          "phase": "setup"
+        },
+        {
+          "duration_seconds": 0.03760020399931818,
+          "outcome": "passed",
+          "phase": "call"
+        },
+        {
+          "duration_seconds": 0.00014505800209008157,
+          "outcome": "passed",
+          "phase": "teardown"
+        }
+      ]
+    },
+    "oracle_tests/test_axes_clear.py::test_clear_spines_survive[cla]": {
+      "outcome": "pass",
+      "phases": [
+        {
+          "duration_seconds": 0.001456438003515359,
+          "outcome": "passed",
+          "phase": "setup"
+        },
+        {
+          "duration_seconds": 0.04769636299897684,
+          "outcome": "passed",
+          "phase": "call"
+        },
+        {
+          "duration_seconds": 0.00013807700452161953,
+          "outcome": "passed",
+          "phase": "teardown"
+        }
+      ]
+    },
+    "oracle_tests/test_axes_clear.py::test_clear_spines_survive[clear]": {
+      "outcome": "pass",
+      "phases": [
+        {
+          "duration_seconds": 0.0013409989987849258,
+          "outcome": "passed",
+          "phase": "setup"
+        },
+        {
+          "duration_seconds": 0.04623591699782992,
+          "outcome": "passed",
+          "phase": "call"
+        },
+        {
+          "duration_seconds": 0.0001468090049456805,
+          "outcome": "passed",
+          "phase": "teardown"
+        }
+      ]
+    },
+    "oracle_tests/test_axes_clear.py::test_clear_title_autopos_default[cla]": {
+      "outcome": "pass",
+      "phases": [
+        {
+          "duration_seconds": 0.001338249996479135,
+          "outcome": "passed",
+          "phase": "setup"
+        },
+        {
+          "duration_seconds": 0.02687353899818845,
+          "outcome": "passed",
+          "phase": "call"
+        },
+        {
+          "duration_seconds": 0.00012833200162276626,
+          "outcome": "passed",
+          "phase": "teardown"
+        }
+      ]
+    },
+    "oracle_tests/test_axes_clear.py::test_clear_title_autopos_default[clear]": {
+      "outcome": "pass",
+      "phases": [
+        {
+          "duration_seconds": 0.0013643690035678446,
+          "outcome": "passed",
+          "phase": "setup"
+        },
+        {
+          "duration_seconds": 0.02725785700022243,
+          "outcome": "passed",
+          "phase": "call"
+        },
+        {
+          "duration_seconds": 0.00014234799891710281,
+          "outcome": "passed",
+          "phase": "teardown"
+        }
+      ]
+    },
+    "oracle_tests/test_axes_clear.py::test_clear_title_font_from_rcparams[cla]": {
+      "outcome": "pass",
+      "phases": [
+        {
+          "duration_seconds": 0.0013540360014303587,
+          "outcome": "passed",
+          "phase": "setup"
+        },
+        {
+          "duration_seconds": 0.02707087499584304,
+          "outcome": "passed",
+          "phase": "call"
+        },
+        {
+          "duration_seconds": 0.0001333899999735877,
+          "outcome": "passed",
+          "phase": "teardown"
+        }
+      ]
+    },
+    "oracle_tests/test_axes_clear.py::test_clear_title_font_from_rcparams[clear]": {
+      "outcome": "pass",
+      "phases": [
+        {
+          "duration_seconds": 0.0014358469998114742,
+          "outcome": "passed",
+          "phase": "setup"
+        },
+        {
+          "duration_seconds": 0.04791049200139241,
+          "outcome": "passed",
+          "phase": "call"
+        },
+        {
+          "duration_seconds": 0.00014434499462367967,
+          "outcome": "passed",
+          "phase": "teardown"
+        }
+      ]
+    },
+    "oracle_tests/test_axes_clear.py::test_clear_title_pad_from_rcparams[cla]": {
+      "outcome": "pass",
+      "phases": [
+        {
+          "duration_seconds": 0.0013233179997769184,
+          "outcome": "passed",
+          "phase": "setup"
+        },
+        {
+          "duration_seconds": 0.02723527899797773,
+          "outcome": "passed",
+          "phase": "call"
+        },
+        {
+          "duration_seconds": 0.0001269349959329702,
+          "outcome": "passed",
+          "phase": "teardown"
+        }
+      ]
+    },
+    "oracle_tests/test_axes_clear.py::test_clear_title_pad_from_rcparams[clear]": {
+      "outcome": "pass",
+      "phases": [
+        {
+          "duration_seconds": 0.0013501420035026968,
+          "outcome": "passed",
+          "phase": "setup"
+        },
+        {
+          "duration_seconds": 0.027296678003040142,
+          "outcome": "passed",
+          "phase": "call"
+        },
+        {
+          "duration_seconds": 0.00014756500604562461,
+          "outcome": "passed",
+          "phase": "teardown"
+        }
+      ]
+    },
+    "oracle_tests/test_axes_clear.py::test_clear_title_y_from_rcparams[cla]": {
+      "outcome": "pass",
+      "phases": [
+        {
+          "duration_seconds": 0.0013717980036744848,
+          "outcome": "passed",
+          "phase": "setup"
+        },
+        {
+          "duration_seconds": 0.02756035800121026,
+          "outcome": "passed",
+          "phase": "call"
+        },
+        {
+          "duration_seconds": 0.0001857699971878901,
+          "outcome": "passed",
+          "phase": "teardown"
+        }
+      ]
+    },
+    "oracle_tests/test_axes_clear.py::test_clear_title_y_from_rcparams[clear]": {
+      "outcome": "pass",
+      "phases": [
+        {
+          "duration_seconds": 0.001335131993982941,
+          "outcome": "passed",
+          "phase": "setup"
+        },
+        {
+          "duration_seconds": 0.02683332600281574,
+          "outcome": "passed",
+          "phase": "call"
+        },
+        {
+          "duration_seconds": 0.00013085099635645747,
+          "outcome": "passed",
+          "phase": "teardown"
+        }
+      ]
+    },
+    "oracle_tests/test_axes_clear.py::test_clear_turns_axis_on[cla]": {
+      "outcome": "pass",
+      "phases": [
+        {
+          "duration_seconds": 0.0014591770013794303,
+          "outcome": "passed",
+          "phase": "setup"
+        },
+        {
+          "duration_seconds": 0.02810480100015411,
+          "outcome": "passed",
+          "phase": "call"
+        },
+        {
+          "duration_seconds": 0.0001526159976492636,
+          "outcome": "passed",
+          "phase": "teardown"
+        }
+      ]
+    },
+    "oracle_tests/test_axes_clear.py::test_clear_turns_axis_on[clear]": {
+      "outcome": "pass",
+      "phases": [
+        {
+          "duration_seconds": 0.0013449739999487065,
+          "outcome": "passed",
+          "phase": "setup"
+        },
+        {
+          "duration_seconds": 0.04365287400287343,
+          "outcome": "passed",
+          "phase": "call"
+        },
+        {
+          "duration_seconds": 0.0001972210011444986,
+          "outcome": "passed",
+          "phase": "teardown"
+        }
+      ]
+    },
+    "oracle_tests/test_axes_clear.py::test_clear_turns_off_grid_by_default[cla]": {
+      "outcome": "pass",
+      "phases": [
+        {
+          "duration_seconds": 0.001437031001842115,
+          "outcome": "passed",
+          "phase": "setup"
+        },
+        {
+          "duration_seconds": 0.04232170099567156,
+          "outcome": "passed",
+          "phase": "call"
+        },
+        {
+          "duration_seconds": 0.00015281399828381836,
+          "outcome": "passed",
+          "phase": "teardown"
+        }
+      ]
+    },
+    "oracle_tests/test_axes_clear.py::test_clear_turns_off_grid_by_default[clear]": {
+      "outcome": "pass",
+      "phases": [
+        {
+          "duration_seconds": 0.0013672869972651824,
+          "outcome": "passed",
+          "phase": "setup"
+        },
+        {
+          "duration_seconds": 0.03965428400260862,
+          "outcome": "passed",
+          "phase": "call"
+        },
+        {
+          "duration_seconds": 0.00014721600018674508,
+          "outcome": "passed",
+          "phase": "teardown"
+        }
+      ]
+    },
+    "oracle_tests/test_axes_clear.py::test_clear_twinx_preserves_patch_invisible[cla]": {
+      "outcome": "pass",
+      "phases": [
+        {
+          "duration_seconds": 0.001339162998192478,
+          "outcome": "passed",
+          "phase": "setup"
+        },
+        {
+          "duration_seconds": 0.03794606400333578,
+          "outcome": "passed",
+          "phase": "call"
+        },
+        {
+          "duration_seconds": 0.00015602100029354915,
+          "outcome": "passed",
+          "phase": "teardown"
+        }
+      ]
+    },
+    "oracle_tests/test_axes_clear.py::test_clear_twinx_preserves_patch_invisible[clear]": {
+      "outcome": "pass",
+      "phases": [
+        {
+          "duration_seconds": 0.0013508499978343025,
+          "outcome": "passed",
+          "phase": "setup"
+        },
+        {
+          "duration_seconds": 0.03764675300044473,
+          "outcome": "passed",
+          "phase": "call"
+        },
+        {
+          "duration_seconds": 0.00012856099783675745,
+          "outcome": "passed",
+          "phase": "teardown"
+        }
+      ]
+    },
+    "oracle_tests/test_axes_clear.py::test_clear_unshared_patch_visibility_reset[cla]": {
+      "outcome": "pass",
+      "phases": [
+        {
+          "duration_seconds": 0.0013954469977761619,
+          "outcome": "passed",
+          "phase": "setup"
+        },
+        {
+          "duration_seconds": 0.027022347996535245,
+          "outcome": "passed",
+          "phase": "call"
+        },
+        {
+          "duration_seconds": 0.0001532099995529279,
+          "outcome": "passed",
+          "phase": "teardown"
+        }
+      ]
+    },
+    "oracle_tests/test_axes_clear.py::test_clear_unshared_patch_visibility_reset[clear]": {
+      "outcome": "pass",
+      "phases": [
+        {
+          "duration_seconds": 0.0013830250027240254,
+          "outcome": "passed",
+          "phase": "setup"
+        },
+        {
+          "duration_seconds": 0.02678456300054677,
+          "outcome": "passed",
+          "phase": "call"
+        },
+        {
+          "duration_seconds": 0.00015046900080051273,
+          "outcome": "passed",
+          "phase": "teardown"
+        }
+      ]
+    },
+    "oracle_tests/test_axes_clear.py::test_clear_uses_gen_axes_patch": {
+      "outcome": "pass",
+      "phases": [
+        {
+          "duration_seconds": 0.00128142700123135,
+          "outcome": "passed",
+          "phase": "setup"
+        },
+        {
+          "duration_seconds": 0.028610067995032296,
+          "outcome": "passed",
+          "phase": "call"
+        },
+        {
+          "duration_seconds": 0.00011946700396947563,
+          "outcome": "passed",
+          "phase": "teardown"
+        }
+      ]
+    },
+    "oracle_tests/test_axes_clear.py::test_clear_uses_initial_facecolor_kwarg[cla]": {
+      "outcome": "pass",
+      "phases": [
+        {
+          "duration_seconds": 0.0014193259994499385,
+          "outcome": "passed",
+          "phase": "setup"
+        },
+        {
+          "duration_seconds": 0.02776735099905636,
+          "outcome": "passed",
+          "phase": "call"
+        },
+        {
+          "duration_seconds": 0.0001395680010318756,
+          "outcome": "passed",
+          "phase": "teardown"
+        }
+      ]
+    },
+    "oracle_tests/test_axes_clear.py::test_clear_uses_initial_facecolor_kwarg[clear]": {
+      "outcome": "pass",
+      "phases": [
+        {
+          "duration_seconds": 0.001343206997262314,
+          "outcome": "passed",
+          "phase": "setup"
+        },
+        {
+          "duration_seconds": 0.02758198100491427,
+          "outcome": "passed",
+          "phase": "call"
+        },
+        {
+          "duration_seconds": 0.00015453000378329307,
+          "outcome": "passed",
+          "phase": "teardown"
+        }
+      ]
+    },
+    "oracle_tests/test_axes_clear.py::test_figure_clear_then_new_axes": {
+      "outcome": "pass",
+      "phases": [
+        {
+          "duration_seconds": 0.0013179450033931062,
+          "outcome": "passed",
+          "phase": "setup"
+        },
+        {
+          "duration_seconds": 0.04006029800075339,
+          "outcome": "passed",
+          "phase": "call"
+        },
+        {
+          "duration_seconds": 0.00014404999819817021,
+          "outcome": "passed",
+          "phase": "teardown"
+        }
+      ]
+    },
+    "oracle_tests/test_axes_clear.py::test_grandchild_of_cla_subclass_inherits_cla_dispatch": {
+      "outcome": "pass",
+      "phases": [
+        {
+          "duration_seconds": 0.0013214529972174205,
+          "outcome": "passed",
+          "phase": "setup"
+        },
+        {
+          "duration_seconds": 0.030641434001154266,
+          "outcome": "passed",
+          "phase": "call"
+        },
+        {
+          "duration_seconds": 0.00013739900168729946,
+          "outcome": "passed",
+          "phase": "teardown"
+        }
+      ]
+    },
+    "oracle_tests/test_axes_clear.py::test_plain_subclass_does_not_warn": {
+      "outcome": "pass",
+      "phases": [
+        {
+          "duration_seconds": 0.001303502001974266,
+          "outcome": "passed",
+          "phase": "setup"
+        },
+        {
+          "duration_seconds": 0.02855771000031382,
+          "outcome": "passed",
+          "phase": "call"
+        },
+        {
+          "duration_seconds": 0.00012679000064963475,
+          "outcome": "passed",
+          "phase": "teardown"
+        }
+      ]
+    },
+    "oracle_tests/test_axes_clear.py::test_plot_after_clear_works[cla]": {
+      "outcome": "pass",
+      "phases": [
+        {
+          "duration_seconds": 0.0014590580030926503,
+          "outcome": "passed",
+          "phase": "setup"
+        },
+        {
+          "duration_seconds": 0.08596513700467767,
+          "outcome": "passed",
+          "phase": "call"
+        },
+        {
+          "duration_seconds": 0.00014738499885424972,
+          "outcome": "passed",
+          "phase": "teardown"
+        }
+      ]
+    },
+    "oracle_tests/test_axes_clear.py::test_plot_after_clear_works[clear]": {
+      "outcome": "pass",
+      "phases": [
+        {
+          "duration_seconds": 0.0013469559999066405,
+          "outcome": "passed",
+          "phase": "setup"
+        },
+        {
+          "duration_seconds": 0.0575593520043185,
+          "outcome": "passed",
+          "phase": "call"
+        },
+        {
+          "duration_seconds": 0.00014882299728924409,
+          "outcome": "passed",
+          "phase": "teardown"
+        }
+      ]
+    },
+    "oracle_tests/test_axes_clear.py::test_polar_axes_clear": {
+      "outcome": "pass",
+      "phases": [
+        {
+          "duration_seconds": 0.0013813129990012385,
+          "outcome": "passed",
+          "phase": "setup"
+        },
+        {
+          "duration_seconds": 0.07145400800072821,
+          "outcome": "passed",
+          "phase": "call"
+        },
+        {
+          "duration_seconds": 0.00016043800133047625,
+          "outcome": "passed",
+          "phase": "teardown"
+        }
+      ]
+    },
+    "oracle_tests/test_axes_clear.py::test_pyplot_cla_clears_current_axes": {
+      "outcome": "pass",
+      "phases": [
+        {
+          "duration_seconds": 0.0013514649981516413,
+          "outcome": "passed",
+          "phase": "setup"
+        },
+        {
+          "duration_seconds": 0.028309123998042196,
+          "outcome": "passed",
+          "phase": "call"
+        },
+        {
+          "duration_seconds": 0.00013145800039637834,
+          "outcome": "passed",
+          "phase": "teardown"
+        }
+      ]
+    },
+    "oracle_tests/test_axes_clear.py::test_subclass_overriding_cla_is_called_by_clear": {
+      "outcome": "pass",
+      "phases": [
+        {
+          "duration_seconds": 0.001332984000327997,
+          "outcome": "passed",
+          "phase": "setup"
+        },
+        {
+          "duration_seconds": 0.045533256998169236,
+          "outcome": "passed",
+          "phase": "call"
+        },
+        {
+          "duration_seconds": 0.0001243939987034537,
+          "outcome": "passed",
+          "phase": "teardown"
+        }
+      ]
+    },
+    "oracle_tests/test_axes_clear.py::test_subclass_overriding_clear_is_called_by_cla": {
+      "outcome": "pass",
+      "phases": [
+        {
+          "duration_seconds": 0.0013021770064369775,
+          "outcome": "passed",
+          "phase": "setup"
+        },
+        {
+          "duration_seconds": 0.045559389000118244,
+          "outcome": "passed",
+          "phase": "call"
+        },
+        {
+          "duration_seconds": 0.00012566700024763122,
+          "outcome": "passed",
+          "phase": "teardown"
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,9 @@
+HEAD is now at 4b6273b87 ENH Native support for missing values in GBDTs (#13911)
+.                                                                        [100%]
+=============================== warnings summary ===============================
+../opt/miniconda3/envs/testbed/lib/python3.6/importlib/_bootstrap.py:219
+  /opt/miniconda3/envs/testbed/lib/python3.6/importlib/_bootstrap.py:219: RuntimeWarning: numpy.ufunc size changed, may indicate binary incompatibility. Expected 192 from C header, got 216 from PyObject
+    return f(*args, **kwds)
+
+-- Docs: https://docs.pytest.org/en/stable/warnings.html
+1 passed, 1 warning in 0.53s

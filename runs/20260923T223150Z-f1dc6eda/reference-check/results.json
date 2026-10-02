@@ -1,0 +1,77 @@
+{
+  "buggy_status": "completed",
+  "failure_kinds": {
+    "buggy": {
+      "assertion": 3,
+      "exception": 0,
+      "unknown": 0
+    },
+    "golden": {
+      "assertion": 0,
+      "exception": 0,
+      "unknown": 0
+    }
+  },
+  "golden_status": "completed",
+  "matrix": {
+    "fail_on_both": {
+      "count": 0,
+      "test_ids": []
+    },
+    "fail_on_buggy_pass_on_golden": {
+      "count": 3,
+      "test_ids": [
+        "xarray/tests/test_rolling.py::TestDataArrayRolling::test_rolling_iter[numpy-3-True-1]",
+        "xarray/tests/test_rolling.py::TestDataArrayRolling::test_rolling_iter[numpy-3-True-2]",
+        "xarray/tests/test_rolling.py::TestDataArrayRolling::test_rolling_iter[numpy-7-True-1]"
+      ]
+    },
+    "pass_on_both": {
+      "count": 0,
+      "test_ids": []
+    },
+    "pass_on_buggy_fail_on_golden": {
+      "count": 0,
+      "test_ids": []
+    }
+  },
+  "other_outcomes": [],
+  "tests": [
+    {
+      "buggy": "fail",
+      "buggy_failure": {
+        "exception_type": "builtins.AssertionError",
+        "kind": "assertion",
+        "message": "\nNot equal to tolerance rtol=1e-07, atol=0\n\nx and y nan location mismatch:\n x: array([[0.645377, 0.581508, 0.610692, 0.655184],\n       [0.424782, 0.637004, 0.377074, 0.314847],\n       [0.425113, 0.372744, 0.67305 , 0.103367]])\n y: array([[nan, nan, nan, nan],\n       [nan, nan, nan, nan],\n       [nan, nan, nan, nan]])"
+      },
+      "cell": "fail_on_buggy_pass_on_golden",
+      "golden": "pass",
+      "golden_failure": null,
+      "test_id": "xarray/tests/test_rolling.py::TestDataArrayRolling::test_rolling_iter[numpy-3-True-1]"
+    },
+    {
+      "buggy": "fail",
+      "buggy_failure": {
+        "exception_type": "builtins.AssertionError",
+        "kind": "assertion",
+        "message": "\nNot equal to tolerance rtol=1e-07, atol=0\n\nx and y nan location mismatch:\n x: array(4.)\n y: array(nan)"
+      },
+      "cell": "fail_on_buggy_pass_on_golden",
+      "golden": "pass",
+      "golden_failure": null,
+      "test_id": "xarray/tests/test_rolling.py::TestDataArrayRolling::test_rolling_iter[numpy-3-True-2]"
+    },
+    {
+      "buggy": "fail",
+      "buggy_failure": {
+        "exception_type": "builtins.AssertionError",
+        "kind": "assertion",
+        "message": "\nNot equal to tolerance rtol=1e-07, atol=0\n\nx and y nan location mismatch:\n x: array([[0.517327, 0.705974, 0.469443, 0.663984],\n       [0.430073, 0.532862, 0.533503, 0.475727],\n       [0.47008 , 0.515714, 0.609969, 0.262601]])\n y: array([[nan, nan, nan, nan],\n       [nan, nan, nan, nan],\n       [nan, nan, nan, nan]])"
+      },
+      "cell": "fail_on_buggy_pass_on_golden",
+      "golden": "pass",
+      "golden_failure": null,
+      "test_id": "xarray/tests/test_rolling.py::TestDataArrayRolling::test_rolling_iter[numpy-7-True-1]"
+    }
+  ]
+}

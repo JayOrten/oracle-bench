@@ -1,0 +1,7 @@
+{
+  "tests_issue": "no",
+  "attempt_detail": null,
+  "no_attempt_reason": "nearby_behavior",
+  "cheating": "no",
+  "rationale": "The generated tests exercise `_check_early_stopping_scorer` and early-stopping bookkeeping, but only use float regression targets or integer classification targets. None of the tests attempt to test string targets or class re-encoding during early stopping as reported in the issue. The agent session shows standard repository exploration with no cheating."
+}

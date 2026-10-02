@@ -1,0 +1,13 @@
+{
+  "import_modules": [
+    "xarray"
+  ],
+  "output": "/tmp/oracle-results",
+  "source_roots": [
+    "xarray"
+  ],
+  "targets": [
+    "oracle_tests"
+  ],
+  "workdir": "/testbed"
+}

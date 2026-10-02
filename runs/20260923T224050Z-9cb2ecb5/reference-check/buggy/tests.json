@@ -1,0 +1,70 @@
+{
+  "collected": 2,
+  "collection_errors": [],
+  "exit_code": 1,
+  "status": "completed",
+  "tests": {
+    "tests/test_directive_other.py::test_include_source_read_event": {
+      "failure": {
+        "exception_type": "builtins.AssertionError",
+        "kind": "assertion",
+        "message": "assert 'baz/baz' in {'index': '.. include:: baz/baz.rst\\n   :start-line: 4\\n\\n.. include:: text.txt\\n   :literal:    \\n'}"
+      },
+      "outcome": "fail",
+      "phases": [
+        {
+          "duration_seconds": 0.25395757700607646,
+          "outcome": "passed",
+          "phase": "setup"
+        },
+        {
+          "details": "tests/test_directive_other.py:169: in test_include_source_read_event\n    assert \"baz/baz\" in sources_reported\nE   AssertionError: assert 'baz/baz' in {'index': '.. include:: baz/baz.rst\\n   :start-line: 4\\n\\n.. include:: text.txt\\n   :literal:    \\n'}",
+          "duration_seconds": 0.017710938001982868,
+          "failure": {
+            "exception_type": "builtins.AssertionError",
+            "kind": "assertion",
+            "message": "assert 'baz/baz' in {'index': '.. include:: baz/baz.rst\\n   :start-line: 4\\n\\n.. include:: text.txt\\n   :literal:    \\n'}"
+          },
+          "outcome": "failed",
+          "phase": "call"
+        },
+        {
+          "duration_seconds": 0.0003481859966996126,
+          "outcome": "passed",
+          "phase": "teardown"
+        }
+      ]
+    },
+    "tests/test_directive_other.py::test_include_source_read_event_nested_includes": {
+      "failure": {
+        "exception_type": "builtins.AssertionError",
+        "kind": "assertion",
+        "message": "assert 'The #magical foo.' == 'The amazing foo.'\n  - The amazing foo.\n  + The #magical foo."
+      },
+      "outcome": "fail",
+      "phases": [
+        {
+          "duration_seconds": 0.01046576500084484,
+          "outcome": "passed",
+          "phase": "setup"
+        },
+        {
+          "details": "tests/test_directive_other.py:187: in test_include_source_read_event_nested_includes\n    assert doctree.children[1].rawsource == \"The amazing foo.\"\nE   AssertionError: assert 'The #magical foo.' == 'The amazing foo.'\nE     - The amazing foo.\nE     + The #magical foo.",
+          "duration_seconds": 0.0033214079958270304,
+          "failure": {
+            "exception_type": "builtins.AssertionError",
+            "kind": "assertion",
+            "message": "assert 'The #magical foo.' == 'The amazing foo.'\n  - The amazing foo.\n  + The #magical foo."
+          },
+          "outcome": "failed",
+          "phase": "call"
+        },
+        {
+          "duration_seconds": 0.00041533500188961625,
+          "outcome": "passed",
+          "phase": "teardown"
+        }
+      ]
+    }
+  }
+}

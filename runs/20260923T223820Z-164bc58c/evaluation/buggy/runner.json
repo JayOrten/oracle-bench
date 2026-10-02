@@ -1,0 +1,13 @@
+{
+  "import_modules": [
+    "sphinx"
+  ],
+  "output": "/tmp/oracle-results",
+  "source_roots": [
+    "sphinx"
+  ],
+  "targets": [
+    "oracle_tests"
+  ],
+  "workdir": "/testbed"
+}

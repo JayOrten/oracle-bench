@@ -1,0 +1,101 @@
+{
+  "collected": 3,
+  "collection_errors": [],
+  "exit_code": 1,
+  "status": "completed",
+  "tests": {
+    "xarray/tests/test_rolling.py::TestDataArrayRolling::test_rolling_iter[numpy-3-True-1]": {
+      "failure": {
+        "exception_type": "builtins.AssertionError",
+        "kind": "assertion",
+        "message": "\nNot equal to tolerance rtol=1e-07, atol=0\n\nx and y nan location mismatch:\n x: array([[0.645377, 0.581508, 0.610692, 0.655184],\n       [0.424782, 0.637004, 0.377074, 0.314847],\n       [0.425113, 0.372744, 0.67305 , 0.103367]])\n y: array([[nan, nan, nan, nan],\n       [nan, nan, nan, nan],\n       [nan, nan, nan, nan]])"
+      },
+      "outcome": "fail",
+      "phases": [
+        {
+          "duration_seconds": 0.0025017199950525537,
+          "outcome": "passed",
+          "phase": "setup"
+        },
+        {
+          "details": "/testbed/xarray/tests/test_rolling.py:45: in test_rolling_iter\n    np.testing.assert_allclose(actual.values, expected.values)\nE   AssertionError: \nE   Not equal to tolerance rtol=1e-07, atol=0\nE   \nE   x and y nan location mismatch:\nE    x: array([[0.645377, 0.581508, 0.610692, 0.655184],\nE          [0.424782, 0.637004, 0.377074, 0.314847],\nE          [0.425113, 0.372744, 0.67305 , 0.103367]])\nE    y: array([[nan, nan, nan, nan],\nE          [nan, nan, nan, nan],\nE          [nan, nan, nan, nan]])",
+          "duration_seconds": 0.01244516600127099,
+          "failure": {
+            "exception_type": "builtins.AssertionError",
+            "kind": "assertion",
+            "message": "\nNot equal to tolerance rtol=1e-07, atol=0\n\nx and y nan location mismatch:\n x: array([[0.645377, 0.581508, 0.610692, 0.655184],\n       [0.424782, 0.637004, 0.377074, 0.314847],\n       [0.425113, 0.372744, 0.67305 , 0.103367]])\n y: array([[nan, nan, nan, nan],\n       [nan, nan, nan, nan],\n       [nan, nan, nan, nan]])"
+          },
+          "outcome": "failed",
+          "phase": "call"
+        },
+        {
+          "duration_seconds": 0.00020114099606871605,
+          "outcome": "passed",
+          "phase": "teardown"
+        }
+      ]
+    },
+    "xarray/tests/test_rolling.py::TestDataArrayRolling::test_rolling_iter[numpy-3-True-2]": {
+      "failure": {
+        "exception_type": "builtins.AssertionError",
+        "kind": "assertion",
+        "message": "\nNot equal to tolerance rtol=1e-07, atol=0\n\nx and y nan location mismatch:\n x: array(4.)\n y: array(nan)"
+      },
+      "outcome": "fail",
+      "phases": [
+        {
+          "duration_seconds": 0.0006509070008178242,
+          "outcome": "passed",
+          "phase": "setup"
+        },
+        {
+          "details": "/testbed/xarray/tests/test_rolling.py:45: in test_rolling_iter\n    np.testing.assert_allclose(actual.values, expected.values)\nE   AssertionError: \nE   Not equal to tolerance rtol=1e-07, atol=0\nE   \nE   x and y nan location mismatch:\nE    x: array(4.)\nE    y: array(nan)",
+          "duration_seconds": 0.0077150930010247976,
+          "failure": {
+            "exception_type": "builtins.AssertionError",
+            "kind": "assertion",
+            "message": "\nNot equal to tolerance rtol=1e-07, atol=0\n\nx and y nan location mismatch:\n x: array(4.)\n y: array(nan)"
+          },
+          "outcome": "failed",
+          "phase": "call"
+        },
+        {
+          "duration_seconds": 0.0001775050041032955,
+          "outcome": "passed",
+          "phase": "teardown"
+        }
+      ]
+    },
+    "xarray/tests/test_rolling.py::TestDataArrayRolling::test_rolling_iter[numpy-7-True-1]": {
+      "failure": {
+        "exception_type": "builtins.AssertionError",
+        "kind": "assertion",
+        "message": "\nNot equal to tolerance rtol=1e-07, atol=0\n\nx and y nan location mismatch:\n x: array([[0.517327, 0.705974, 0.469443, 0.663984],\n       [0.430073, 0.532862, 0.533503, 0.475727],\n       [0.47008 , 0.515714, 0.609969, 0.262601]])\n y: array([[nan, nan, nan, nan],\n       [nan, nan, nan, nan],\n       [nan, nan, nan, nan]])"
+      },
+      "outcome": "fail",
+      "phases": [
+        {
+          "duration_seconds": 0.0008827999990899116,
+          "outcome": "passed",
+          "phase": "setup"
+        },
+        {
+          "details": "/testbed/xarray/tests/test_rolling.py:45: in test_rolling_iter\n    np.testing.assert_allclose(actual.values, expected.values)\nE   AssertionError: \nE   Not equal to tolerance rtol=1e-07, atol=0\nE   \nE   x and y nan location mismatch:\nE    x: array([[0.517327, 0.705974, 0.469443, 0.663984],\nE          [0.430073, 0.532862, 0.533503, 0.475727],\nE          [0.47008 , 0.515714, 0.609969, 0.262601]])\nE    y: array([[nan, nan, nan, nan],\nE          [nan, nan, nan, nan],\nE          [nan, nan, nan, nan]])",
+          "duration_seconds": 0.009587205000570975,
+          "failure": {
+            "exception_type": "builtins.AssertionError",
+            "kind": "assertion",
+            "message": "\nNot equal to tolerance rtol=1e-07, atol=0\n\nx and y nan location mismatch:\n x: array([[0.517327, 0.705974, 0.469443, 0.663984],\n       [0.430073, 0.532862, 0.533503, 0.475727],\n       [0.47008 , 0.515714, 0.609969, 0.262601]])\n y: array([[nan, nan, nan, nan],\n       [nan, nan, nan, nan],\n       [nan, nan, nan, nan]])"
+          },
+          "outcome": "failed",
+          "phase": "call"
+        },
+        {
+          "duration_seconds": 0.00026823200460057706,
+          "outcome": "passed",
+          "phase": "teardown"
+        }
+      ]
+    }
+  }
+}

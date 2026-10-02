@@ -1,0 +1,5 @@
+Created `oracle_tests/test_rolling_init.py` — 40 tests, all passing. Coverage of `Rolling.__init__` and its subclasses:
+
+- **Rolling**: attribute storage (`dim`/`window`/`center`/`obj`/`min_periods`), default `min_periods = prod(windows)`, scalar-vs-dict `center` broadcast (extra keys ignored, missing default `False`), windows-mapping order, `ValueError` for `window <= 0` and `min_periods <= 0` (window checked first), empty-windows edge case, no dim validation in base class, `ndim`/`__len__`, `__slots__`, `__repr__`.
+- **DataArrayRolling**: `window_labels` (with/without coord), direct construction parity with `.rolling()`, oversized windows, immutability of `obj`.
+- **DatasetRolling**: `KeyError` for missing dims, `rollings` built only for dependent vars (empty for coord-only dims), per-variable window/center subsets, sub-rolling `obj` identity, explicit `min_periods` shared vs. per-variable default recompute, `__repr__`.

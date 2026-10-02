@@ -1,0 +1,768 @@
+{
+  "collected": 38,
+  "collection_errors": [],
+  "exit_code": 0,
+  "status": "completed",
+  "tests": {
+    "oracle_tests/test_check_early_stopping_scorer.py::test_decision_false_when_validation_improves_despite_train_plateau": {
+      "outcome": "pass",
+      "phases": [
+        {
+          "duration_seconds": 6.80739976814948e-05,
+          "outcome": "passed",
+          "phase": "setup"
+        },
+        {
+          "duration_seconds": 9.713499457575381e-05,
+          "outcome": "passed",
+          "phase": "call"
+        },
+        {
+          "duration_seconds": 6.911600212333724e-05,
+          "outcome": "passed",
+          "phase": "teardown"
+        }
+      ]
+    },
+    "oracle_tests/test_check_early_stopping_scorer.py::test_decision_uses_validation_scores_not_train_scores": {
+      "outcome": "pass",
+      "phases": [
+        {
+          "duration_seconds": 7.117700442904606e-05,
+          "outcome": "passed",
+          "phase": "setup"
+        },
+        {
+          "duration_seconds": 0.00011224600166315213,
+          "outcome": "passed",
+          "phase": "call"
+        },
+        {
+          "duration_seconds": 6.243400275707245e-05,
+          "outcome": "passed",
+          "phase": "teardown"
+        }
+      ]
+    },
+    "oracle_tests/test_check_early_stopping_scorer.py::test_early_stopping_scenarios[val_values0-expected_returns0]": {
+      "outcome": "pass",
+      "phases": [
+        {
+          "duration_seconds": 0.00017432499589631334,
+          "outcome": "passed",
+          "phase": "setup"
+        },
+        {
+          "duration_seconds": 9.572600538376719e-05,
+          "outcome": "passed",
+          "phase": "call"
+        },
+        {
+          "duration_seconds": 7.738100248388946e-05,
+          "outcome": "passed",
+          "phase": "teardown"
+        }
+      ]
+    },
+    "oracle_tests/test_check_early_stopping_scorer.py::test_early_stopping_scenarios[val_values1-expected_returns1]": {
+      "outcome": "pass",
+      "phases": [
+        {
+          "duration_seconds": 0.00015056299889693037,
+          "outcome": "passed",
+          "phase": "setup"
+        },
+        {
+          "duration_seconds": 0.00010516299516893923,
+          "outcome": "passed",
+          "phase": "call"
+        },
+        {
+          "duration_seconds": 7.992899918463081e-05,
+          "outcome": "passed",
+          "phase": "teardown"
+        }
+      ]
+    },
+    "oracle_tests/test_check_early_stopping_scorer.py::test_early_stopping_scenarios[val_values2-expected_returns2]": {
+      "outcome": "pass",
+      "phases": [
+        {
+          "duration_seconds": 0.00014971199561841786,
+          "outcome": "passed",
+          "phase": "setup"
+        },
+        {
+          "duration_seconds": 9.85570004559122e-05,
+          "outcome": "passed",
+          "phase": "call"
+        },
+        {
+          "duration_seconds": 8.613200043328106e-05,
+          "outcome": "passed",
+          "phase": "teardown"
+        }
+      ]
+    },
+    "oracle_tests/test_check_early_stopping_scorer.py::test_early_stopping_scenarios[val_values3-expected_returns3]": {
+      "outcome": "pass",
+      "phases": [
+        {
+          "duration_seconds": 0.00013555499754147604,
+          "outcome": "passed",
+          "phase": "setup"
+        },
+        {
+          "duration_seconds": 0.00010413400013931096,
+          "outcome": "passed",
+          "phase": "call"
+        },
+        {
+          "duration_seconds": 8.276000153273344e-05,
+          "outcome": "passed",
+          "phase": "teardown"
+        }
+      ]
+    },
+    "oracle_tests/test_check_early_stopping_scorer.py::test_early_stopping_scenarios[val_values4-expected_returns4]": {
+      "outcome": "pass",
+      "phases": [
+        {
+          "duration_seconds": 0.000146033002238255,
+          "outcome": "passed",
+          "phase": "setup"
+        },
+        {
+          "duration_seconds": 9.781600238056853e-05,
+          "outcome": "passed",
+          "phase": "call"
+        },
+        {
+          "duration_seconds": 7.469800038961694e-05,
+          "outcome": "passed",
+          "phase": "teardown"
+        }
+      ]
+    },
+    "oracle_tests/test_check_early_stopping_scorer.py::test_early_stopping_scenarios[val_values5-expected_returns5]": {
+      "outcome": "pass",
+      "phases": [
+        {
+          "duration_seconds": 0.00013872799900127575,
+          "outcome": "passed",
+          "phase": "setup"
+        },
+        {
+          "duration_seconds": 0.00010188600572291762,
+          "outcome": "passed",
+          "phase": "call"
+        },
+        {
+          "duration_seconds": 7.986800483195111e-05,
+          "outcome": "passed",
+          "phase": "teardown"
+        }
+      ]
+    },
+    "oracle_tests/test_check_early_stopping_scorer.py::test_early_stopping_scenarios[val_values6-expected_returns6]": {
+      "outcome": "pass",
+      "phases": [
+        {
+          "duration_seconds": 0.00014434500189963728,
+          "outcome": "passed",
+          "phase": "setup"
+        },
+        {
+          "duration_seconds": 0.00010180000390391797,
+          "outcome": "passed",
+          "phase": "call"
+        },
+        {
+          "duration_seconds": 7.939499482745305e-05,
+          "outcome": "passed",
+          "phase": "teardown"
+        }
+      ]
+    },
+    "oracle_tests/test_check_early_stopping_scorer.py::test_early_stopping_scenarios[val_values7-expected_returns7]": {
+      "outcome": "pass",
+      "phases": [
+        {
+          "duration_seconds": 0.00014399100473383442,
+          "outcome": "passed",
+          "phase": "setup"
+        },
+        {
+          "duration_seconds": 0.00010416899749543518,
+          "outcome": "passed",
+          "phase": "call"
+        },
+        {
+          "duration_seconds": 7.826500223018229e-05,
+          "outcome": "passed",
+          "phase": "teardown"
+        }
+      ]
+    },
+    "oracle_tests/test_check_early_stopping_scorer.py::test_early_stopping_scenarios_no_validation[train_values0-expected_returns0]": {
+      "outcome": "pass",
+      "phases": [
+        {
+          "duration_seconds": 0.0001482700026826933,
+          "outcome": "passed",
+          "phase": "setup"
+        },
+        {
+          "duration_seconds": 9.490900265518576e-05,
+          "outcome": "passed",
+          "phase": "call"
+        },
+        {
+          "duration_seconds": 8.976000390248373e-05,
+          "outcome": "passed",
+          "phase": "teardown"
+        }
+      ]
+    },
+    "oracle_tests/test_check_early_stopping_scorer.py::test_early_stopping_scenarios_no_validation[train_values1-expected_returns1]": {
+      "outcome": "pass",
+      "phases": [
+        {
+          "duration_seconds": 0.00015277799684554338,
+          "outcome": "passed",
+          "phase": "setup"
+        },
+        {
+          "duration_seconds": 0.00010442400525789708,
+          "outcome": "passed",
+          "phase": "call"
+        },
+        {
+          "duration_seconds": 8.235099812736735e-05,
+          "outcome": "passed",
+          "phase": "teardown"
+        }
+      ]
+    },
+    "oracle_tests/test_check_early_stopping_scorer.py::test_early_stopping_scenarios_no_validation[train_values2-expected_returns2]": {
+      "outcome": "pass",
+      "phases": [
+        {
+          "duration_seconds": 0.0001482719962950796,
+          "outcome": "passed",
+          "phase": "setup"
+        },
+        {
+          "duration_seconds": 0.00012046799383824691,
+          "outcome": "passed",
+          "phase": "call"
+        },
+        {
+          "duration_seconds": 9.600900375517085e-05,
+          "outcome": "passed",
+          "phase": "teardown"
+        }
+      ]
+    },
+    "oracle_tests/test_check_early_stopping_scorer.py::test_full_fit_scorer_early_stopping_classifier": {
+      "outcome": "pass",
+      "phases": [
+        {
+          "duration_seconds": 0.0001740119987516664,
+          "outcome": "passed",
+          "phase": "setup"
+        },
+        {
+          "duration_seconds": 0.29998441899806494,
+          "outcome": "passed",
+          "phase": "call"
+        },
+        {
+          "duration_seconds": 0.0002441160031594336,
+          "outcome": "passed",
+          "phase": "teardown"
+        }
+      ]
+    },
+    "oracle_tests/test_check_early_stopping_scorer.py::test_full_fit_scorer_early_stopping_regressor": {
+      "outcome": "pass",
+      "phases": [
+        {
+          "duration_seconds": 0.00023159699776442721,
+          "outcome": "passed",
+          "phase": "setup"
+        },
+        {
+          "duration_seconds": 2.600142624003638,
+          "outcome": "passed",
+          "phase": "call"
+        },
+        {
+          "duration_seconds": 0.00016304200107697397,
+          "outcome": "passed",
+          "phase": "teardown"
+        }
+      ]
+    },
+    "oracle_tests/test_check_early_stopping_scorer.py::test_full_fit_scorer_without_validation_fraction_uses_train_scores": {
+      "outcome": "pass",
+      "phases": [
+        {
+          "duration_seconds": 0.0001366479991702363,
+          "outcome": "passed",
+          "phase": "setup"
+        },
+        {
+          "duration_seconds": 0.39585240900487406,
+          "outcome": "passed",
+          "phase": "call"
+        },
+        {
+          "duration_seconds": 0.0002884700006688945,
+          "outcome": "passed",
+          "phase": "teardown"
+        }
+      ]
+    },
+    "oracle_tests/test_check_early_stopping_scorer.py::test_full_fit_warm_start_keeps_appending_scores": {
+      "outcome": "pass",
+      "phases": [
+        {
+          "duration_seconds": 0.00013827600196236745,
+          "outcome": "passed",
+          "phase": "setup"
+        },
+        {
+          "duration_seconds": 0.1974062130029779,
+          "outcome": "passed",
+          "phase": "call"
+        },
+        {
+          "duration_seconds": 0.0002510269987396896,
+          "outcome": "passed",
+          "phase": "teardown"
+        }
+      ]
+    },
+    "oracle_tests/test_check_early_stopping_scorer.py::test_n_iter_no_change_zero_stops_after_first_score": {
+      "outcome": "pass",
+      "phases": [
+        {
+          "duration_seconds": 7.28939994587563e-05,
+          "outcome": "passed",
+          "phase": "setup"
+        },
+        {
+          "duration_seconds": 0.0001046149991452694,
+          "outcome": "passed",
+          "phase": "call"
+        },
+        {
+          "duration_seconds": 6.951999966986477e-05,
+          "outcome": "passed",
+          "phase": "teardown"
+        }
+      ]
+    },
+    "oracle_tests/test_check_early_stopping_scorer.py::test_real_scorer_binary_classifier_accuracy": {
+      "outcome": "pass",
+      "phases": [
+        {
+          "duration_seconds": 0.00021786899742437527,
+          "outcome": "passed",
+          "phase": "setup"
+        },
+        {
+          "duration_seconds": 1.795916846000182,
+          "outcome": "passed",
+          "phase": "call"
+        },
+        {
+          "duration_seconds": 0.00013050800043856725,
+          "outcome": "passed",
+          "phase": "teardown"
+        }
+      ]
+    },
+    "oracle_tests/test_check_early_stopping_scorer.py::test_real_scorer_multiclass_classifier_neg_log_loss": {
+      "outcome": "pass",
+      "phases": [
+        {
+          "duration_seconds": 0.00044843600335298106,
+          "outcome": "passed",
+          "phase": "setup"
+        },
+        {
+          "duration_seconds": 2.797523851993901,
+          "outcome": "passed",
+          "phase": "call"
+        },
+        {
+          "duration_seconds": 0.00017678499716566876,
+          "outcome": "passed",
+          "phase": "teardown"
+        }
+      ]
+    },
+    "oracle_tests/test_check_early_stopping_scorer.py::test_real_scorer_neg_mean_squared_error_with_validation": {
+      "outcome": "pass",
+      "phases": [
+        {
+          "duration_seconds": 0.0005353309970814735,
+          "outcome": "passed",
+          "phase": "setup"
+        },
+        {
+          "duration_seconds": 0.01737963100458728,
+          "outcome": "passed",
+          "phase": "call"
+        },
+        {
+          "duration_seconds": 0.00015698600327596068,
+          "outcome": "passed",
+          "phase": "teardown"
+        }
+      ]
+    },
+    "oracle_tests/test_check_early_stopping_scorer.py::test_real_scorer_neg_mean_squared_error_without_validation": {
+      "outcome": "pass",
+      "phases": [
+        {
+          "duration_seconds": 0.0012065970004186966,
+          "outcome": "passed",
+          "phase": "setup"
+        },
+        {
+          "duration_seconds": 1.6969934239969007,
+          "outcome": "passed",
+          "phase": "call"
+        },
+        {
+          "duration_seconds": 0.0002027240043389611,
+          "outcome": "passed",
+          "phase": "teardown"
+        }
+      ]
+    },
+    "oracle_tests/test_check_early_stopping_scorer.py::test_real_scorer_stops_on_plateau_across_manual_calls": {
+      "outcome": "pass",
+      "phases": [
+        {
+          "duration_seconds": 0.0009276269993279129,
+          "outcome": "passed",
+          "phase": "setup"
+        },
+        {
+          "duration_seconds": 0.09567365499970037,
+          "outcome": "passed",
+          "phase": "call"
+        },
+        {
+          "duration_seconds": 0.00015348000306403264,
+          "outcome": "passed",
+          "phase": "teardown"
+        }
+      ]
+    },
+    "oracle_tests/test_check_early_stopping_scorer.py::test_return_matches_should_stop_on_train_history_without_validation": {
+      "outcome": "pass",
+      "phases": [
+        {
+          "duration_seconds": 6.30490030744113e-05,
+          "outcome": "passed",
+          "phase": "setup"
+        },
+        {
+          "duration_seconds": 0.0004057670012116432,
+          "outcome": "passed",
+          "phase": "call"
+        },
+        {
+          "duration_seconds": 8.00340058049187e-05,
+          "outcome": "passed",
+          "phase": "teardown"
+        }
+      ]
+    },
+    "oracle_tests/test_check_early_stopping_scorer.py::test_return_matches_should_stop_on_validation_history": {
+      "outcome": "pass",
+      "phases": [
+        {
+          "duration_seconds": 6.886399933137e-05,
+          "outcome": "passed",
+          "phase": "setup"
+        },
+        {
+          "duration_seconds": 0.00011806700058514252,
+          "outcome": "passed",
+          "phase": "call"
+        },
+        {
+          "duration_seconds": 7.162400288507342e-05,
+          "outcome": "passed",
+          "phase": "teardown"
+        }
+      ]
+    },
+    "oracle_tests/test_check_early_stopping_scorer.py::test_returns_are_plain_bools": {
+      "outcome": "pass",
+      "phases": [
+        {
+          "duration_seconds": 6.713699985994026e-05,
+          "outcome": "passed",
+          "phase": "setup"
+        },
+        {
+          "duration_seconds": 0.0001443799992557615,
+          "outcome": "passed",
+          "phase": "call"
+        },
+        {
+          "duration_seconds": 9.4675000582356e-05,
+          "outcome": "passed",
+          "phase": "teardown"
+        }
+      ]
+    },
+    "oracle_tests/test_check_early_stopping_scorer.py::test_scorer_called_with_estimator_and_both_datasets": {
+      "outcome": "pass",
+      "phases": [
+        {
+          "duration_seconds": 0.0001022260039462708,
+          "outcome": "passed",
+          "phase": "setup"
+        },
+        {
+          "duration_seconds": 0.0001399140019202605,
+          "outcome": "passed",
+          "phase": "call"
+        },
+        {
+          "duration_seconds": 9.108599624596536e-05,
+          "outcome": "passed",
+          "phase": "teardown"
+        }
+      ]
+    },
+    "oracle_tests/test_check_early_stopping_scorer.py::test_scorer_receives_small_trainset_before_validation_set": {
+      "outcome": "pass",
+      "phases": [
+        {
+          "duration_seconds": 6.12780058872886e-05,
+          "outcome": "passed",
+          "phase": "setup"
+        },
+        {
+          "duration_seconds": 9.374500223202631e-05,
+          "outcome": "passed",
+          "phase": "call"
+        },
+        {
+          "duration_seconds": 6.239099457161501e-05,
+          "outcome": "passed",
+          "phase": "teardown"
+        }
+      ]
+    },
+    "oracle_tests/test_check_early_stopping_scorer.py::test_scores_accumulate_in_order_over_repeated_calls": {
+      "outcome": "pass",
+      "phases": [
+        {
+          "duration_seconds": 6.745299469912425e-05,
+          "outcome": "passed",
+          "phase": "setup"
+        },
+        {
+          "duration_seconds": 9.374799992656335e-05,
+          "outcome": "passed",
+          "phase": "call"
+        },
+        {
+          "duration_seconds": 6.647800182690844e-05,
+          "outcome": "passed",
+          "phase": "teardown"
+        }
+      ]
+    },
+    "oracle_tests/test_check_early_stopping_scorer.py::test_scores_appended_to_train_and_validation_lists": {
+      "outcome": "pass",
+      "phases": [
+        {
+          "duration_seconds": 6.460199801949784e-05,
+          "outcome": "passed",
+          "phase": "setup"
+        },
+        {
+          "duration_seconds": 8.913000056054443e-05,
+          "outcome": "passed",
+          "phase": "call"
+        },
+        {
+          "duration_seconds": 6.019300053594634e-05,
+          "outcome": "passed",
+          "phase": "teardown"
+        }
+      ]
+    },
+    "oracle_tests/test_check_early_stopping_scorer.py::test_scores_are_recorded_even_when_stopping": {
+      "outcome": "pass",
+      "phases": [
+        {
+          "duration_seconds": 8.556499960832298e-05,
+          "outcome": "passed",
+          "phase": "setup"
+        },
+        {
+          "duration_seconds": 0.000128641004266683,
+          "outcome": "passed",
+          "phase": "call"
+        },
+        {
+          "duration_seconds": 7.062399527058005e-05,
+          "outcome": "passed",
+          "phase": "teardown"
+        }
+      ]
+    },
+    "oracle_tests/test_check_early_stopping_scorer.py::test_tol_controls_significant_improvement[0.0-False]": {
+      "outcome": "pass",
+      "phases": [
+        {
+          "duration_seconds": 0.0001736330013955012,
+          "outcome": "passed",
+          "phase": "setup"
+        },
+        {
+          "duration_seconds": 0.00011978600377915427,
+          "outcome": "passed",
+          "phase": "call"
+        },
+        {
+          "duration_seconds": 0.00013440999464364722,
+          "outcome": "passed",
+          "phase": "teardown"
+        }
+      ]
+    },
+    "oracle_tests/test_check_early_stopping_scorer.py::test_tol_controls_significant_improvement[0.01-False]": {
+      "outcome": "pass",
+      "phases": [
+        {
+          "duration_seconds": 0.00014175699470797554,
+          "outcome": "passed",
+          "phase": "setup"
+        },
+        {
+          "duration_seconds": 0.00010866899538086727,
+          "outcome": "passed",
+          "phase": "call"
+        },
+        {
+          "duration_seconds": 0.00010846900113392621,
+          "outcome": "passed",
+          "phase": "teardown"
+        }
+      ]
+    },
+    "oracle_tests/test_check_early_stopping_scorer.py::test_tol_controls_significant_improvement[0.05-True]": {
+      "outcome": "pass",
+      "phases": [
+        {
+          "duration_seconds": 0.00017979700351133943,
+          "outcome": "passed",
+          "phase": "setup"
+        },
+        {
+          "duration_seconds": 0.00011079700198024511,
+          "outcome": "passed",
+          "phase": "call"
+        },
+        {
+          "duration_seconds": 8.044499554671347e-05,
+          "outcome": "passed",
+          "phase": "teardown"
+        }
+      ]
+    },
+    "oracle_tests/test_check_early_stopping_scorer.py::test_tol_controls_significant_improvement[0.1-True]": {
+      "outcome": "pass",
+      "phases": [
+        {
+          "duration_seconds": 0.00015627499669790268,
+          "outcome": "passed",
+          "phase": "setup"
+        },
+        {
+          "duration_seconds": 0.00013228300667833537,
+          "outcome": "passed",
+          "phase": "call"
+        },
+        {
+          "duration_seconds": 8.339900523424149e-05,
+          "outcome": "passed",
+          "phase": "teardown"
+        }
+      ]
+    },
+    "oracle_tests/test_check_early_stopping_scorer.py::test_tol_none_is_treated_as_zero": {
+      "outcome": "pass",
+      "phases": [
+        {
+          "duration_seconds": 9.086100180866197e-05,
+          "outcome": "passed",
+          "phase": "setup"
+        },
+        {
+          "duration_seconds": 0.00011370699940016493,
+          "outcome": "passed",
+          "phase": "call"
+        },
+        {
+          "duration_seconds": 7.444699440384284e-05,
+          "outcome": "passed",
+          "phase": "teardown"
+        }
+      ]
+    },
+    "oracle_tests/test_check_early_stopping_scorer.py::test_tol_none_still_stops_on_exact_plateau": {
+      "outcome": "pass",
+      "phases": [
+        {
+          "duration_seconds": 7.794699922669679e-05,
+          "outcome": "passed",
+          "phase": "setup"
+        },
+        {
+          "duration_seconds": 0.0001015009984257631,
+          "outcome": "passed",
+          "phase": "call"
+        },
+        {
+          "duration_seconds": 9.542200132273138e-05,
+          "outcome": "passed",
+          "phase": "teardown"
+        }
+      ]
+    },
+    "oracle_tests/test_check_early_stopping_scorer.py::test_without_validation_data_only_train_is_scored": {
+      "outcome": "pass",
+      "phases": [
+        {
+          "duration_seconds": 6.602399662369862e-05,
+          "outcome": "passed",
+          "phase": "setup"
+        },
+        {
+          "duration_seconds": 9.282999963033944e-05,
+          "outcome": "passed",
+          "phase": "call"
+        },
+        {
+          "duration_seconds": 6.015600229147822e-05,
+          "outcome": "passed",
+          "phase": "teardown"
+        }
+      ]
+    }
+  }
+}

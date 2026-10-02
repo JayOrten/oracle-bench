@@ -1,0 +1,61 @@
+source:
+  instance: scikit-learn__scikit-learn-14710
+  kind: swebench
+  dataset: verified
+  revision: c104f840cc67f8b6eec6f759ebc8b2693d585d4a
+  split: test
+  record: null
+agent:
+  model: qwen/qwen3.8-max-0902
+  harness: opencode
+  provider: openrouter
+  auth: oauth
+  limit:
+    kind: wall_seconds
+    value: 900.0
+  multi_agent: false
+judge:
+  model: google/gemini-3.8-flash
+  harness: codex
+  provider: openrouter
+  auth: oauth
+  limit:
+    kind: wall_seconds
+    value: 300.0
+  multi_agent: false
+  rubric: /home/jay/repos/oracle-bench/runs/20260924T023734Z-053e0297/judge/rubric.md
+  instructions: /home/jay/repos/oracle-bench/runs/20260924T023734Z-053e0297/judge/instructions.md
+task:
+  prompt: /home/jay/repos/oracle-bench/runs/20260924T023734Z-053e0297/inputs/prompt.txt
+  scope: localized
+  existing_tests: hide_all
+  generated_dir: oracle_tests
+limits:
+  evaluation_seconds: 600.0
+  setup_seconds: 1800.0
+  memory: 4g
+  cpus: 2.0
+output: /home/jay/repos/oracle-bench/runs
+runtime:
+  image: swebench/sweb.eval.x86_64.scikit-learn_1776_scikit-learn-14710:latest
+  source_roots:
+  - sklearn
+  import_modules:
+  - sklearn
+  existing_test_globs:
+  - sklearn/**/tests
+  platform: linux/amd64
+  workdir: /testbed
+  python: /opt/miniconda3/envs/testbed/bin/python
+  pythonpath: null
+  pytest_plugins: []
+  pytest_version: 6.2.5
+  coverage_version: '6.2'
+  rebuild: ':'
+toolchain:
+  node_image: node:22.14.0-bookworm-slim
+  codex_version: 0.153.4
+  claude_version: 2.1.280
+  opencode_version: 1.18.32
+  pytest_version: 7.4.4
+  coverage_version: 7.6.1

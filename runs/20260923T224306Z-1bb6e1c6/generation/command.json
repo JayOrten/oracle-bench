@@ -1,0 +1,11 @@
+[
+  "opencode",
+  "run",
+  "--format",
+  "json",
+  "--auto",
+  "--dir",
+  "/testbed",
+  "--model",
+  "openrouter/qwen/qwen3.8-max-0902"
+]

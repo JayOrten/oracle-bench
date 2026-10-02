@@ -1,0 +1,337 @@
+"""Tests for sphinx.directives.other.Include."""
+
+from __future__ import annotations
+
+import os
+from io import StringIO
+from pathlib import Path
+
+import pytest
+from docutils import nodes
+
+from sphinx.directives.other import Include
+from sphinx.testing.util import SphinxTestApp, strip_escseq
+
+
+def _write(root: Path, files: dict[str, str]) -> None:
+    for name, content in files.items():
+        target = root / name
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_text(content, encoding='utf-8')
+
+
+@pytest.fixture()
+def make_project(tmp_path):
+    apps = []
+
+    def make(files: dict[str, str], buildername: str = 'dummy', **kwargs):
+        srcdir = tmp_path / 'src'
+        srcdir.mkdir(exist_ok=True)
+        files = {'conf.py': '', **files}
+        _write(srcdir, files)
+        app = SphinxTestApp(buildername, srcdir=srcdir, status=StringIO(),
+                            warning=StringIO(), **kwargs)
+        apps.append(app)
+        return app
+
+    yield make
+
+    for app in apps:
+        app.cleanup()
+
+
+def _warnings(app) -> str:
+    return strip_escseq(app._warning.getvalue())
+
+
+def _paragraph_texts(doctree) -> list[str]:
+    return [p.astext() for p in doctree.findall(nodes.paragraph)]
+
+
+def test_include_is_registered(make_project):
+    from docutils.parsers.rst import directives
+
+    make_project({'index.rst': 'Title\n=====\n'})
+    directive, _messages = directives.directive('include', None, None)
+    assert directive is Include
+
+
+def test_relative_include_from_root_document(make_project):
+    app = make_project({
+        'index.rst': 'Title\n=====\n\n.. include:: inc.txt\n',
+        'inc.txt': 'Included text from root.\n',
+    })
+    app.build()
+
+    doctree = app.env.get_doctree('index')
+    assert 'Included text from root.' in _paragraph_texts(doctree)
+    assert 'Problems with "include"' not in _warnings(app)
+
+
+def test_relative_include_from_subdirectory_document(make_project):
+    app = make_project({
+        'index.rst': 'Title\n=====\n\n.. toctree::\n\n   sub/page\n',
+        'sub/page.rst': 'Page\n====\n\n.. include:: inc.txt\n',
+        'sub/inc.txt': 'Text from sub directory.\n',
+        'inc.txt': 'Text from root directory.\n',
+    })
+    app.build()
+
+    texts = _paragraph_texts(app.env.get_doctree('sub/page'))
+    assert 'Text from sub directory.' in texts
+    assert 'Text from root directory.' not in texts
+
+
+def test_absolute_include_is_relative_to_srcdir(make_project):
+    app = make_project({
+        'index.rst': 'Title\n=====\n\n.. toctree::\n\n   sub/page\n',
+        'sub/page.rst': 'Page\n====\n\n.. include:: /inc.txt\n',
+        'sub/inc.txt': 'Text from sub directory.\n',
+        'inc.txt': 'Text from root directory.\n',
+    })
+    app.build()
+
+    texts = _paragraph_texts(app.env.get_doctree('sub/page'))
+    assert 'Text from root directory.' in texts
+    assert 'Text from sub directory.' not in texts
+    assert 'Problems with "include"' not in _warnings(app)
+
+
+def test_absolute_include_into_other_subdirectory(make_project):
+    app = make_project({
+        'index.rst': 'Title\n=====\n\n.. toctree::\n\n   a/page\n',
+        'a/page.rst': 'Page\n====\n\n.. include:: /b/inc.txt\n',
+        'b/inc.txt': 'Text from b.\n',
+    })
+    app.build()
+
+    assert 'Text from b.' in _paragraph_texts(app.env.get_doctree('a/page'))
+
+
+def test_parent_relative_include(make_project):
+    app = make_project({
+        'index.rst': 'Title\n=====\n\n.. toctree::\n\n   sub/page\n',
+        'sub/page.rst': 'Page\n====\n\n.. include:: ../inc.txt\n',
+        'inc.txt': 'Text from root directory.\n',
+    })
+    app.build()
+
+    texts = _paragraph_texts(app.env.get_doctree('sub/page'))
+    assert 'Text from root directory.' in texts
+
+
+def test_included_source_path_is_absolute(make_project):
+    app = make_project({
+        'index.rst': ('Title\n=====\n\n.. toctree::\n\n   sub/page\n'),
+        'sub/page.rst': 'Page\n====\n\n.. include:: /code.py\n   :literal:\n',
+        'code.py': 'print("hello")\n',
+    })
+    app.build()
+
+    doctree = app.env.get_doctree('sub/page')
+    blocks = list(doctree.findall(nodes.literal_block))
+    assert len(blocks) == 1
+    assert blocks[0].astext().strip() == 'print("hello")'
+    expected = os.path.normpath(os.path.join(app.srcdir, 'code.py'))
+    assert os.path.normpath(blocks[0]['source']) == expected
+
+
+def test_include_records_dependency(make_project):
+    app = make_project({
+        'index.rst': 'Title\n=====\n\n.. toctree::\n\n   sub/page\n',
+        'sub/page.rst': ('Page\n====\n\n'
+                         '.. include:: /inc.txt\n\n'
+                         '.. include:: local.txt\n'),
+        'inc.txt': 'Root.\n',
+        'sub/local.txt': 'Local.\n',
+    })
+    app.build()
+
+    deps = {os.path.normpath(d) for d in app.env.dependencies['sub/page']}
+    assert os.path.normpath('inc.txt') in deps
+    assert os.path.normpath('sub/local.txt') in deps
+
+
+def test_including_document_is_noted_as_included(make_project):
+    app = make_project({
+        'index.rst': 'Title\n=====\n\n.. include:: part.rst\n',
+        'part.rst': 'Part text.\n',
+    })
+    app.build()
+
+    assert app.env.included['index'] == {'part'}
+    assert 'Part text.' in _paragraph_texts(app.env.get_doctree('index'))
+    # the included document is not reported as orphan
+    assert "part.rst: WARNING: document isn't included in any toctree" \
+        not in _warnings(app)
+    assert "document isn't included in any toctree" not in _warnings(app)
+
+
+def test_absolute_include_of_document_is_noted(make_project):
+    app = make_project({
+        'index.rst': 'Title\n=====\n\n.. toctree::\n\n   sub/page\n',
+        'sub/page.rst': 'Page\n====\n\n.. include:: /shared/part.rst\n',
+        'shared/part.rst': 'Shared part.\n',
+    })
+    app.build()
+
+    assert app.env.included['sub/page'] == {'shared/part'}
+    assert "document isn't included in any toctree" not in _warnings(app)
+
+
+def test_relative_include_of_document_in_subdir_is_noted(make_project):
+    app = make_project({
+        'index.rst': 'Title\n=====\n\n.. toctree::\n\n   sub/page\n',
+        'sub/page.rst': 'Page\n====\n\n.. include:: part.rst\n',
+        'sub/part.rst': 'Sub part.\n',
+    })
+    app.build()
+
+    assert app.env.included['sub/page'] == {'sub/part'}
+
+
+def test_include_of_non_document_is_not_noted(make_project):
+    app = make_project({
+        'index.rst': 'Title\n=====\n\n.. include:: inc.txt\n',
+        'inc.txt': 'Included text.\n',
+    })
+    app.build()
+
+    assert not app.env.included.get('index')
+
+
+def test_not_included_document_is_orphan_warning(make_project):
+    # sanity check for the test above: without include, a warning is emitted
+    app = make_project({
+        'index.rst': 'Title\n=====\n',
+        'part.rst': 'Part text.\n',
+    })
+    app.build()
+
+    assert "document isn't included in any toctree" in _warnings(app)
+
+
+def test_standard_include_skips_path_processing(make_project):
+    app = make_project({
+        'index.rst': ('Title\n=====\n\n'
+                      '.. include:: <isonum.txt>\n\n'
+                      'Copyright |copy| 2023.\n'),
+    })
+    app.build()
+
+    doctree = app.env.get_doctree('index')
+    assert 'Copyright © 2023.' in _paragraph_texts(doctree)
+    assert not app.env.included.get('index')
+    assert 'Problems with "include"' not in _warnings(app)
+
+
+def test_standard_include_not_resolved_to_srcdir(make_project):
+    # a file in srcdir with the same name must not shadow the standard file
+    app = make_project({
+        'index.rst': ('Title\n=====\n\n'
+                      '.. include:: <isonum.txt>\n\n'
+                      'Copyright |copy| 2023.\n'),
+        'isonum.txt': 'Shadowing text.\n',
+    })
+    app.build()
+
+    texts = _paragraph_texts(app.env.get_doctree('index'))
+    assert 'Shadowing text.' not in texts
+    assert 'Copyright © 2023.' in texts
+
+
+def test_missing_include_file_warns(make_project):
+    app = make_project({
+        'index.rst': 'Title\n=====\n\n.. include:: /missing.txt\n',
+    })
+    app.build()
+
+    warnings = _warnings(app)
+    assert 'Problems with "include" directive path' in warnings
+    assert 'missing.txt' in warnings
+
+
+def test_include_options_are_supported(make_project):
+    app = make_project({
+        'index.rst': ('Title\n=====\n\n.. toctree::\n\n   sub/page\n'),
+        'sub/page.rst': ('Page\n====\n\n'
+                         '.. include:: /inc.txt\n'
+                         '   :start-after: START\n'
+                         '   :end-before: END\n'),
+        'inc.txt': 'Before.\n\nSTART\n\nMiddle.\n\nEND\n\nAfter.\n',
+    })
+    app.build()
+
+    texts = _paragraph_texts(app.env.get_doctree('sub/page'))
+    assert 'Middle.' in texts
+    assert 'Before.' not in texts
+    assert 'After.' not in texts
+
+
+def test_include_with_code_option(make_project):
+    app = make_project({
+        'index.rst': ('Title\n=====\n\n'
+                      '.. include:: code.py\n'
+                      '   :code: python\n'),
+        'code.py': 'x = 1\n',
+    })
+    app.build()
+
+    doctree = app.env.get_doctree('index')
+    blocks = list(doctree.findall(nodes.literal_block))
+    assert len(blocks) == 1
+    assert blocks[0].astext() == 'x = 1'
+
+
+def test_nested_include_is_relative_to_current_document(make_project):
+    # Sphinx resolves relative paths against the directory of the document
+    # being read (env.docname), even for includes nested in included files
+    app = make_project({
+        'index.rst': 'Title\n=====\n\n.. include:: inc/outer.txt\n',
+        'inc/outer.txt': 'Outer.\n\n.. include:: inner.txt\n',
+        'inc/inner.txt': 'Inner from inc.\n',
+        'inner.txt': 'Inner from root.\n',
+    })
+    app.build()
+
+    texts = _paragraph_texts(app.env.get_doctree('index'))
+    assert 'Outer.' in texts
+    assert 'Inner from root.' in texts
+    assert 'Inner from inc.' not in texts
+
+
+def test_nested_absolute_include(make_project):
+    app = make_project({
+        'index.rst': 'Title\n=====\n\n.. include:: inc/outer.txt\n',
+        'inc/outer.txt': 'Outer.\n\n.. include:: /inner.txt\n',
+        'inner.txt': 'Inner from root.\n',
+    })
+    app.build()
+
+    texts = _paragraph_texts(app.env.get_doctree('index'))
+    assert 'Outer.' in texts
+    assert 'Inner from root.' in texts
+
+
+def test_included_rst_markup_is_parsed(make_project):
+    app = make_project({
+        'index.rst': 'Title\n=====\n\n.. include:: inc.txt\n',
+        'inc.txt': 'Section\n-------\n\nSome *emphasis* here.\n',
+    })
+    app.build()
+
+    doctree = app.env.get_doctree('index')
+    assert [e.astext() for e in doctree.findall(nodes.emphasis)] == ['emphasis']
+    titles = [t.astext() for t in doctree.findall(nodes.title)]
+    assert 'Section' in titles
+
+
+def test_include_html_output(make_project):
+    app = make_project({
+        'index.rst': 'Title\n=====\n\n.. include:: /inc.txt\n',
+        'inc.txt': 'Rendered included text.\n',
+    }, buildername='html')
+    app.build()
+
+    html = (app.outdir / 'index.html').read_text(encoding='utf-8')
+    assert 'Rendered included text.' in html

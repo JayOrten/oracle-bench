@@ -1,0 +1,12 @@
+{
+  "compliant": true,
+  "empty": false,
+  "files": {
+    "oracle_tests/test_check_early_stopping_scorer.py": {
+      "mode": 420,
+      "sha256": "87b92ccac757a47c262efeed2f1140fe2e9ab9c2d2fe9378f2d22b101a5ffac9"
+    }
+  },
+  "forbidden_changes": [],
+  "sha256": "9953942cec8b7fbae880817671819d51a3d1f738622120d7fa2a22f9d7304b5c"
+}

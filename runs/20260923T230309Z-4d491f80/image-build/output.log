@@ -1,0 +1,56 @@
+{"stream": "Step 1/15 : ARG HARNESS_IMAGE"}
+{"stream": "\n"}
+{"stream": "Step 2/15 : ARG PROJECT_IMAGE"}
+{"stream": "\n"}
+{"stream": "Step 3/15 : FROM ${HARNESS_IMAGE} AS harnesses"}
+{"stream": "\n"}
+{"stream": " ---> d6c4130f4f22\n"}
+{"aux": {"ID": "sha256:d6c4130f4f22ddd5d25aad486ab4eb7fea7ae61baaa5727f364258ea9e69c8b6"}}
+{"stream": "Step 4/15 : FROM ${PROJECT_IMAGE}"}
+{"stream": "\n"}
+{"stream": " ---> e68930db25c0\n"}
+{"stream": "Step 5/15 : USER root"}
+{"stream": "\n"}
+{"stream": " ---> Running in 27655b1b8aef\n"}
+{"stream": " ---> Removed intermediate container 27655b1b8aef\n"}
+{"stream": " ---> 8c1b2be79447\n"}
+{"stream": "Step 6/15 : ARG PROJECT_PYTHON"}
+{"stream": "\n"}
+{"stream": " ---> Running in b88ff9ce2a1c\n"}
+{"stream": " ---> Removed intermediate container b88ff9ce2a1c\n"}
+{"stream": " ---> 4ce2546cab8d\n"}
+{"stream": "Step 7/15 : ARG PROJECT_PYTHON_DIR"}
+{"stream": "\n"}
+{"stream": " ---> Running in e3ef313e40f8\n"}
+{"stream": " ---> Removed intermediate container e3ef313e40f8\n"}
+{"stream": " ---> e12421367fc2\n"}
+{"stream": "Step 8/15 : ARG PYTEST_VERSION"}
+{"stream": "\n"}
+{"stream": " ---> Running in 91972276c44b\n"}
+{"stream": " ---> Removed intermediate container 91972276c44b\n"}
+{"stream": " ---> ffb08fb19e7a\n"}
+{"stream": "Step 9/15 : ARG COVERAGE_VERSION"}
+{"stream": "\n"}
+{"stream": " ---> Running in 555f340ed412\n"}
+{"stream": " ---> Removed intermediate container 555f340ed412\n"}
+{"stream": " ---> 3656581e2844\n"}
+{"stream": "Step 10/15 : COPY --from=harnesses /usr/local/bin/node /opt/oracle-node/node"}
+{"stream": "\n"}
+{"stream": " ---> 7129151feb15\n"}
+{"stream": "Step 11/15 : COPY --from=harnesses /opt/oracle-agent /opt/oracle-agent"}
+{"stream": "\n"}
+{"stream": " ---> 6d1b91a881f6\n"}
+{"stream": "Step 12/15 : COPY container_helpers/ /opt/oracle-bench/container-helpers/"}
+{"stream": "\n"}
+{"stream": " ---> eb94e3334d21\n"}
+{"stream": "Step 13/15 : ENV PATH=\"${PROJECT_PYTHON_DIR}:/opt/oracle-node:/opt/oracle-agent/node_modules/.bin:${PATH}\""}
+{"stream": "\n"}
+{"stream": " ---> Running in 637f1b4a67f3\n"}
+{"stream": " ---> Removed intermediate container 637f1b4a67f3\n"}
+{"stream": " ---> 4e152a2677e2\n"}
+{"stream": "Step 14/15 : RUN \"${PROJECT_PYTHON}\" -m pip install     \"pytest==${PYTEST_VERSION}\"     \"coverage==${COVERAGE_VERSION}\""}
+{"stream": "\n"}
+{"stream": " ---> Running in 14ac688034a4\n"}
+{"stream": "\u001b[91mERROR: Could not find a version that satisfies the requirement pytest==7.4.4 (from versions: 2.0.0, 2.0.1, 2.0.2, 2.0.3, 2.1.0, 2.1.1, 2.1.2, 2.1.3, 2.2.0, 2.2.1, 2.2.2, 2.2.3, 2.2.4, 2.3.0, 2.3.1, 2.3.2, 2.3.3, 2.3.4, 2.3.5, 2.4.0, 2.4.1, 2.4.2, 2.5.0, 2.5.1, 2.5.2, 2.6.0, 2.6.1, 2.6.2, 2.6.3, 2.6.4, 2.7.0, 2.7.1, 2.7.2, 2.7.3, 2.8.0, 2.8.1, 2.8.2, 2.8.3, 2.8.4, 2.8.5, 2.8.6, 2.8.7, 2.9.0, 2.9.1, 2.9.2, 3.0.0, 3.0.1, 3.0.2, 3.0.3, 3.0.4, 3.0.5, 3.0.6, 3.0.7, 3.1.0, 3.1.1, 3.1.2, 3.1.3, 3.2.0, 3.2.1, 3.2.2, 3.2.3, 3.2.4, 3.2.5, 3.3.0, 3.3.1, 3.3.2, 3.4.0, 3.4.1, 3.4.2, 3.5.0, 3.5.1, 3.6.0, 3.6.1, 3.6.2, 3.6.3, 3.6.4, 3.7.0, 3.7.1, 3.7.2, 3.7.3, 3.7.4, 3.8.0, 3.8.1, 3.8.2, 3.9.1, 3.9.2, 3.9.3, 3.10.0, 3.10.1, 4.0.0, 4.0.1, 4.0.2, 4.1.0, 4.1.1, 4.2.0, 4.2.1, 4.3.0, 4.3.1, 4.4.0, 4.4.1, 4.4.2, 4.5.0, 4.6.0, 4.6.1, 4.6.2, 4.6.3, 4.6.4, 4.6.5, 4.6.6, 4.6.7, 4.6.8, 4.6.9, 4.6.10, 4.6.11, 5.0.0, 5.0.1, 5.1.0, 5.1.1, 5.1.2, 5.1.3, 5.2.0, 5.2.1, 5.2.2, 5.2.3, 5.2.4, 5.3.0, 5.3.1, 5.3.2, 5.3.3, 5.3.4, 5.3.5, 5.4.0, 5.4.1, 5.4.2, 5.4.3, 6.0.0rc1, 6.0.0, 6.0.1, 6.0.2, 6.1.0, 6.1.1, 6.1.2, 6.2.0, 6.2.1, 6.2.2, 6.2.3, 6.2.4, 6.2.5, 7.0.0rc1, 7.0.0, 7.0.1)\nERROR: No matching distribution found for pytest==7.4.4\n\u001b[0m"}
+{"stream": " ---> Removed intermediate container 14ac688034a4\n"}
+{"error": "The command '/bin/sh -c \"${PROJECT_PYTHON}\" -m pip install     \"pytest==${PYTEST_VERSION}\"     \"coverage==${COVERAGE_VERSION}\"' returned a non-zero code: 1", "errorDetail": {"code": 1, "message": "The command '/bin/sh -c \"${PROJECT_PYTHON}\" -m pip install     \"pytest==${PYTEST_VERSION}\"     \"coverage==${COVERAGE_VERSION}\"' returned a non-zero code: 1"}}

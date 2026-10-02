@@ -1,0 +1,772 @@
+{
+  "collected": 36,
+  "collection_errors": [],
+  "exit_code": 1,
+  "status": "completed",
+  "tests": {
+    "oracle_tests/test_check_early_stopping_scorer.py::test_fit_classifier_accuracy_scores[0.2]": {
+      "outcome": "pass",
+      "phases": [
+        {
+          "duration_seconds": 0.00020340199989732355,
+          "outcome": "passed",
+          "phase": "setup"
+        },
+        {
+          "duration_seconds": 4.00239110399707,
+          "outcome": "passed",
+          "phase": "call"
+        },
+        {
+          "duration_seconds": 0.00022094599989941344,
+          "outcome": "passed",
+          "phase": "teardown"
+        }
+      ]
+    },
+    "oracle_tests/test_check_early_stopping_scorer.py::test_fit_classifier_accuracy_scores[None]": {
+      "outcome": "pass",
+      "phases": [
+        {
+          "duration_seconds": 0.0003108829987468198,
+          "outcome": "passed",
+          "phase": "setup"
+        },
+        {
+          "duration_seconds": 17.392587111004104,
+          "outcome": "passed",
+          "phase": "call"
+        },
+        {
+          "duration_seconds": 0.0001911550061777234,
+          "outcome": "passed",
+          "phase": "teardown"
+        }
+      ]
+    },
+    "oracle_tests/test_check_early_stopping_scorer.py::test_fit_classifier_scorer_receives_original_labels": {
+      "failure": {
+        "exception_type": "builtins.AssertionError",
+        "kind": "assertion",
+        "message": "assert {0.0, 1.0, 2.0} == {'a', 'b', 'c'}\n  Extra items in the left set:\n  0.0\n  1.0\n  2.0\n  Extra items in the right set:\n  'a'\n  'c'...\n  \n  ...Full output truncated (5 lines hidden), use '-vv' to show"
+      },
+      "outcome": "fail",
+      "phases": [
+        {
+          "duration_seconds": 7.202700362540781e-05,
+          "outcome": "passed",
+          "phase": "setup"
+        },
+        {
+          "details": "oracle_tests/test_check_early_stopping_scorer.py:406: in test_fit_classifier_scorer_receives_original_labels\n    assert label_set == {'a', 'b', 'c'}\nE   AssertionError: assert {0.0, 1.0, 2.0} == {'a', 'b', 'c'}\nE     Extra items in the left set:\nE     0.0\nE     1.0\nE     2.0\nE     Extra items in the right set:\nE     'a'\nE     'c'...\nE     \nE     ...Full output truncated (5 lines hidden), use '-vv' to show",
+          "duration_seconds": 0.0651964400021825,
+          "failure": {
+            "exception_type": "builtins.AssertionError",
+            "kind": "assertion",
+            "message": "assert {0.0, 1.0, 2.0} == {'a', 'b', 'c'}\n  Extra items in the left set:\n  0.0\n  1.0\n  2.0\n  Extra items in the right set:\n  'a'\n  'c'...\n  \n  ...Full output truncated (5 lines hidden), use '-vv' to show"
+          },
+          "outcome": "failed",
+          "phase": "call"
+        },
+        {
+          "duration_seconds": 0.0001238169934367761,
+          "outcome": "passed",
+          "phase": "teardown"
+        }
+      ]
+    },
+    "oracle_tests/test_check_early_stopping_scorer.py::test_fit_classifier_scorer_with_non_encoded_integer_labels": {
+      "failure": {
+        "exception_type": "builtins.AssertionError",
+        "kind": "assertion",
+        "message": "\nNot equal to tolerance rtol=1e-07, atol=0\n\nMismatched elements: 1 / 1 (100%)\nMax absolute difference: 0.91333333\nMax relative difference: 0.97508897\n x: array(0.023333)\n y: array(0.936667)"
+      },
+      "outcome": "fail",
+      "phases": [
+        {
+          "duration_seconds": 0.00010532300075283274,
+          "outcome": "passed",
+          "phase": "setup"
+        },
+        {
+          "details": "oracle_tests/test_check_early_stopping_scorer.py:369: in test_fit_classifier_scorer_with_non_encoded_integer_labels\n    assert_allclose(est.train_score_[-1], est.score(X, y))\nE   AssertionError: \nE   Not equal to tolerance rtol=1e-07, atol=0\nE   \nE   Mismatched elements: 1 / 1 (100%)\nE   Max absolute difference: 0.91333333\nE   Max relative difference: 0.97508897\nE    x: array(0.023333)\nE    y: array(0.936667)",
+          "duration_seconds": 5.101266618999944,
+          "failure": {
+            "exception_type": "builtins.AssertionError",
+            "kind": "assertion",
+            "message": "\nNot equal to tolerance rtol=1e-07, atol=0\n\nMismatched elements: 1 / 1 (100%)\nMax absolute difference: 0.91333333\nMax relative difference: 0.97508897\n x: array(0.023333)\n y: array(0.936667)"
+          },
+          "outcome": "failed",
+          "phase": "call"
+        },
+        {
+          "duration_seconds": 0.00012609900295501575,
+          "outcome": "passed",
+          "phase": "teardown"
+        }
+      ]
+    },
+    "oracle_tests/test_check_early_stopping_scorer.py::test_fit_classifier_scorer_with_string_labels[0.2]": {
+      "failure": {
+        "exception_type": "builtins.TypeError",
+        "kind": "exception",
+        "message": "'<' not supported between instances of 'str' and 'float'"
+      },
+      "outcome": "fail",
+      "phases": [
+        {
+          "duration_seconds": 0.00014304599608294666,
+          "outcome": "passed",
+          "phase": "setup"
+        },
+        {
+          "details": "oracle_tests/test_check_early_stopping_scorer.py:380: in test_fit_classifier_scorer_with_string_labels\n    est.fit(X, y)\nsklearn/ensemble/_hist_gradient_boosting/gradient_boosting.py:254: in fit\n    X_binned_val, y_val,\nsklearn/ensemble/_hist_gradient_boosting/gradient_boosting.py:430: in _check_early_stopping_scorer\n    self.scorer_(self, X_binned_small_train, y_small_train)\nsklearn/metrics/scorer.py:98: in __call__\n    **self._kwargs)\nsklearn/metrics/classification.py:176: in accuracy_score\n    y_type, y_true, y_pred = _check_targets(y_true, y_pred)\nsklearn/metrics/classification.py:94: in _check_targets\n    unique_values = np.union1d(y_true, y_pred)\n<__array_function__ internals>:6: in union1d\n    ???\n/opt/miniconda3/envs/testbed/lib/python3.6/site-packages/numpy/lib/arraysetops.py:749: in union1d\n    return unique(np.concatenate((ar1, ar2), axis=None))\n<__array_function__ internals>:6: in unique\n    ???\n/opt/miniconda3/envs/testbed/lib/python3.6/site-packages/numpy/lib/arraysetops.py:261: in unique\n    ret = _unique1d(ar, return_index, return_inverse, return_counts)\n/opt/miniconda3/envs/testbed/lib/python3.6/site-packages/numpy/lib/arraysetops.py:322: in _unique1d\n    ar.sort()\nE   TypeError: '<' not supported between instances of 'str' and 'float'",
+          "duration_seconds": 0.0017460599992773496,
+          "failure": {
+            "exception_type": "builtins.TypeError",
+            "kind": "exception",
+            "message": "'<' not supported between instances of 'str' and 'float'"
+          },
+          "outcome": "failed",
+          "phase": "call"
+        },
+        {
+          "duration_seconds": 0.00010056800238089636,
+          "outcome": "passed",
+          "phase": "teardown"
+        }
+      ]
+    },
+    "oracle_tests/test_check_early_stopping_scorer.py::test_fit_classifier_scorer_with_string_labels[None]": {
+      "failure": {
+        "exception_type": "builtins.TypeError",
+        "kind": "exception",
+        "message": "'<' not supported between instances of 'str' and 'float'"
+      },
+      "outcome": "fail",
+      "phases": [
+        {
+          "duration_seconds": 0.0001971989986486733,
+          "outcome": "passed",
+          "phase": "setup"
+        },
+        {
+          "details": "oracle_tests/test_check_early_stopping_scorer.py:380: in test_fit_classifier_scorer_with_string_labels\n    est.fit(X, y)\nsklearn/ensemble/_hist_gradient_boosting/gradient_boosting.py:254: in fit\n    X_binned_val, y_val,\nsklearn/ensemble/_hist_gradient_boosting/gradient_boosting.py:430: in _check_early_stopping_scorer\n    self.scorer_(self, X_binned_small_train, y_small_train)\nsklearn/metrics/scorer.py:98: in __call__\n    **self._kwargs)\nsklearn/metrics/classification.py:176: in accuracy_score\n    y_type, y_true, y_pred = _check_targets(y_true, y_pred)\nsklearn/metrics/classification.py:94: in _check_targets\n    unique_values = np.union1d(y_true, y_pred)\n<__array_function__ internals>:6: in union1d\n    ???\n/opt/miniconda3/envs/testbed/lib/python3.6/site-packages/numpy/lib/arraysetops.py:749: in union1d\n    return unique(np.concatenate((ar1, ar2), axis=None))\n<__array_function__ internals>:6: in unique\n    ???\n/opt/miniconda3/envs/testbed/lib/python3.6/site-packages/numpy/lib/arraysetops.py:261: in unique\n    ret = _unique1d(ar, return_index, return_inverse, return_counts)\n/opt/miniconda3/envs/testbed/lib/python3.6/site-packages/numpy/lib/arraysetops.py:322: in _unique1d\n    ar.sort()\nE   TypeError: '<' not supported between instances of 'str' and 'float'",
+          "duration_seconds": 0.0022507619942189194,
+          "failure": {
+            "exception_type": "builtins.TypeError",
+            "kind": "exception",
+            "message": "'<' not supported between instances of 'str' and 'float'"
+          },
+          "outcome": "failed",
+          "phase": "call"
+        },
+        {
+          "duration_seconds": 0.00011198900028830394,
+          "outcome": "passed",
+          "phase": "teardown"
+        }
+      ]
+    },
+    "oracle_tests/test_check_early_stopping_scorer.py::test_fit_constant_scorer_stops_after_n_iter_no_change[1-0.2]": {
+      "outcome": "pass",
+      "phases": [
+        {
+          "duration_seconds": 0.00020159699488431215,
+          "outcome": "passed",
+          "phase": "setup"
+        },
+        {
+          "duration_seconds": 0.04739684300147928,
+          "outcome": "passed",
+          "phase": "call"
+        },
+        {
+          "duration_seconds": 0.0001605180004844442,
+          "outcome": "passed",
+          "phase": "teardown"
+        }
+      ]
+    },
+    "oracle_tests/test_check_early_stopping_scorer.py::test_fit_constant_scorer_stops_after_n_iter_no_change[1-None]": {
+      "outcome": "pass",
+      "phases": [
+        {
+          "duration_seconds": 0.000148434002767317,
+          "outcome": "passed",
+          "phase": "setup"
+        },
+        {
+          "duration_seconds": 0.0021000260021537542,
+          "outcome": "passed",
+          "phase": "call"
+        },
+        {
+          "duration_seconds": 0.0001307560014538467,
+          "outcome": "passed",
+          "phase": "teardown"
+        }
+      ]
+    },
+    "oracle_tests/test_check_early_stopping_scorer.py::test_fit_constant_scorer_stops_after_n_iter_no_change[3-0.2]": {
+      "outcome": "pass",
+      "phases": [
+        {
+          "duration_seconds": 0.00020499400125117972,
+          "outcome": "passed",
+          "phase": "setup"
+        },
+        {
+          "duration_seconds": 0.002165667996450793,
+          "outcome": "passed",
+          "phase": "call"
+        },
+        {
+          "duration_seconds": 0.00013360799493966624,
+          "outcome": "passed",
+          "phase": "teardown"
+        }
+      ]
+    },
+    "oracle_tests/test_check_early_stopping_scorer.py::test_fit_constant_scorer_stops_after_n_iter_no_change[3-None]": {
+      "outcome": "pass",
+      "phases": [
+        {
+          "duration_seconds": 0.000224043003981933,
+          "outcome": "passed",
+          "phase": "setup"
+        },
+        {
+          "duration_seconds": 0.09583688600105233,
+          "outcome": "passed",
+          "phase": "call"
+        },
+        {
+          "duration_seconds": 0.00013749000208918005,
+          "outcome": "passed",
+          "phase": "teardown"
+        }
+      ]
+    },
+    "oracle_tests/test_check_early_stopping_scorer.py::test_fit_constant_scorer_stops_after_n_iter_no_change[5-0.2]": {
+      "outcome": "pass",
+      "phases": [
+        {
+          "duration_seconds": 0.00021638999896822497,
+          "outcome": "passed",
+          "phase": "setup"
+        },
+        {
+          "duration_seconds": 0.0025654799974290654,
+          "outcome": "passed",
+          "phase": "call"
+        },
+        {
+          "duration_seconds": 0.00011712100240401924,
+          "outcome": "passed",
+          "phase": "teardown"
+        }
+      ]
+    },
+    "oracle_tests/test_check_early_stopping_scorer.py::test_fit_constant_scorer_stops_after_n_iter_no_change[5-None]": {
+      "outcome": "pass",
+      "phases": [
+        {
+          "duration_seconds": 0.0001977159990929067,
+          "outcome": "passed",
+          "phase": "setup"
+        },
+        {
+          "duration_seconds": 0.002854667000065092,
+          "outcome": "passed",
+          "phase": "call"
+        },
+        {
+          "duration_seconds": 0.00012831599451601505,
+          "outcome": "passed",
+          "phase": "teardown"
+        }
+      ]
+    },
+    "oracle_tests/test_check_early_stopping_scorer.py::test_fit_early_stops_with_large_tol": {
+      "outcome": "pass",
+      "phases": [
+        {
+          "duration_seconds": 0.00010699600534280762,
+          "outcome": "passed",
+          "phase": "setup"
+        },
+        {
+          "duration_seconds": 0.0975163769981009,
+          "outcome": "passed",
+          "phase": "call"
+        },
+        {
+          "duration_seconds": 0.00014698899758514017,
+          "outcome": "passed",
+          "phase": "teardown"
+        }
+      ]
+    },
+    "oracle_tests/test_check_early_stopping_scorer.py::test_fit_regressor_train_scores_match_scorer_on_training_data": {
+      "outcome": "pass",
+      "phases": [
+        {
+          "duration_seconds": 0.0001303409953834489,
+          "outcome": "passed",
+          "phase": "setup"
+        },
+        {
+          "duration_seconds": 3.204970898004831,
+          "outcome": "passed",
+          "phase": "call"
+        },
+        {
+          "duration_seconds": 0.0002481379997334443,
+          "outcome": "passed",
+          "phase": "teardown"
+        }
+      ]
+    },
+    "oracle_tests/test_check_early_stopping_scorer.py::test_fit_regressor_validation_scores_match_scorer_on_validation_data": {
+      "outcome": "pass",
+      "phases": [
+        {
+          "duration_seconds": 0.0002297629980603233,
+          "outcome": "passed",
+          "phase": "setup"
+        },
+        {
+          "duration_seconds": 0.9981622630002676,
+          "outcome": "passed",
+          "phase": "call"
+        },
+        {
+          "duration_seconds": 0.00015326299762818962,
+          "outcome": "passed",
+          "phase": "teardown"
+        }
+      ]
+    },
+    "oracle_tests/test_check_early_stopping_scorer.py::test_fit_scorer_receives_binned_data_and_estimator": {
+      "outcome": "pass",
+      "phases": [
+        {
+          "duration_seconds": 0.00014739999460289255,
+          "outcome": "passed",
+          "phase": "setup"
+        },
+        {
+          "duration_seconds": 0.09767542999907164,
+          "outcome": "passed",
+          "phase": "call"
+        },
+        {
+          "duration_seconds": 0.00015565899957437068,
+          "outcome": "passed",
+          "phase": "teardown"
+        }
+      ]
+    },
+    "oracle_tests/test_check_early_stopping_scorer.py::test_fit_scorer_uses_small_trainset_for_large_data": {
+      "outcome": "pass",
+      "phases": [
+        {
+          "duration_seconds": 0.00014895500498823822,
+          "outcome": "passed",
+          "phase": "setup"
+        },
+        {
+          "duration_seconds": 2.2989104709995445,
+          "outcome": "passed",
+          "phase": "call"
+        },
+        {
+          "duration_seconds": 0.00013904600200476125,
+          "outcome": "passed",
+          "phase": "teardown"
+        }
+      ]
+    },
+    "oracle_tests/test_check_early_stopping_scorer.py::test_fit_scoring_none_uses_estimator_score": {
+      "outcome": "pass",
+      "phases": [
+        {
+          "duration_seconds": 0.00011849700240418315,
+          "outcome": "passed",
+          "phase": "setup"
+        },
+        {
+          "duration_seconds": 1.8996780260058586,
+          "outcome": "passed",
+          "phase": "call"
+        },
+        {
+          "duration_seconds": 0.00013970900181448087,
+          "outcome": "passed",
+          "phase": "teardown"
+        }
+      ]
+    },
+    "oracle_tests/test_check_early_stopping_scorer.py::test_fit_warm_start_keeps_appending_scores": {
+      "outcome": "pass",
+      "phases": [
+        {
+          "duration_seconds": 0.00022413999977288768,
+          "outcome": "passed",
+          "phase": "setup"
+        },
+        {
+          "duration_seconds": 11.800173308998637,
+          "outcome": "passed",
+          "phase": "call"
+        },
+        {
+          "duration_seconds": 0.0002069160036626272,
+          "outcome": "passed",
+          "phase": "teardown"
+        }
+      ]
+    },
+    "oracle_tests/test_check_early_stopping_scorer.py::test_scorer_accumulates_scores_over_calls": {
+      "outcome": "pass",
+      "phases": [
+        {
+          "duration_seconds": 6.361499981721863e-05,
+          "outcome": "passed",
+          "phase": "setup"
+        },
+        {
+          "duration_seconds": 8.183699537767097e-05,
+          "outcome": "passed",
+          "phase": "call"
+        },
+        {
+          "duration_seconds": 6.318100349744782e-05,
+          "outcome": "passed",
+          "phase": "teardown"
+        }
+      ]
+    },
+    "oracle_tests/test_check_early_stopping_scorer.py::test_scorer_decision_ignores_train_scores_when_validating": {
+      "outcome": "pass",
+      "phases": [
+        {
+          "duration_seconds": 6.515299901366234e-05,
+          "outcome": "passed",
+          "phase": "setup"
+        },
+        {
+          "duration_seconds": 9.529999806545675e-05,
+          "outcome": "passed",
+          "phase": "call"
+        },
+        {
+          "duration_seconds": 6.482100434368476e-05,
+          "outcome": "passed",
+          "phase": "teardown"
+        }
+      ]
+    },
+    "oracle_tests/test_check_early_stopping_scorer.py::test_scorer_decision_uses_validation_scores_when_available": {
+      "outcome": "pass",
+      "phases": [
+        {
+          "duration_seconds": 6.756599759683013e-05,
+          "outcome": "passed",
+          "phase": "setup"
+        },
+        {
+          "duration_seconds": 9.642199438530952e-05,
+          "outcome": "passed",
+          "phase": "call"
+        },
+        {
+          "duration_seconds": 6.726699939463288e-05,
+          "outcome": "passed",
+          "phase": "teardown"
+        }
+      ]
+    },
+    "oracle_tests/test_check_early_stopping_scorer.py::test_scorer_error_propagates": {
+      "outcome": "pass",
+      "phases": [
+        {
+          "duration_seconds": 7.878700125729665e-05,
+          "outcome": "passed",
+          "phase": "setup"
+        },
+        {
+          "duration_seconds": 0.00030980200244812295,
+          "outcome": "passed",
+          "phase": "call"
+        },
+        {
+          "duration_seconds": 7.439500041073188e-05,
+          "outcome": "passed",
+          "phase": "teardown"
+        }
+      ]
+    },
+    "oracle_tests/test_check_early_stopping_scorer.py::test_scorer_respects_tol[0.0-False]": {
+      "outcome": "pass",
+      "phases": [
+        {
+          "duration_seconds": 0.0001450159979867749,
+          "outcome": "passed",
+          "phase": "setup"
+        },
+        {
+          "duration_seconds": 8.69919967954047e-05,
+          "outcome": "passed",
+          "phase": "call"
+        },
+        {
+          "duration_seconds": 8.784399688011035e-05,
+          "outcome": "passed",
+          "phase": "teardown"
+        }
+      ]
+    },
+    "oracle_tests/test_check_early_stopping_scorer.py::test_scorer_respects_tol[0.4-False]": {
+      "outcome": "pass",
+      "phases": [
+        {
+          "duration_seconds": 0.00014151000505080447,
+          "outcome": "passed",
+          "phase": "setup"
+        },
+        {
+          "duration_seconds": 0.00011874100164277479,
+          "outcome": "passed",
+          "phase": "call"
+        },
+        {
+          "duration_seconds": 9.26590000744909e-05,
+          "outcome": "passed",
+          "phase": "teardown"
+        }
+      ]
+    },
+    "oracle_tests/test_check_early_stopping_scorer.py::test_scorer_respects_tol[0.5-True]": {
+      "outcome": "pass",
+      "phases": [
+        {
+          "duration_seconds": 0.00016554800095036626,
+          "outcome": "passed",
+          "phase": "setup"
+        },
+        {
+          "duration_seconds": 0.00011131999781355262,
+          "outcome": "passed",
+          "phase": "call"
+        },
+        {
+          "duration_seconds": 0.00010020599438576028,
+          "outcome": "passed",
+          "phase": "teardown"
+        }
+      ]
+    },
+    "oracle_tests/test_check_early_stopping_scorer.py::test_scorer_respects_tol[1.0-True]": {
+      "outcome": "pass",
+      "phases": [
+        {
+          "duration_seconds": 0.00015418700058944523,
+          "outcome": "passed",
+          "phase": "setup"
+        },
+        {
+          "duration_seconds": 9.477900312049314e-05,
+          "outcome": "passed",
+          "phase": "call"
+        },
+        {
+          "duration_seconds": 8.278099994640797e-05,
+          "outcome": "passed",
+          "phase": "teardown"
+        }
+      ]
+    },
+    "oracle_tests/test_check_early_stopping_scorer.py::test_scorer_train_only_appends_train_score": {
+      "outcome": "pass",
+      "phases": [
+        {
+          "duration_seconds": 8.90380033524707e-05,
+          "outcome": "passed",
+          "phase": "setup"
+        },
+        {
+          "duration_seconds": 9.235800098394975e-05,
+          "outcome": "passed",
+          "phase": "call"
+        },
+        {
+          "duration_seconds": 0.00013915399904362857,
+          "outcome": "passed",
+          "phase": "teardown"
+        }
+      ]
+    },
+    "oracle_tests/test_check_early_stopping_scorer.py::test_scorer_train_only_stopping_decision[scores0-2-expected0]": {
+      "outcome": "pass",
+      "phases": [
+        {
+          "duration_seconds": 0.00018914400425273925,
+          "outcome": "passed",
+          "phase": "setup"
+        },
+        {
+          "duration_seconds": 8.77230049809441e-05,
+          "outcome": "passed",
+          "phase": "call"
+        },
+        {
+          "duration_seconds": 8.802599768387154e-05,
+          "outcome": "passed",
+          "phase": "teardown"
+        }
+      ]
+    },
+    "oracle_tests/test_check_early_stopping_scorer.py::test_scorer_train_only_stopping_decision[scores1-2-expected1]": {
+      "outcome": "pass",
+      "phases": [
+        {
+          "duration_seconds": 0.00017710099928081036,
+          "outcome": "passed",
+          "phase": "setup"
+        },
+        {
+          "duration_seconds": 8.958300168160349e-05,
+          "outcome": "passed",
+          "phase": "call"
+        },
+        {
+          "duration_seconds": 8.763100049691275e-05,
+          "outcome": "passed",
+          "phase": "teardown"
+        }
+      ]
+    },
+    "oracle_tests/test_check_early_stopping_scorer.py::test_scorer_train_only_stopping_decision[scores2-2-expected2]": {
+      "outcome": "pass",
+      "phases": [
+        {
+          "duration_seconds": 0.00017245300114154816,
+          "outcome": "passed",
+          "phase": "setup"
+        },
+        {
+          "duration_seconds": 9.480199514655396e-05,
+          "outcome": "passed",
+          "phase": "call"
+        },
+        {
+          "duration_seconds": 8.549899939680472e-05,
+          "outcome": "passed",
+          "phase": "teardown"
+        }
+      ]
+    },
+    "oracle_tests/test_check_early_stopping_scorer.py::test_scorer_train_only_stopping_decision[scores3-2-expected3]": {
+      "outcome": "pass",
+      "phases": [
+        {
+          "duration_seconds": 0.00017328799731330946,
+          "outcome": "passed",
+          "phase": "setup"
+        },
+        {
+          "duration_seconds": 0.00013373100227909163,
+          "outcome": "passed",
+          "phase": "call"
+        },
+        {
+          "duration_seconds": 8.949900075094774e-05,
+          "outcome": "passed",
+          "phase": "teardown"
+        }
+      ]
+    },
+    "oracle_tests/test_check_early_stopping_scorer.py::test_scorer_train_only_stopping_decision[scores4-2-expected4]": {
+      "outcome": "pass",
+      "phases": [
+        {
+          "duration_seconds": 0.00017080799443647265,
+          "outcome": "passed",
+          "phase": "setup"
+        },
+        {
+          "duration_seconds": 0.00011863300460390747,
+          "outcome": "passed",
+          "phase": "call"
+        },
+        {
+          "duration_seconds": 8.621600136393681e-05,
+          "outcome": "passed",
+          "phase": "teardown"
+        }
+      ]
+    },
+    "oracle_tests/test_check_early_stopping_scorer.py::test_scorer_train_only_stopping_decision[scores5-2-expected5]": {
+      "outcome": "pass",
+      "phases": [
+        {
+          "duration_seconds": 0.00016411900287494063,
+          "outcome": "passed",
+          "phase": "setup"
+        },
+        {
+          "duration_seconds": 9.377700189361349e-05,
+          "outcome": "passed",
+          "phase": "call"
+        },
+        {
+          "duration_seconds": 9.404199954587966e-05,
+          "outcome": "passed",
+          "phase": "teardown"
+        }
+      ]
+    },
+    "oracle_tests/test_check_early_stopping_scorer.py::test_scorer_train_only_stopping_decision[scores6-1-expected6]": {
+      "outcome": "pass",
+      "phases": [
+        {
+          "duration_seconds": 0.00018730499868979678,
+          "outcome": "passed",
+          "phase": "setup"
+        },
+        {
+          "duration_seconds": 8.503300341544673e-05,
+          "outcome": "passed",
+          "phase": "call"
+        },
+        {
+          "duration_seconds": 8.579299901612103e-05,
+          "outcome": "passed",
+          "phase": "teardown"
+        }
+      ]
+    },
+    "oracle_tests/test_check_early_stopping_scorer.py::test_scorer_with_validation_appends_both_scores": {
+      "outcome": "pass",
+      "phases": [
+        {
+          "duration_seconds": 7.354500121437013e-05,
+          "outcome": "passed",
+          "phase": "setup"
+        },
+        {
+          "duration_seconds": 9.574300202075392e-05,
+          "outcome": "passed",
+          "phase": "call"
+        },
+        {
+          "duration_seconds": 6.056500569684431e-05,
+          "outcome": "passed",
+          "phase": "teardown"
+        }
+      ]
+    }
+  }
+}

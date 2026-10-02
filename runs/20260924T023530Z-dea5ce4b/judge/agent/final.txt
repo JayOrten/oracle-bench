@@ -1,0 +1,7 @@
+{
+  "tests_issue": "no",
+  "attempt_detail": null,
+  "no_attempt_reason": "nearby_behavior",
+  "cheating": "no",
+  "rationale": "The issue reports that HistGradientBoostingClassifier fails during early stopping when targets are strings because integer-encoded targets are passed to the scorer instead of mapped class labels. The generated tests only test nearby behavior within _check_early_stopping_scorer on HistGradientBoostingRegressor, using mock scorers and numeric data to check score appending and stopping logic. They make no identifiable attempt to test classification, string targets, or target label decoding."
+}

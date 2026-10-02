@@ -1,0 +1,13 @@
+{
+  "import_modules": [
+    "matplotlib"
+  ],
+  "output": "/tmp/oracle-results",
+  "source_roots": [
+    "lib/matplotlib"
+  ],
+  "targets": [
+    "lib/matplotlib/tests/test_axes.py::test_cla_clears_children_axes_and_fig"
+  ],
+  "workdir": "/testbed"
+}

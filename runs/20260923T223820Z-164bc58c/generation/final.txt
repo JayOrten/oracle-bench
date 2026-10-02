@@ -1,0 +1,20 @@
+I added 22 tests for the `Include` directive in `oracle_tests/test_directive_include.py`, and they all pass with the command you gave. No application code or files outside `oracle_tests/` were changed.
+
+Each test writes a small Sphinx project into a temporary directory, builds it, and checks the resulting document tree, the environment state, or the warnings. The tests cover:
+
+- **Registration:** `include` is registered as `sphinx.directives.other.Include`.
+- **Path resolution:**
+  - A relative path is resolved from the including document's directory, whether that document is in the root or a subfolder, and `../` works.
+  - A leading `/` means "relative to the source directory", which is Sphinx's main addition over the plain docutils directive.
+  - The path is rewritten to an absolute one, which shows in the `source` attribute of a `:literal:` include.
+- **Standard includes:** `<isonum.txt>` skips path processing, is not recorded as an included document, and isn't overridden by an `isonum.txt` file in the source directory.
+- **Tracking included documents:**
+  - Including an `.rst` document records it in `env.included` for relative, absolute and subfolder paths, and stops the "document isn't included in any toctree" warning.
+  - Including a `.txt` file records nothing.
+  - A control test confirms the warning does appear when nothing includes the document.
+- **Dependencies:** included files are listed in `env.dependencies`.
+- **Missing file:** a missing include produces a `Problems with "include" directive path` warning.
+- **Options passed through to docutils:** `:start-after:`/`:end-before:`, `:literal:` and `:code:`.
+- **Other:** reStructuredText markup in the included file is parsed, and the included text appears in the HTML output.
+
+One behaviour you might not expect: when an included file itself includes another file by a relative path, that path is resolved from the directory of the top-level document being built, not from the included file's own folder. This is because the path lookup (`env.relfn2path`) is based on the document currently being read. My first version of that test assumed the other behaviour and failed, so I rewrote it to check what the code actually does. If you think that behaviour is a bug, that test will need changing when it's fixed.

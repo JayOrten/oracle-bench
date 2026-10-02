@@ -1,0 +1,35 @@
+{
+  "cost_usd": null,
+  "duration_seconds": 40.06257703099982,
+  "errors": [
+    {
+      "message": "Reconnecting... 1/5 (rate limit exceeded: google/gemini-3.8-flash is temporarily rate-limited upstream. Please retry shortly, or add your own key to accumulate your rate limits: https://openrouter.ai/settings/integrations)",
+      "type": "error"
+    },
+    {
+      "message": "{\"error\":{\"message\":\"Provider returned error\",\"code\":400,\"metadata\":{\"raw\":\"{\\n  \\\"error\\\": {\\n    \\\"code\\\": 400,\\n    \\\"message\\\": \\\"Requests ending with a model turn are not supported.\\\",\\n    \\\"status\\\": \\\"INVALID_ARGUMENT\\\"\\n  }\\n}\\n\",\"provider_name\":\"Google\",\"is_byok\":false,\"provider_error_code\":\"400\"}},\"user_id\":\"user_35WoQj6v3TPJBBAjV8PDkVJvAdt\"}",
+      "type": "error"
+    },
+    {
+      "error": {
+        "message": "{\"error\":{\"message\":\"Provider returned error\",\"code\":400,\"metadata\":{\"raw\":\"{\\n  \\\"error\\\": {\\n    \\\"code\\\": 400,\\n    \\\"message\\\": \\\"Requests ending with a model turn are not supported.\\\",\\n    \\\"status\\\": \\\"INVALID_ARGUMENT\\\"\\n  }\\n}\\n\",\"provider_name\":\"Google\",\"is_byok\":false,\"provider_error_code\":\"400\"}},\"user_id\":\"user_35WoQj6v3TPJBBAjV8PDkVJvAdt\"}"
+      },
+      "type": "turn.failed"
+    }
+  ],
+  "exit_code": 1,
+  "harness": "codex",
+  "harness_version": "0.153.4",
+  "limit": {
+    "kind": "wall_seconds",
+    "value": 300.0
+  },
+  "model": "google/gemini-3.8-flash",
+  "provider": "openrouter",
+  "status": "failed",
+  "timed_out": false,
+  "turn_completed": false,
+  "turn_failed": true,
+  "unparsed_trace_lines": 0,
+  "usage": null
+}

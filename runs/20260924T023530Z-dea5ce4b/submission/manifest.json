@@ -1,0 +1,12 @@
+{
+  "compliant": true,
+  "empty": false,
+  "files": {
+    "oracle_tests/test_hist_gradient_boosting_early_stopping_scorer.py": {
+      "mode": 420,
+      "sha256": "9d3ecd71708d51f632bfc7ddb161aaeabda956908dbda51881bcb951c8de2382"
+    }
+  },
+  "forbidden_changes": [],
+  "sha256": "b6c1ab13435ddffb7341954f7c7b486d72d8072da2d7209ec066bb0f384a50fc"
+}

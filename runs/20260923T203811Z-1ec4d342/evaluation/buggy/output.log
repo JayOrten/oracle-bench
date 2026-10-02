@@ -1,0 +1,13 @@
+HEAD is now at 22623bd Merge pull request #1099 from sprt/master
+................                                                         [100%]/testbed/requests/models.py:560: SyntaxWarning: "is" with a literal. Did you mean "=="?
+  if self.status_code is 0:
+/opt/miniconda3/envs/testbed/lib/python3.9/site-packages/coverage/report_core.py:109: CoverageWarning: Couldn't parse Python file '/testbed/requests/packages/urllib3/contrib/ntlmpool.py' (couldnt-parse)
+  coverage._warn(msg, slug="couldnt-parse")
+
+=============================== warnings summary ===============================
+requests/packages/urllib3/_collections.py:7
+  /testbed/requests/packages/urllib3/_collections.py:7: DeprecationWarning: Using or importing the ABCs from 'collections' instead of from 'collections.abc' is deprecated since Python 3.3, and in 3.10 it will stop working
+    from collections import MutableMapping
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+16 passed, 1 warning in 0.07s

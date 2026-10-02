@@ -1,0 +1,24 @@
+{
+  "cost_usd": 0.39371199999999995,
+  "duration_seconds": 900.0332005620003,
+  "errors": [],
+  "exit_code": 124,
+  "harness": "opencode",
+  "harness_version": "1.18.32",
+  "limit": {
+    "kind": "wall_seconds",
+    "value": 900.0
+  },
+  "model": "qwen/qwen3.8-max-0902",
+  "provider": "openrouter",
+  "status": "timeout",
+  "timed_out": true,
+  "turn_completed": false,
+  "turn_failed": false,
+  "unparsed_trace_lines": 0,
+  "usage": {
+    "input_tokens": 52472,
+    "output_tokens": 2926,
+    "reasoning_tokens": 27058
+  }
+}

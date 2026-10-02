@@ -1,0 +1,7 @@
+{
+  "digests": [
+    "oracle-bench/runtime@sha256:4dbeed70767e796db4ef3ffd888f1c3d2d78826e25d2cbfc7af978f2c5208b42"
+  ],
+  "image_id": "sha256:4dbeed70767e796db4ef3ffd888f1c3d2d78826e25d2cbfc7af978f2c5208b42",
+  "reference": "sha256:4dbeed70767e796db4ef3ffd888f1c3d2d78826e25d2cbfc7af978f2c5208b42"
+}

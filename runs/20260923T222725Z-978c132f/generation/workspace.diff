@@ -1,0 +1,304 @@
+diff --git a/oracle_tests/test_rolling_init.py b/oracle_tests/test_rolling_init.py
+new file mode 100644
+index 0000000..d9d5195
+--- /dev/null
++++ b/oracle_tests/test_rolling_init.py
+@@ -0,0 +1,298 @@
++"""Unit tests for the constructors in ``xarray/core/rolling.py``."""
++from __future__ import annotations
++
++import numpy as np
++import pytest
++
++import xarray as xr
++from xarray.core import duck_array_ops
++from xarray.core.rolling import (
++    DataArrayCoarsen,
++    DataArrayRolling,
++    DatasetCoarsen,
++    DatasetRolling,
++)
++
++
++@pytest.fixture
++def da():
++    return xr.DataArray(
++        np.arange(12.0).reshape(3, 4),
++        dims=("x", "y"),
++        coords={"x": [10, 20, 30], "y": [1, 2, 3, 4], "lab": ("x", ["a", "b", "c"])},
++        attrs={"units": "m"},
++    )
++
++
++@pytest.fixture
++def ds(da):
++    return xr.Dataset(
++        {
++            "a": da,
++            "b": ("y", np.arange(4.0)),
++            "c": ("x", np.arange(3.0)),
++            "d": ("z", np.arange(2.0)),
++        },
++        coords=da.coords,
++    )
++
++
++class TestRollingInit:
++    def test_basic_attributes(self, da):
++        r = DataArrayRolling(da, {"y": 3})
++        assert r.obj is da
++        assert r.dim == ["y"]
++        assert r.window == [3]
++        assert r.center == [False]
++        assert r.min_periods == 3
++        assert r.ndim == 1
++
++    def test_multiple_dims_preserve_order(self, da):
++        r = DataArrayRolling(da, {"y": 2, "x": 3})
++        assert r.dim == ["y", "x"]
++        assert r.window == [2, 3]
++        assert r.ndim == 2
++
++    def test_default_min_periods_is_product_of_windows(self, da):
++        r = DataArrayRolling(da, {"x": 2, "y": 3})
++        assert r.min_periods == 6
++
++    @pytest.mark.parametrize("min_periods", [1, 2, 100])
++    def test_explicit_min_periods(self, da, min_periods):
++        r = DataArrayRolling(da, {"x": 2, "y": 3}, min_periods=min_periods)
++        assert r.min_periods == min_periods
++
++    @pytest.mark.parametrize("min_periods", [0, -1])
++    def test_invalid_min_periods(self, da, min_periods):
++        with pytest.raises(ValueError, match="min_periods must be greater than zero"):
++            DataArrayRolling(da, {"y": 2}, min_periods=min_periods)
++
++    @pytest.mark.parametrize("window", [0, -2])
++    def test_invalid_window(self, da, window):
++        with pytest.raises(ValueError, match="window must be > 0"):
++            DataArrayRolling(da, {"y": window})
++
++    def test_invalid_window_in_second_dim(self, da):
++        with pytest.raises(ValueError, match="window must be > 0"):
++            DataArrayRolling(da, {"x": 2, "y": 0})
++
++    def test_invalid_window_checked_before_min_periods(self, da):
++        with pytest.raises(ValueError, match="window must be > 0"):
++            DataArrayRolling(da, {"y": 0}, min_periods=0)
++
++    @pytest.mark.parametrize("center", [True, False])
++    def test_scalar_center_broadcast(self, da, center):
++        r = DataArrayRolling(da, {"x": 2, "y": 2}, center=center)
++        assert r.center == [center, center]
++
++    def test_mapping_center(self, da):
++        r = DataArrayRolling(da, {"x": 2, "y": 2}, center={"y": True})
++        assert r.center == [False, True]
++
++        r = DataArrayRolling(da, {"x": 2, "y": 2}, center={"x": True, "y": False})
++        assert r.center == [True, False]
++
++    def test_mapping_center_ignores_unknown_keys(self, da):
++        r = DataArrayRolling(da, {"y": 2}, center={"x": True, "other": True})
++        assert r.center == [False]
++
++    def test_repr(self, da):
++        r = DataArrayRolling(da, {"x": 2, "y": 3}, center={"y": True})
++        assert repr(r) == "DataArrayRolling [x->2,y->3(center)]"
++
++    def test_len(self, da):
++        assert len(DataArrayRolling(da, {"y": 2})) == 4
++        assert len(DataArrayRolling(da, {"x": 2, "y": 2})) == 12
++
++
++class TestDataArrayRollingInit:
++    def test_window_labels_with_coordinate(self, da):
++        r = DataArrayRolling(da, {"y": 2})
++        xr.testing.assert_identical(r.window_labels, da["y"])
++
++    def test_window_labels_uses_first_dim(self, da):
++        r = DataArrayRolling(da, {"x": 2, "y": 2})
++        xr.testing.assert_identical(r.window_labels, da["x"])
++
++    def test_window_labels_without_coordinate(self):
++        arr = xr.DataArray(np.arange(5.0), dims="t")
++        r = DataArrayRolling(arr, {"t": 2})
++        np.testing.assert_array_equal(r.window_labels.values, np.arange(5))
++
++    def test_missing_dim_raises(self, da):
++        with pytest.raises(KeyError):
++            DataArrayRolling(da, {"z": 2})
++
++    def test_matches_dataarray_rolling(self, da):
++        r = da.rolling(y=3, center=True, min_periods=2)
++        assert isinstance(r, DataArrayRolling)
++        assert r.dim == ["y"]
++        assert r.window == [3]
++        assert r.center == [True]
++        assert r.min_periods == 2
++
++    def test_constructed_object_is_usable(self, da):
++        r = DataArrayRolling(da, {"y": 2}, min_periods=1)
++        expected = da.rolling(y=2, min_periods=1).sum()
++        xr.testing.assert_identical(r.sum(), expected)
++
++
++class TestDatasetRollingInit:
++    def test_basic_attributes(self, ds):
++        r = DatasetRolling(ds, {"y": 2})
++        assert r.obj is ds
++        assert r.dim == ["y"]
++        assert r.window == [2]
++        assert r.center == [False]
++        assert r.min_periods == 2
++
++    def test_rollings_only_for_dependent_vars(self, ds):
++        r = DatasetRolling(ds, {"y": 2})
++        assert set(r.rollings) == {"a", "b"}
++        for key, sub in r.rollings.items():
++            assert isinstance(sub, DataArrayRolling)
++            xr.testing.assert_identical(sub.obj, ds[key])
++            assert sub.dim == ["y"]
++            assert sub.window == [2]
++
++    def test_rollings_multi_dim_subsets(self, ds):
++        r = DatasetRolling(ds, {"x": 2, "y": 3}, center={"x": True})
++        assert set(r.rollings) == {"a", "b", "c"}
++        assert r.min_periods == 6
++
++        a = r.rollings["a"]
++        assert a.dim == ["x", "y"]
++        assert a.window == [2, 3]
++        assert a.center == [True, False]
++        assert a.min_periods == 6
++
++        b = r.rollings["b"]
++        assert b.dim == ["y"]
++        assert b.window == [3]
++        assert b.center == [False]
++        # min_periods=None is forwarded, so each sub-rolling uses its own window
++        assert b.min_periods == 3
++
++        c = r.rollings["c"]
++        assert c.dim == ["x"]
++        assert c.window == [2]
++        assert c.center == [True]
++        assert c.min_periods == 2
++
++    def test_explicit_min_periods_forwarded(self, ds):
++        r = DatasetRolling(ds, {"x": 2, "y": 3}, min_periods=1)
++        assert r.min_periods == 1
++        assert all(sub.min_periods == 1 for sub in r.rollings.values())
++
++    def test_scalar_center_forwarded(self, ds):
++        r = DatasetRolling(ds, {"x": 2, "y": 2}, center=True)
++        assert r.center == [True, True]
++        assert r.rollings["a"].center == [True, True]
++        assert r.rollings["b"].center == [True]
++        assert r.rollings["c"].center == [True]
++
++    def test_no_dependent_vars(self, ds):
++        r = DatasetRolling(ds[["d"]].assign_coords(x=ds.x), {"x": 2})
++        assert r.rollings == {}
++
++    def test_missing_dim_raises(self, ds):
++        with pytest.raises(KeyError):
++            DatasetRolling(ds, {"q": 2})
++
++    def test_missing_dim_among_valid_raises(self, ds):
++        with pytest.raises(KeyError):
++            DatasetRolling(ds, {"x": 2, "q": 2})
++
++    def test_invalid_window(self, ds):
++        with pytest.raises(ValueError, match="window must be > 0"):
++            DatasetRolling(ds, {"x": 0})
++
++    def test_invalid_min_periods(self, ds):
++        with pytest.raises(ValueError, match="min_periods must be greater than zero"):
++            DatasetRolling(ds, {"x": 2}, min_periods=0)
++
++    def test_matches_dataset_rolling(self, ds):
++        r = ds.rolling(x=2, center=True)
++        assert isinstance(r, DatasetRolling)
++        assert r.dim == ["x"]
++        assert r.center == [True]
++        assert set(r.rollings) == {"a", "c"}
++
++    def test_repr(self, ds):
++        r = DatasetRolling(ds, {"x": 2, "y": 3}, center={"x": True})
++        assert repr(r) == "DatasetRolling [x->2(center),y->3]"
++
++
++class TestCoarsenInit:
++    def test_basic_attributes(self, da):
++        windows = {"y": 2}
++        c = DataArrayCoarsen(da, windows, "exact", "left", "mean")
++        assert c.obj is da
++        assert c.windows is windows
++        assert c.boundary == "exact"
++        assert c.side == "left"
++
++    def test_scalar_coord_func_expanded(self, da):
++        c = DataArrayCoarsen(da, {"y": 2}, "exact", "left", "sum")
++        assert c.coord_func["x"] == "sum"
++        assert c.coord_func["y"] == "sum"
++        # non-dimension coordinates default to mean
++        assert c.coord_func["lab"] is duck_array_ops.mean
++        assert set(c.coord_func) == {"x", "y", "lab"}
++
++    def test_callable_coord_func_expanded(self, da):
++        c = DataArrayCoarsen(da, {"y": 2}, "exact", "left", np.max)
++        assert c.coord_func["x"] is np.max
++        assert c.coord_func["y"] is np.max
++
++    def test_mapping_coord_func_filled_with_mean(self, da):
++        c = DataArrayCoarsen(da, {"y": 2}, "exact", "left", {"y": "max"})
++        assert c.coord_func["y"] == "max"
++        assert c.coord_func["x"] is duck_array_ops.mean
++        assert c.coord_func["lab"] is duck_array_ops.mean
++
++    def test_mapping_coord_func_extra_keys_kept(self, da):
++        c = DataArrayCoarsen(da, {"y": 2}, "exact", "left", {"other": "min"})
++        assert c.coord_func["other"] == "min"
++
++    def test_scalar_coord_func_dims_without_coords(self):
++        arr = xr.DataArray(np.zeros((2, 4)), dims=("a", "b"))
++        c = DataArrayCoarsen(arr, {"b": 2}, "exact", "left", "min")
++        assert c.coord_func == {"a": "min", "b": "min"}
++
++    def test_mapping_side_stored(self, da):
++        side = {"y": "right"}
++        c = DataArrayCoarsen(da, {"y": 2}, "trim", side, "mean")
++        assert c.side is side
++        assert c.boundary == "trim"
++
++    def test_missing_dim_raises(self, da):
++        with pytest.raises(ValueError, match=r"Dimensions \['z'\] not found in DataArray"):
++            DataArrayCoarsen(da, {"z": 2}, "exact", "left", "mean")
++
++    def test_multiple_missing_dims_listed(self, da):
++        with pytest.raises(ValueError, match=r"\['z', 'w'\]"):
++            DataArrayCoarsen(da, {"y": 2, "z": 2, "w": 3}, "exact", "left", "mean")
++
++    def test_dataset_missing_dim_raises(self, ds):
++        with pytest.raises(ValueError, match=r"Dimensions \['q'\] not found in Dataset"):
++            DatasetCoarsen(ds, {"q": 2}, "exact", "left", "mean")
++
++    def test_dataset_coord_func(self, ds):
++        c = DatasetCoarsen(ds, {"y": 2}, "exact", "left", "sum")
++        assert c.coord_func["x"] == "sum"
++        assert c.coord_func["y"] == "sum"
++        assert c.coord_func["z"] == "sum"
++        assert c.coord_func["lab"] is duck_array_ops.mean
++
++    def test_matches_dataarray_coarsen(self, da):
++        c = da.coarsen(y=2, boundary="trim", side="right", coord_func="max")
++        assert isinstance(c, DataArrayCoarsen)
++        assert c.windows == {"y": 2}
++        assert c.boundary == "trim"
++        assert c.side == "right"
++        assert c.coord_func["y"] == "max"
++
++    def test_repr(self, da):
++        c = DataArrayCoarsen(da, {"y": 2}, "exact", "left", "mean")
++        assert repr(c) == "DataArrayCoarsen [windows->{'y': 2},side->left]"

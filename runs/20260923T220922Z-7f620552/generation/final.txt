@@ -1,0 +1,2 @@
+Now I have a full picture of `__clear`. Let me write the tests.
+

@@ -1,0 +1,88 @@
+{
+  "compliant": true,
+  "empty": false,
+  "files": {
+    "oracle_tests/conftest.py": {
+      "mode": 420,
+      "sha256": "0718d28eeb6dbe7068197d6eed8aa5e03ba56473475cf189d4441d0c4ef17800"
+    },
+    "oracle_tests/roots/test-include-basic/conf.py": {
+      "mode": 420,
+      "sha256": "a1ccfd17079ba1072a0db866f27c6ec5e9118930dfb5ff3ae309c223f7f4b719"
+    },
+    "oracle_tests/roots/test-include-basic/index.rst": {
+      "mode": 420,
+      "sha256": "8d907997073bb1fcceee25a6825c31e8a4a345b1704e2eaa8c38f4ea00ff83a5"
+    },
+    "oracle_tests/roots/test-include-basic/intro.rst": {
+      "mode": 420,
+      "sha256": "d97b2135838534806c5653000ae5d370a1ba07892ba7321946b92baf908dc727"
+    },
+    "oracle_tests/roots/test-include-basic/rootfile.rst": {
+      "mode": 420,
+      "sha256": "2c68b2967a28d9e8db10ec57e25d27cfce67a5b54593851e981cfce74f9eee58"
+    },
+    "oracle_tests/roots/test-include-basic/rootnote.txt": {
+      "mode": 420,
+      "sha256": "1d0ddcfb3337d31799a50567e1a82e6e9a0fe6b8fd840d751e3490a550d948a8"
+    },
+    "oracle_tests/roots/test-include-basic/sub/doc.rst": {
+      "mode": 420,
+      "sha256": "ffa31d20a3c483a8de02fda4127dd4b91fc969f2ffb10c22ef0a08a871cdc8cf"
+    },
+    "oracle_tests/roots/test-include-basic/sub/local.rst": {
+      "mode": 420,
+      "sha256": "4cfaa8128c204337ac566416beeebfb79749dcfb96188b355cdd144ef3d65411"
+    },
+    "oracle_tests/roots/test-include-circular/a.rst": {
+      "mode": 420,
+      "sha256": "08ab64bd7edb22f16154e4dde3005db95efe53f0dd0f4dac1c0d5da69575f67a"
+    },
+    "oracle_tests/roots/test-include-circular/conf.py": {
+      "mode": 420,
+      "sha256": "a1ccfd17079ba1072a0db866f27c6ec5e9118930dfb5ff3ae309c223f7f4b719"
+    },
+    "oracle_tests/roots/test-include-circular/index.rst": {
+      "mode": 420,
+      "sha256": "f04566935d9fbe25e8c6afaaeedfbe19d9a3acfc7227e29e6976c46fa61b7cd4"
+    },
+    "oracle_tests/roots/test-include-missing/conf.py": {
+      "mode": 420,
+      "sha256": "a1ccfd17079ba1072a0db866f27c6ec5e9118930dfb5ff3ae309c223f7f4b719"
+    },
+    "oracle_tests/roots/test-include-missing/index.rst": {
+      "mode": 420,
+      "sha256": "a6ecf562cad1d1f5e505b46ce6cae8868101fff3b34a91785fee42dfc9d32eef"
+    },
+    "oracle_tests/roots/test-include-options/code.py": {
+      "mode": 420,
+      "sha256": "d4511450ecbf083ae8a13f334fb28ce51c032905946e8c0563f2046bac26ada0"
+    },
+    "oracle_tests/roots/test-include-options/conf.py": {
+      "mode": 420,
+      "sha256": "a1ccfd17079ba1072a0db866f27c6ec5e9118930dfb5ff3ae309c223f7f4b719"
+    },
+    "oracle_tests/roots/test-include-options/index.rst": {
+      "mode": 420,
+      "sha256": "cf73ed8c7ca4aba96e0a76974a8b1d0c592eb8d804ffd3f68b44df5e1c75ce67"
+    },
+    "oracle_tests/roots/test-include-options/spaced file.txt": {
+      "mode": 420,
+      "sha256": "6f699e0bb1e422b4869257f26bc749b6ec5da317ec705298dbab468d348bcdde"
+    },
+    "oracle_tests/roots/test-include-options/target.txt": {
+      "mode": 420,
+      "sha256": "006b20babef288a10138f946c88e9642bd76fa2e151ae6925dadf8ac3a89a146"
+    },
+    "oracle_tests/roots/test-include-standard/conf.py": {
+      "mode": 420,
+      "sha256": "a1ccfd17079ba1072a0db866f27c6ec5e9118930dfb5ff3ae309c223f7f4b719"
+    },
+    "oracle_tests/roots/test-include-standard/index.rst": {
+      "mode": 420,
+      "sha256": "4aa25eccc81a77edcdd48596d3ca84f0a72d53680f542ae0fcd0e96e0f8c13db"
+    }
+  },
+  "forbidden_changes": [],
+  "sha256": "56071cee5631409a32e5c4ddd5ec858330e6a8ef6b2d75fdb3ba226f9268e56c"
+}

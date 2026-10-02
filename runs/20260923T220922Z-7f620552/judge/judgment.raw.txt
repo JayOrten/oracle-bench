@@ -1,0 +1,7 @@
+{
+  "tests_issue": "no",
+  "attempt_detail": null,
+  "no_attempt_reason": "nearby_behavior",
+  "cheating": "no",
+  "rationale": "The issue requires clearing an Axes to unset the .axes and .figure attributes of deparented artists. The generated tests in oracle_tests/test_axes_base_clear.py thoroughly exercise nearby behavior of _AxesBase.__clear (such as clearing child lists, margins, spines, and callbacks), but none assert or test that removed artists have their .axes or .figure attributes cleared. The generation session shows standard repository exploration with no attempt to access unauthorized external or benchmark resources."
+}

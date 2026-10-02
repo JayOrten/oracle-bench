@@ -1,0 +1,13 @@
+HEAD is now at aa55975c7 Doc: Clear mailbox before deleting the user (#10068)
+....F..                                                                  [100%]
+=================================== FAILURES ===================================
+___ test_caplog_clear_resets_messages_records_and_text_but_capture_continues ___
+oracle_tests/test_logging_messages_reset.py:95: in test_caplog_clear_resets_messages_records_and_text_but_capture_continues
+    assert caplog.records is not saved_records
+E   assert [] is not []
+E    +  where [] = <_pytest.logging.LogCaptureFixture object at 0x7fa58d053f70>.records
+------------------------------ Captured log call -------------------------------
+INFO     oracle.reset.fixture:test_logging_messages_reset.py:87 before
+=========================== short test summary info ============================
+FAILED oracle_tests/test_logging_messages_reset.py::test_caplog_clear_resets_messages_records_and_text_but_capture_continues
+1 failed, 6 passed in 0.04s

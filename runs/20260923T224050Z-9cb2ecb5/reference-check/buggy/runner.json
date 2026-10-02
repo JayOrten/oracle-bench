@@ -1,0 +1,14 @@
+{
+  "import_modules": [
+    "sphinx"
+  ],
+  "output": "/tmp/oracle-results",
+  "source_roots": [
+    "sphinx"
+  ],
+  "targets": [
+    "tests/test_directive_other.py::test_include_source_read_event",
+    "tests/test_directive_other.py::test_include_source_read_event_nested_includes"
+  ],
+  "workdir": "/testbed"
+}

@@ -1,0 +1,20 @@
+{
+  "arguments": {
+    "COVERAGE_VERSION": "7.6.1",
+    "HARNESS_IMAGE": "sha256:d6c4130f4f22ddd5d25aad486ab4eb7fea7ae61baaa5727f364258ea9e69c8b6",
+    "PROJECT_IMAGE": "sha256:2b2d88a009299437cd61f155bb5a0ecf9a956386ecf4fc2dd765bb79907f3a8f",
+    "PROJECT_PYTHON": "/opt/miniconda3/envs/testbed/bin/python",
+    "PROJECT_PYTHON_DIR": "/opt/miniconda3/envs/testbed/bin",
+    "PYTEST_VERSION": "7.4.4"
+  },
+  "files": {
+    "container_helpers/execute.py": "d7e030a6e9c3809a22b3e031c7da3066d09689a1f20e40a0b762ce03a831f627",
+    "container_helpers/judge_workspace.py": "97ed65f3c4fbeff2bf69fc5b67146193a534a34af5dccc0ffbe2b00a4a0a85cd",
+    "container_helpers/prepare.py": "da2bc3db3fd2602b1248469bcad3dd18e92d738a5e6dcf30c9b9450e9b424d1f",
+    "container_helpers/pytest_runner.py": "8c2f9812dfe3b35dcd216f7145715170218aa3d221ffdd4cb9c33e7c6741f07c",
+    "container_helpers/workspace.py": "a5c50f8cfa070b9c91872e9cad3d00f67eb182e3388ff370d4b1cf68cc0723c5",
+    "runtime.Dockerfile": "1f0f6fbaddf4c973fdaee2bb5b399b94a28e29bdc9a4cec00e9090f28e7aab66"
+  },
+  "platform": "linux/amd64",
+  "recipe": "runtime.Dockerfile"
+}

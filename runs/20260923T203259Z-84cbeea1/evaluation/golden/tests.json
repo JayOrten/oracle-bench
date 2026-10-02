@@ -1,0 +1,899 @@
+{
+  "collected": 44,
+  "collection_errors": [],
+  "exit_code": 1,
+  "status": "completed",
+  "tests": {
+    "oracle_tests/test_prepare_body.py::TestEmptyBody::test_body_attribute_overwritten": {
+      "outcome": "pass",
+      "phases": [
+        {
+          "duration_seconds": 7.160700261010788e-05,
+          "outcome": "passed",
+          "phase": "setup"
+        },
+        {
+          "duration_seconds": 9.480999869992957e-05,
+          "outcome": "passed",
+          "phase": "call"
+        },
+        {
+          "duration_seconds": 6.081500032451004e-05,
+          "outcome": "passed",
+          "phase": "teardown"
+        }
+      ]
+    },
+    "oracle_tests/test_prepare_body.py::TestEmptyBody::test_empty_dict_data": {
+      "outcome": "pass",
+      "phases": [
+        {
+          "duration_seconds": 6.596999810426496e-05,
+          "outcome": "passed",
+          "phase": "setup"
+        },
+        {
+          "duration_seconds": 9.190800119540654e-05,
+          "outcome": "passed",
+          "phase": "call"
+        },
+        {
+          "duration_seconds": 6.208899867488071e-05,
+          "outcome": "passed",
+          "phase": "teardown"
+        }
+      ]
+    },
+    "oracle_tests/test_prepare_body.py::TestEmptyBody::test_empty_files_is_ignored": {
+      "outcome": "pass",
+      "phases": [
+        {
+          "duration_seconds": 6.827199831604958e-05,
+          "outcome": "passed",
+          "phase": "setup"
+        },
+        {
+          "duration_seconds": 0.0001699960012047086,
+          "outcome": "passed",
+          "phase": "call"
+        },
+        {
+          "duration_seconds": 9.497800056124106e-05,
+          "outcome": "passed",
+          "phase": "teardown"
+        }
+      ]
+    },
+    "oracle_tests/test_prepare_body.py::TestEmptyBody::test_empty_string_data": {
+      "outcome": "pass",
+      "phases": [
+        {
+          "duration_seconds": 6.834399755462073e-05,
+          "outcome": "passed",
+          "phase": "setup"
+        },
+        {
+          "duration_seconds": 9.239200153388083e-05,
+          "outcome": "passed",
+          "phase": "call"
+        },
+        {
+          "duration_seconds": 5.666800279868767e-05,
+          "outcome": "passed",
+          "phase": "teardown"
+        }
+      ]
+    },
+    "oracle_tests/test_prepare_body.py::TestEmptyBody::test_none_data_no_files": {
+      "outcome": "pass",
+      "phases": [
+        {
+          "duration_seconds": 0.0001069270001607947,
+          "outcome": "passed",
+          "phase": "setup"
+        },
+        {
+          "duration_seconds": 0.0001331979983660858,
+          "outcome": "passed",
+          "phase": "call"
+        },
+        {
+          "duration_seconds": 7.381099931080826e-05,
+          "outcome": "passed",
+          "phase": "teardown"
+        }
+      ]
+    },
+    "oracle_tests/test_prepare_body.py::TestFileLikeData::test_content_length_rewinds_file_position": {
+      "outcome": "pass",
+      "phases": [
+        {
+          "duration_seconds": 7.301100049517117e-05,
+          "outcome": "passed",
+          "phase": "setup"
+        },
+        {
+          "duration_seconds": 9.308599692303687e-05,
+          "outcome": "passed",
+          "phase": "call"
+        },
+        {
+          "duration_seconds": 6.240500079002231e-05,
+          "outcome": "passed",
+          "phase": "teardown"
+        }
+      ]
+    },
+    "oracle_tests/test_prepare_body.py::TestFileLikeData::test_readable_keeps_explicit_content_type": {
+      "outcome": "pass",
+      "phases": [
+        {
+          "duration_seconds": 6.859000131953508e-05,
+          "outcome": "passed",
+          "phase": "setup"
+        },
+        {
+          "duration_seconds": 9.502399916527793e-05,
+          "outcome": "passed",
+          "phase": "call"
+        },
+        {
+          "duration_seconds": 6.18920021224767e-05,
+          "outcome": "passed",
+          "phase": "teardown"
+        }
+      ]
+    },
+    "oracle_tests/test_prepare_body.py::TestFileLikeData::test_readable_non_iterable_passed_through": {
+      "outcome": "pass",
+      "phases": [
+        {
+          "duration_seconds": 6.535099964821711e-05,
+          "outcome": "passed",
+          "phase": "setup"
+        },
+        {
+          "duration_seconds": 0.00010342799942009151,
+          "outcome": "passed",
+          "phase": "call"
+        },
+        {
+          "duration_seconds": 6.471100277849473e-05,
+          "outcome": "passed",
+          "phase": "teardown"
+        }
+      ]
+    },
+    "oracle_tests/test_prepare_body.py::TestFormEncoded::test_dict_is_form_encoded": {
+      "outcome": "pass",
+      "phases": [
+        {
+          "duration_seconds": 6.593700163648464e-05,
+          "outcome": "passed",
+          "phase": "setup"
+        },
+        {
+          "duration_seconds": 0.00012013400191790424,
+          "outcome": "passed",
+          "phase": "call"
+        },
+        {
+          "duration_seconds": 6.552999911946245e-05,
+          "outcome": "passed",
+          "phase": "teardown"
+        }
+      ]
+    },
+    "oracle_tests/test_prepare_body.py::TestFormEncoded::test_dict_values_are_url_quoted": {
+      "outcome": "pass",
+      "phases": [
+        {
+          "duration_seconds": 7.600300159538165e-05,
+          "outcome": "passed",
+          "phase": "setup"
+        },
+        {
+          "duration_seconds": 0.00012215600145282224,
+          "outcome": "passed",
+          "phase": "call"
+        },
+        {
+          "duration_seconds": 6.555900108651258e-05,
+          "outcome": "passed",
+          "phase": "teardown"
+        }
+      ]
+    },
+    "oracle_tests/test_prepare_body.py::TestFormEncoded::test_dict_with_list_values": {
+      "outcome": "pass",
+      "phases": [
+        {
+          "duration_seconds": 7.798600199748762e-05,
+          "outcome": "passed",
+          "phase": "setup"
+        },
+        {
+          "duration_seconds": 0.00011296299999230541,
+          "outcome": "passed",
+          "phase": "call"
+        },
+        {
+          "duration_seconds": 6.070200106478296e-05,
+          "outcome": "passed",
+          "phase": "teardown"
+        }
+      ]
+    },
+    "oracle_tests/test_prepare_body.py::TestFormEncoded::test_dict_with_multiple_keys": {
+      "outcome": "pass",
+      "phases": [
+        {
+          "duration_seconds": 7.317100244108588e-05,
+          "outcome": "passed",
+          "phase": "setup"
+        },
+        {
+          "duration_seconds": 0.00012744400009978563,
+          "outcome": "passed",
+          "phase": "call"
+        },
+        {
+          "duration_seconds": 6.629999916185625e-05,
+          "outcome": "passed",
+          "phase": "teardown"
+        }
+      ]
+    },
+    "oracle_tests/test_prepare_body.py::TestFormEncoded::test_dict_with_non_string_value": {
+      "outcome": "pass",
+      "phases": [
+        {
+          "duration_seconds": 7.262299914145842e-05,
+          "outcome": "passed",
+          "phase": "setup"
+        },
+        {
+          "duration_seconds": 0.0001591869986441452,
+          "outcome": "passed",
+          "phase": "call"
+        },
+        {
+          "duration_seconds": 6.568000026163645e-05,
+          "outcome": "passed",
+          "phase": "teardown"
+        }
+      ]
+    },
+    "oracle_tests/test_prepare_body.py::TestFormEncoded::test_dict_with_none_value_is_dropped": {
+      "outcome": "pass",
+      "phases": [
+        {
+          "duration_seconds": 6.978300007176585e-05,
+          "outcome": "passed",
+          "phase": "setup"
+        },
+        {
+          "duration_seconds": 0.00010930099961115047,
+          "outcome": "passed",
+          "phase": "call"
+        },
+        {
+          "duration_seconds": 6.671799928881228e-05,
+          "outcome": "passed",
+          "phase": "teardown"
+        }
+      ]
+    },
+    "oracle_tests/test_prepare_body.py::TestFormEncoded::test_explicit_content_type_check_is_case_insensitive": {
+      "outcome": "pass",
+      "phases": [
+        {
+          "duration_seconds": 7.330500011448748e-05,
+          "outcome": "passed",
+          "phase": "setup"
+        },
+        {
+          "duration_seconds": 0.00010683599975891411,
+          "outcome": "passed",
+          "phase": "call"
+        },
+        {
+          "duration_seconds": 7.117900167941116e-05,
+          "outcome": "passed",
+          "phase": "teardown"
+        }
+      ]
+    },
+    "oracle_tests/test_prepare_body.py::TestFormEncoded::test_explicit_content_type_is_preserved": {
+      "outcome": "pass",
+      "phases": [
+        {
+          "duration_seconds": 6.785799996578135e-05,
+          "outcome": "passed",
+          "phase": "setup"
+        },
+        {
+          "duration_seconds": 0.00013364700134843588,
+          "outcome": "passed",
+          "phase": "call"
+        },
+        {
+          "duration_seconds": 7.333200119319372e-05,
+          "outcome": "passed",
+          "phase": "teardown"
+        }
+      ]
+    },
+    "oracle_tests/test_prepare_body.py::TestFormEncoded::test_unicode_values_are_utf8_encoded": {
+      "outcome": "pass",
+      "phases": [
+        {
+          "duration_seconds": 6.869600110803731e-05,
+          "outcome": "passed",
+          "phase": "setup"
+        },
+        {
+          "duration_seconds": 0.00010651200136635453,
+          "outcome": "passed",
+          "phase": "call"
+        },
+        {
+          "duration_seconds": 5.9301000874256715e-05,
+          "outcome": "passed",
+          "phase": "teardown"
+        }
+      ]
+    },
+    "oracle_tests/test_prepare_body.py::TestMultipart::test_content_length_matches_body": {
+      "outcome": "pass",
+      "phases": [
+        {
+          "duration_seconds": 6.846600081189536e-05,
+          "outcome": "passed",
+          "phase": "setup"
+        },
+        {
+          "duration_seconds": 0.00013304800086189061,
+          "outcome": "passed",
+          "phase": "call"
+        },
+        {
+          "duration_seconds": 6.3904000853654e-05,
+          "outcome": "passed",
+          "phase": "teardown"
+        }
+      ]
+    },
+    "oracle_tests/test_prepare_body.py::TestMultipart::test_data_field_list_values_repeated": {
+      "outcome": "pass",
+      "phases": [
+        {
+          "duration_seconds": 7.433099744957872e-05,
+          "outcome": "passed",
+          "phase": "setup"
+        },
+        {
+          "duration_seconds": 0.00014550700143445283,
+          "outcome": "passed",
+          "phase": "call"
+        },
+        {
+          "duration_seconds": 6.573900100192986e-05,
+          "outcome": "passed",
+          "phase": "teardown"
+        }
+      ]
+    },
+    "oracle_tests/test_prepare_body.py::TestMultipart::test_data_fields_included": {
+      "outcome": "pass",
+      "phases": [
+        {
+          "duration_seconds": 6.585600203834474e-05,
+          "outcome": "passed",
+          "phase": "setup"
+        },
+        {
+          "duration_seconds": 0.0001328389989794232,
+          "outcome": "passed",
+          "phase": "call"
+        },
+        {
+          "duration_seconds": 6.860299981781282e-05,
+          "outcome": "passed",
+          "phase": "teardown"
+        }
+      ]
+    },
+    "oracle_tests/test_prepare_body.py::TestMultipart::test_explicit_content_type_header_preserved": {
+      "outcome": "pass",
+      "phases": [
+        {
+          "duration_seconds": 6.978700184845366e-05,
+          "outcome": "passed",
+          "phase": "setup"
+        },
+        {
+          "duration_seconds": 0.0001325289995293133,
+          "outcome": "passed",
+          "phase": "call"
+        },
+        {
+          "duration_seconds": 7.870199988246895e-05,
+          "outcome": "passed",
+          "phase": "teardown"
+        }
+      ]
+    },
+    "oracle_tests/test_prepare_body.py::TestMultipart::test_explicit_file_content_type": {
+      "outcome": "pass",
+      "phases": [
+        {
+          "duration_seconds": 7.170899698394351e-05,
+          "outcome": "passed",
+          "phase": "setup"
+        },
+        {
+          "duration_seconds": 0.00011947500024689361,
+          "outcome": "passed",
+          "phase": "call"
+        },
+        {
+          "duration_seconds": 6.793499778723344e-05,
+          "outcome": "passed",
+          "phase": "teardown"
+        }
+      ]
+    },
+    "oracle_tests/test_prepare_body.py::TestMultipart::test_file_object_uses_its_name": {
+      "outcome": "pass",
+      "phases": [
+        {
+          "duration_seconds": 6.873200254631229e-05,
+          "outcome": "passed",
+          "phase": "setup"
+        },
+        {
+          "duration_seconds": 0.00012791400149581023,
+          "outcome": "passed",
+          "phase": "call"
+        },
+        {
+          "duration_seconds": 6.67730018903967e-05,
+          "outcome": "passed",
+          "phase": "teardown"
+        }
+      ]
+    },
+    "oracle_tests/test_prepare_body.py::TestMultipart::test_file_object_with_bracketed_name_falls_back_to_key": {
+      "outcome": "pass",
+      "phases": [
+        {
+          "duration_seconds": 8.489299943903461e-05,
+          "outcome": "passed",
+          "phase": "setup"
+        },
+        {
+          "duration_seconds": 0.0001960219997272361,
+          "outcome": "passed",
+          "phase": "call"
+        },
+        {
+          "duration_seconds": 6.842900256742723e-05,
+          "outcome": "passed",
+          "phase": "teardown"
+        }
+      ]
+    },
+    "oracle_tests/test_prepare_body.py::TestMultipart::test_files_produce_multipart_body": {
+      "outcome": "pass",
+      "phases": [
+        {
+          "duration_seconds": 7.59290014684666e-05,
+          "outcome": "passed",
+          "phase": "setup"
+        },
+        {
+          "duration_seconds": 0.002149772997654509,
+          "outcome": "passed",
+          "phase": "call"
+        },
+        {
+          "duration_seconds": 7.837199882487766e-05,
+          "outcome": "passed",
+          "phase": "teardown"
+        }
+      ]
+    },
+    "oracle_tests/test_prepare_body.py::TestMultipart::test_multiple_files": {
+      "outcome": "pass",
+      "phases": [
+        {
+          "duration_seconds": 7.330199878197163e-05,
+          "outcome": "passed",
+          "phase": "setup"
+        },
+        {
+          "duration_seconds": 0.0001409819997206796,
+          "outcome": "passed",
+          "phase": "call"
+        },
+        {
+          "duration_seconds": 6.899199797771871e-05,
+          "outcome": "passed",
+          "phase": "teardown"
+        }
+      ]
+    },
+    "oracle_tests/test_prepare_body.py::TestMultipart::test_raw_bytes_file_falls_back_to_key_name": {
+      "outcome": "pass",
+      "phases": [
+        {
+          "duration_seconds": 6.957400182727724e-05,
+          "outcome": "passed",
+          "phase": "setup"
+        },
+        {
+          "duration_seconds": 0.00012260400035302155,
+          "outcome": "passed",
+          "phase": "call"
+        },
+        {
+          "duration_seconds": 7.073500091792084e-05,
+          "outcome": "passed",
+          "phase": "teardown"
+        }
+      ]
+    },
+    "oracle_tests/test_prepare_body.py::TestRawData::test_bytes_data_is_not_streamed": {
+      "outcome": "pass",
+      "phases": [
+        {
+          "duration_seconds": 6.858800043119118e-05,
+          "outcome": "passed",
+          "phase": "setup"
+        },
+        {
+          "duration_seconds": 9.629200212657452e-05,
+          "outcome": "passed",
+          "phase": "call"
+        },
+        {
+          "duration_seconds": 6.626300091738813e-05,
+          "outcome": "passed",
+          "phase": "teardown"
+        }
+      ]
+    },
+    "oracle_tests/test_prepare_body.py::TestRawData::test_bytes_data_is_passed_through": {
+      "outcome": "pass",
+      "phases": [
+        {
+          "duration_seconds": 6.86999992467463e-05,
+          "outcome": "passed",
+          "phase": "setup"
+        },
+        {
+          "duration_seconds": 9.782300185179338e-05,
+          "outcome": "passed",
+          "phase": "call"
+        },
+        {
+          "duration_seconds": 6.334999852697365e-05,
+          "outcome": "passed",
+          "phase": "teardown"
+        }
+      ]
+    },
+    "oracle_tests/test_prepare_body.py::TestRawData::test_str_data_is_passed_through": {
+      "outcome": "pass",
+      "phases": [
+        {
+          "duration_seconds": 7.241699859150685e-05,
+          "outcome": "passed",
+          "phase": "setup"
+        },
+        {
+          "duration_seconds": 9.512600081507117e-05,
+          "outcome": "passed",
+          "phase": "call"
+        },
+        {
+          "duration_seconds": 6.834400119259953e-05,
+          "outcome": "passed",
+          "phase": "teardown"
+        }
+      ]
+    },
+    "oracle_tests/test_prepare_body.py::TestRawData::test_str_data_keeps_explicit_content_type": {
+      "outcome": "pass",
+      "phases": [
+        {
+          "duration_seconds": 7.170600292738527e-05,
+          "outcome": "passed",
+          "phase": "setup"
+        },
+        {
+          "duration_seconds": 0.00011298800018266775,
+          "outcome": "passed",
+          "phase": "call"
+        },
+        {
+          "duration_seconds": 6.456699702539481e-05,
+          "outcome": "passed",
+          "phase": "teardown"
+        }
+      ]
+    },
+    "oracle_tests/test_prepare_body.py::TestRawData::test_str_data_sets_no_content_type": {
+      "outcome": "pass",
+      "phases": [
+        {
+          "duration_seconds": 7.3054001404671e-05,
+          "outcome": "passed",
+          "phase": "setup"
+        },
+        {
+          "duration_seconds": 9.286100248573348e-05,
+          "outcome": "passed",
+          "phase": "call"
+        },
+        {
+          "duration_seconds": 6.124799983808771e-05,
+          "outcome": "passed",
+          "phase": "teardown"
+        }
+      ]
+    },
+    "oracle_tests/test_prepare_body.py::TestRequestPrepare::test_default_request_has_empty_body": {
+      "failure": {
+        "exception_type": "builtins.AssertionError",
+        "kind": "assertion",
+        "message": "assert None == '0'"
+      },
+      "outcome": "fail",
+      "phases": [
+        {
+          "duration_seconds": 7.106700286385603e-05,
+          "outcome": "passed",
+          "phase": "setup"
+        },
+        {
+          "details": "oracle_tests/test_prepare_body.py:361: in test_default_request_has_empty_body\n    assert p.headers['Content-Length'] == '0'\nE   AssertionError: assert None == '0'",
+          "duration_seconds": 0.0012078629988536704,
+          "failure": {
+            "exception_type": "builtins.AssertionError",
+            "kind": "assertion",
+            "message": "assert None == '0'"
+          },
+          "outcome": "failed",
+          "phase": "call"
+        },
+        {
+          "duration_seconds": 8.449700180790387e-05,
+          "outcome": "passed",
+          "phase": "teardown"
+        }
+      ]
+    },
+    "oracle_tests/test_prepare_body.py::TestRequestPrepare::test_post_with_dict_data": {
+      "outcome": "pass",
+      "phases": [
+        {
+          "duration_seconds": 7.3512001108611e-05,
+          "outcome": "passed",
+          "phase": "setup"
+        },
+        {
+          "duration_seconds": 0.00016650799807393923,
+          "outcome": "passed",
+          "phase": "call"
+        },
+        {
+          "duration_seconds": 6.852699880255386e-05,
+          "outcome": "passed",
+          "phase": "teardown"
+        }
+      ]
+    },
+    "oracle_tests/test_prepare_body.py::TestRequestPrepare::test_post_with_files": {
+      "outcome": "pass",
+      "phases": [
+        {
+          "duration_seconds": 7.33560009393841e-05,
+          "outcome": "passed",
+          "phase": "setup"
+        },
+        {
+          "duration_seconds": 0.0001915240027301479,
+          "outcome": "passed",
+          "phase": "call"
+        },
+        {
+          "duration_seconds": 6.786000085412525e-05,
+          "outcome": "passed",
+          "phase": "teardown"
+        }
+      ]
+    },
+    "oracle_tests/test_prepare_body.py::TestStreamingBody::test_generator_body_is_passed_through": {
+      "outcome": "pass",
+      "phases": [
+        {
+          "duration_seconds": 7.289900167961605e-05,
+          "outcome": "passed",
+          "phase": "setup"
+        },
+        {
+          "duration_seconds": 9.652000153437257e-05,
+          "outcome": "passed",
+          "phase": "call"
+        },
+        {
+          "duration_seconds": 6.434200258809142e-05,
+          "outcome": "passed",
+          "phase": "teardown"
+        }
+      ]
+    },
+    "oracle_tests/test_prepare_body.py::TestStreamingBody::test_iterable_with_len_attr_sets_content_length": {
+      "outcome": "pass",
+      "phases": [
+        {
+          "duration_seconds": 7.059699782985263e-05,
+          "outcome": "passed",
+          "phase": "setup"
+        },
+        {
+          "duration_seconds": 9.099899762077257e-05,
+          "outcome": "passed",
+          "phase": "call"
+        },
+        {
+          "duration_seconds": 5.844200131832622e-05,
+          "outcome": "passed",
+          "phase": "teardown"
+        }
+      ]
+    },
+    "oracle_tests/test_prepare_body.py::TestStreamingBody::test_list_data_with_files_raises": {
+      "outcome": "pass",
+      "phases": [
+        {
+          "duration_seconds": 7.44580029277131e-05,
+          "outcome": "passed",
+          "phase": "setup"
+        },
+        {
+          "duration_seconds": 0.00010979699800373055,
+          "outcome": "passed",
+          "phase": "call"
+        },
+        {
+          "duration_seconds": 6.740800017723814e-05,
+          "outcome": "passed",
+          "phase": "teardown"
+        }
+      ]
+    },
+    "oracle_tests/test_prepare_body.py::TestStreamingBody::test_list_is_streamed_as_is": {
+      "outcome": "pass",
+      "phases": [
+        {
+          "duration_seconds": 6.982999911997467e-05,
+          "outcome": "passed",
+          "phase": "setup"
+        },
+        {
+          "duration_seconds": 9.174599836114794e-05,
+          "outcome": "passed",
+          "phase": "call"
+        },
+        {
+          "duration_seconds": 6.217699774424545e-05,
+          "outcome": "passed",
+          "phase": "teardown"
+        }
+      ]
+    },
+    "oracle_tests/test_prepare_body.py::TestStreamingBody::test_real_file_is_streamed_with_length": {
+      "outcome": "pass",
+      "phases": [
+        {
+          "duration_seconds": 6.786800076952204e-05,
+          "outcome": "passed",
+          "phase": "setup"
+        },
+        {
+          "duration_seconds": 0.00016413000048487447,
+          "outcome": "passed",
+          "phase": "call"
+        },
+        {
+          "duration_seconds": 6.315700011327863e-05,
+          "outcome": "passed",
+          "phase": "teardown"
+        }
+      ]
+    },
+    "oracle_tests/test_prepare_body.py::TestStreamingBody::test_stream_does_not_set_default_content_type": {
+      "outcome": "pass",
+      "phases": [
+        {
+          "duration_seconds": 8.11079989944119e-05,
+          "outcome": "passed",
+          "phase": "setup"
+        },
+        {
+          "duration_seconds": 0.00010856899825739674,
+          "outcome": "passed",
+          "phase": "call"
+        },
+        {
+          "duration_seconds": 6.394500087480992e-05,
+          "outcome": "passed",
+          "phase": "teardown"
+        }
+      ]
+    },
+    "oracle_tests/test_prepare_body.py::TestStreamingBody::test_stream_with_empty_files_is_allowed": {
+      "outcome": "pass",
+      "phases": [
+        {
+          "duration_seconds": 7.596199793624692e-05,
+          "outcome": "passed",
+          "phase": "setup"
+        },
+        {
+          "duration_seconds": 0.0001006519996735733,
+          "outcome": "passed",
+          "phase": "call"
+        },
+        {
+          "duration_seconds": 6.33589988865424e-05,
+          "outcome": "passed",
+          "phase": "teardown"
+        }
+      ]
+    },
+    "oracle_tests/test_prepare_body.py::TestStreamingBody::test_stream_with_files_raises": {
+      "outcome": "pass",
+      "phases": [
+        {
+          "duration_seconds": 6.447799751185812e-05,
+          "outcome": "passed",
+          "phase": "setup"
+        },
+        {
+          "duration_seconds": 0.00018696600091061555,
+          "outcome": "passed",
+          "phase": "call"
+        },
+        {
+          "duration_seconds": 6.576399755431339e-05,
+          "outcome": "passed",
+          "phase": "teardown"
+        }
+      ]
+    },
+    "oracle_tests/test_prepare_body.py::TestStreamingBody::test_unknown_length_uses_chunked_encoding": {
+      "outcome": "pass",
+      "phases": [
+        {
+          "duration_seconds": 6.917100108694285e-05,
+          "outcome": "passed",
+          "phase": "setup"
+        },
+        {
+          "duration_seconds": 8.984200030681677e-05,
+          "outcome": "passed",
+          "phase": "call"
+        },
+        {
+          "duration_seconds": 6.943399785086513e-05,
+          "outcome": "passed",
+          "phase": "teardown"
+        }
+      ]
+    }
+  }
+}

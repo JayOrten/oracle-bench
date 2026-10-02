@@ -1,0 +1,12 @@
+{
+  "compliant": true,
+  "empty": false,
+  "files": {
+    "oracle_tests/test_logging_messages_reset.py": {
+      "mode": 420,
+      "sha256": "f4b9e7c1c2cb67e955f3a8d6d3063d07e1a3050672772f64ece8c85e1c21820e"
+    }
+  },
+  "forbidden_changes": [],
+  "sha256": "44444e8a05d106ac525b5118dfba1c340475dbc2e914c159182eaaca0ccabb68"
+}

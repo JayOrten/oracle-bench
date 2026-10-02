@@ -1,0 +1,12 @@
+{
+  "compliant": true,
+  "empty": false,
+  "files": {
+    "oracle_tests/test_directive_include.py": {
+      "mode": 420,
+      "sha256": "5a57c0c138dfebf3661b60534bb789633cffc8e6ba119275769456fed76627bb"
+    }
+  },
+  "forbidden_changes": [],
+  "sha256": "90d106a7c89a7766ed9baf863e63bdfff49200b53b8e69e130b710c22600bf54"
+}

@@ -1,0 +1,68 @@
+{
+  "collected": 3,
+  "collection_errors": [],
+  "exit_code": 0,
+  "status": "completed",
+  "tests": {
+    "xarray/tests/test_rolling.py::TestDataArrayRolling::test_rolling_iter[numpy-3-True-1]": {
+      "outcome": "pass",
+      "phases": [
+        {
+          "duration_seconds": 0.0015639179982827045,
+          "outcome": "passed",
+          "phase": "setup"
+        },
+        {
+          "duration_seconds": 0.05453086699708365,
+          "outcome": "passed",
+          "phase": "call"
+        },
+        {
+          "duration_seconds": 0.00017159200069727376,
+          "outcome": "passed",
+          "phase": "teardown"
+        }
+      ]
+    },
+    "xarray/tests/test_rolling.py::TestDataArrayRolling::test_rolling_iter[numpy-3-True-2]": {
+      "outcome": "pass",
+      "phases": [
+        {
+          "duration_seconds": 0.0005922690033912659,
+          "outcome": "passed",
+          "phase": "setup"
+        },
+        {
+          "duration_seconds": 0.011056706003728323,
+          "outcome": "passed",
+          "phase": "call"
+        },
+        {
+          "duration_seconds": 0.0001611199986655265,
+          "outcome": "passed",
+          "phase": "teardown"
+        }
+      ]
+    },
+    "xarray/tests/test_rolling.py::TestDataArrayRolling::test_rolling_iter[numpy-7-True-1]": {
+      "outcome": "pass",
+      "phases": [
+        {
+          "duration_seconds": 0.0008213140026782639,
+          "outcome": "passed",
+          "phase": "setup"
+        },
+        {
+          "duration_seconds": 0.046034699997107964,
+          "outcome": "passed",
+          "phase": "call"
+        },
+        {
+          "duration_seconds": 0.0002992810041178018,
+          "outcome": "passed",
+          "phase": "teardown"
+        }
+      ]
+    }
+  }
+}

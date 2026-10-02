@@ -1,0 +1,14 @@
+{
+  "import_modules": [
+    "sklearn"
+  ],
+  "output": "/tmp/oracle-results",
+  "pytest_plugins": [],
+  "source_roots": [
+    "sklearn"
+  ],
+  "targets": [
+    "oracle_tests"
+  ],
+  "workdir": "/testbed"
+}

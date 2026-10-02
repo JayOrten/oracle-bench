@@ -1,0 +1,32 @@
+I added 40 tests in `oracle_tests/test_logging_messages_reset.py`, plus a `conftest.py` that turns on `pytester`. Two of them fail against this repository's code, and the failures point at a real bug in `clear()`.
+
+**Your command doesn't test the repo code.** The environment has pytest 7.4.4 installed as a normal package in `site-packages`, not linked to `src/`. So your run command imports that installed copy of `_pytest/logging.py`, not the repo's. Run that way, all 40 pass. To test the repo's copy (7.2.0.dev) you need `src` on the path:
+
+```sh
+PYTHONPATH=src /opt/miniconda3/envs/testbed/bin/python -m pytest -o addopts= oracle_tests
+```
+
+That gives **38 passed, 2 failed**.
+
+**What's covered:**
+- **`LogCaptureHandler.reset`:** it empties the records and text, and the handler keeps capturing afterwards. The formatter and level survive. It also leaves alone any records list or stream handed out earlier; pytest relies on that to keep the setup, call and teardown records separate.
+- **`_LiveLoggingStreamHandler.reset` / `_LiveLoggingNullHandler.reset`:** using a fake terminal reporter, `reset()` makes the next record start with a newline again but doesn't show the "live log" section header a second time. The null handler's `reset()` does nothing.
+- **`caplog.messages`:**
+  - Arguments are filled into the message, including `%(name)s`-style dict arguments, non-string messages, unicode and `%%`.
+  - Messages carry no level prefix and keep the order they were logged in, across several loggers.
+  - They match `record_tuples` and `records`, and follow `set_level` and `at_level`.
+  - Tracebacks and stack info from `logger.exception`, `exc_info` and `stack_info` are left out.
+  - Each access returns a fresh list, the message text is only built when you read it, and the list is empty after `clear()`.
+- **`caplog.clear()` and the per-phase resets, run through `pytester`:**
+  - The handler is reset between setup, call and teardown.
+  - Each "Captured log" section in the report only shows its own phase.
+  - `caplog.clear()` doesn't remove anything from the report section.
+  - Live logging (`log_cli`) starts fresh for each test.
+
+**The two failures:**
+- `TestCaplogClear::test_get_records_call_consistent_after_clear`
+- `test_clear_in_call_keeps_setup_records`
+
+After `caplog.clear()`, `caplog.records` is empty but `caplog.get_records("call")` still returns the old records. The cause is that `LogCaptureFixture.clear()` calls `handler.reset()` (`src/_pytest/logging.py:344`), which creates a new list with `self.records = []`. The list that `get_records` reads from is left untouched. The docstring says `clear()` should "reset the list of log records", and this is a known upstream issue (pytest #9877, fixed in 7.2.0). I left these tests failing on purpose rather than rewriting them to match the current behaviour; they pass on 7.4.4, which has the fix.
+
+I didn't touch any application code or files outside `oracle_tests/`.

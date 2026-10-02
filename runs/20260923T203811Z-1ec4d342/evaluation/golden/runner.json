@@ -1,0 +1,13 @@
+{
+  "import_modules": [
+    "requests"
+  ],
+  "output": "/tmp/oracle-results",
+  "source_roots": [
+    "requests"
+  ],
+  "targets": [
+    "oracle_tests"
+  ],
+  "workdir": "/testbed"
+}

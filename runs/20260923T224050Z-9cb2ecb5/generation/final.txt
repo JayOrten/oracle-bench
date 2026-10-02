@@ -1,0 +1,3 @@
+Added 11 unit tests for `Include` in `oracle_tests/test_include_directive.py:1`. They cover path resolution and dependency tracking, Docutils-standard include bypass, and error propagation. No application code was changed.
+
+Validation: all 11 tests pass with the requested pytest command.

@@ -1,0 +1,12 @@
+{
+  "arguments": {
+    "NODE_IMAGE": "sha256:1c18d9ab3af4585870b92e4dbc5cac5a0dc77dd13df1a5905cea89fc720eb05b"
+  },
+  "files": {
+    "harnesses.Dockerfile": "7e9f12546f92718b5ba8dcbd184c1bc30dd4ee8dcbfd09ccafedb6ad4f50b0a0",
+    "package-lock.json": "346fb0e5ea02b430c6bded2861b3129c56aa88d979675ec1968c9d6780b27076",
+    "package.json": "1bcaa10781441d03668b61312cc002a397aa69c56aec61256c2a7defd3e6aa80"
+  },
+  "platform": "linux/amd64",
+  "recipe": "harnesses.Dockerfile"
+}

@@ -1,0 +1,12 @@
+[
+  "/opt/miniconda3/envs/testbed/bin/python",
+  "-m",
+  "pytest",
+  "-o",
+  "addopts=",
+  "-q",
+  "--tb=short",
+  "-p",
+  "pytester",
+  "oracle_tests"
+]

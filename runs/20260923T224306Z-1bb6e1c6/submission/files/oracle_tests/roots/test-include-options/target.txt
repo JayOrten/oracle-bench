@@ -1,0 +1,7 @@
+line0
+line1
+line2
+START
+middle
+END
+line6

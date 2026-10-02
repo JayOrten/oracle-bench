@@ -1,0 +1,39 @@
+{
+  "collected": 1,
+  "collection_errors": [],
+  "exit_code": 1,
+  "status": "completed",
+  "tests": {
+    "lib/matplotlib/tests/test_axes.py::test_cla_clears_children_axes_and_fig": {
+      "failure": {
+        "exception_type": "builtins.AssertionError",
+        "kind": "assertion",
+        "message": "assert <Axes: > is None\n +  where <Axes: > = <matplotlib.lines.Line2D object at 0x7fc0ba364750>.axes"
+      },
+      "outcome": "fail",
+      "phases": [
+        {
+          "duration_seconds": 0.0025264309952035546,
+          "outcome": "passed",
+          "phase": "setup"
+        },
+        {
+          "details": "lib/matplotlib/tests/test_axes.py:8382: in test_cla_clears_children_axes_and_fig\n    assert art.axes is None\nE   assert <Axes: > is None\nE    +  where <Axes: > = <matplotlib.lines.Line2D object at 0x7fc0ba364750>.axes",
+          "duration_seconds": 0.03377980199729791,
+          "failure": {
+            "exception_type": "builtins.AssertionError",
+            "kind": "assertion",
+            "message": "assert <Axes: > is None\n +  where <Axes: > = <matplotlib.lines.Line2D object at 0x7fc0ba364750>.axes"
+          },
+          "outcome": "failed",
+          "phase": "call"
+        },
+        {
+          "duration_seconds": 0.00025719399855006486,
+          "outcome": "passed",
+          "phase": "teardown"
+        }
+      ]
+    }
+  }
+}

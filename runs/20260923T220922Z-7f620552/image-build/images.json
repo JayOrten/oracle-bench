@@ -1,0 +1,41 @@
+{
+  "harnesses": {
+    "digests": [
+      "oracle-bench/harnesses@sha256:d6c4130f4f22ddd5d25aad486ab4eb7fea7ae61baaa5727f364258ea9e69c8b6"
+    ],
+    "id": "sha256:d6c4130f4f22ddd5d25aad486ab4eb7fea7ae61baaa5727f364258ea9e69c8b6",
+    "reference": "sha256:d6c4130f4f22ddd5d25aad486ab4eb7fea7ae61baaa5727f364258ea9e69c8b6"
+  },
+  "installed_harnesses": {
+    "claude": "2.1.280",
+    "codex": "0.153.4",
+    "opencode": "1.18.32"
+  },
+  "lockfile_sha256": "346fb0e5ea02b430c6bded2861b3129c56aa88d979675ec1968c9d6780b27076",
+  "node": {
+    "digests": [
+      "node@sha256:1c18d9ab3af4585870b92e4dbc5cac5a0dc77dd13df1a5905cea89fc720eb05b"
+    ],
+    "id": "sha256:1c18d9ab3af4585870b92e4dbc5cac5a0dc77dd13df1a5905cea89fc720eb05b",
+    "reference": "node:22.14.0-bookworm-slim"
+  },
+  "observed_harness_versions": {
+    "claude": "2.1.280 (Claude Code)",
+    "codex": "codex-cli 0.153.4",
+    "opencode": "1.18.32"
+  },
+  "runtime": {
+    "digests": [
+      "oracle-bench/runtime@sha256:7ae77c390808f4647353c8699f521e2966e4897a9276e7b7211eb7daeb4646fb"
+    ],
+    "id": "sha256:7ae77c390808f4647353c8699f521e2966e4897a9276e7b7211eb7daeb4646fb",
+    "reference": "sha256:7ae77c390808f4647353c8699f521e2966e4897a9276e7b7211eb7daeb4646fb"
+  },
+  "source": {
+    "digests": [
+      "swebench/sweb.eval.x86_64.matplotlib_1776_matplotlib-24627@sha256:476e2188798df71e5e904360d15fe2c6fe23c7f215eb3dafd3001688cbc40adc"
+    ],
+    "id": "sha256:476e2188798df71e5e904360d15fe2c6fe23c7f215eb3dafd3001688cbc40adc",
+    "reference": "swebench/sweb.eval.x86_64.matplotlib_1776_matplotlib-24627:latest"
+  }
+}

@@ -1,0 +1,349 @@
+{
+  "collected": 11,
+  "collection_errors": [],
+  "exit_code": 1,
+  "status": "completed",
+  "tests": {
+    "oracle_tests/test_include_directive.py::test_docutils_error_propagates_after_recording_include": {
+      "failure": {
+        "exception_type": "builtins.AttributeError",
+        "kind": "exception",
+        "message": "'types.SimpleNamespace' object has no attribute 'app'"
+      },
+      "outcome": "fail",
+      "phases": [
+        {
+          "duration_seconds": 0.00011470399476820603,
+          "outcome": "passed",
+          "phase": "setup"
+        },
+        {
+          "details": "oracle_tests/test_include_directive.py:108: in test_docutils_error_propagates_after_recording_include\n    directive.run()\nsphinx/directives/other.py:404: in run\n    if self.env.app.events.listeners.get('source-read'):\nE   AttributeError: 'types.SimpleNamespace' object has no attribute 'app'",
+          "duration_seconds": 0.0002495520020602271,
+          "failure": {
+            "exception_type": "builtins.AttributeError",
+            "kind": "exception",
+            "message": "'types.SimpleNamespace' object has no attribute 'app'"
+          },
+          "outcome": "failed",
+          "phase": "call"
+        },
+        {
+          "duration_seconds": 9.133300045505166e-05,
+          "outcome": "passed",
+          "phase": "teardown"
+        }
+      ]
+    },
+    "oracle_tests/test_include_directive.py::test_include_resolves_and_records_file_before_running_docutils[../intro.inc]": {
+      "failure": {
+        "exception_type": "builtins.AttributeError",
+        "kind": "exception",
+        "message": "'types.SimpleNamespace' object has no attribute 'app'"
+      },
+      "outcome": "fail",
+      "phases": [
+        {
+          "duration_seconds": 0.00014703199849464,
+          "outcome": "passed",
+          "phase": "setup"
+        },
+        {
+          "details": "oracle_tests/test_include_directive.py:42: in test_include_resolves_and_records_file_before_running_docutils\n    assert directive.run() is result\nsphinx/directives/other.py:404: in run\n    if self.env.app.events.listeners.get('source-read'):\nE   AttributeError: 'types.SimpleNamespace' object has no attribute 'app'",
+          "duration_seconds": 9.255499753635377e-05,
+          "failure": {
+            "exception_type": "builtins.AttributeError",
+            "kind": "exception",
+            "message": "'types.SimpleNamespace' object has no attribute 'app'"
+          },
+          "outcome": "failed",
+          "phase": "call"
+        },
+        {
+          "duration_seconds": 9.633599984226748e-05,
+          "outcome": "passed",
+          "phase": "teardown"
+        }
+      ]
+    },
+    "oracle_tests/test_include_directive.py::test_include_resolves_and_records_file_before_running_docutils[/shared/intro.inc]": {
+      "failure": {
+        "exception_type": "builtins.AttributeError",
+        "kind": "exception",
+        "message": "'types.SimpleNamespace' object has no attribute 'app'"
+      },
+      "outcome": "fail",
+      "phases": [
+        {
+          "duration_seconds": 0.0001660999987507239,
+          "outcome": "passed",
+          "phase": "setup"
+        },
+        {
+          "details": "oracle_tests/test_include_directive.py:42: in test_include_resolves_and_records_file_before_running_docutils\n    assert directive.run() is result\nsphinx/directives/other.py:404: in run\n    if self.env.app.events.listeners.get('source-read'):\nE   AttributeError: 'types.SimpleNamespace' object has no attribute 'app'",
+          "duration_seconds": 9.753199992701411e-05,
+          "failure": {
+            "exception_type": "builtins.AttributeError",
+            "kind": "exception",
+            "message": "'types.SimpleNamespace' object has no attribute 'app'"
+          },
+          "outcome": "failed",
+          "phase": "call"
+        },
+        {
+          "duration_seconds": 0.00010011599806603044,
+          "outcome": "passed",
+          "phase": "teardown"
+        }
+      ]
+    },
+    "oracle_tests/test_include_directive.py::test_include_resolves_and_records_file_before_running_docutils[parts/intro.inc]": {
+      "failure": {
+        "exception_type": "builtins.AttributeError",
+        "kind": "exception",
+        "message": "'types.SimpleNamespace' object has no attribute 'app'"
+      },
+      "outcome": "fail",
+      "phases": [
+        {
+          "duration_seconds": 0.00021072099480079487,
+          "outcome": "passed",
+          "phase": "setup"
+        },
+        {
+          "details": "oracle_tests/test_include_directive.py:42: in test_include_resolves_and_records_file_before_running_docutils\n    assert directive.run() is result\nsphinx/directives/other.py:404: in run\n    if self.env.app.events.listeners.get('source-read'):\nE   AttributeError: 'types.SimpleNamespace' object has no attribute 'app'",
+          "duration_seconds": 0.00016194699855986983,
+          "failure": {
+            "exception_type": "builtins.AttributeError",
+            "kind": "exception",
+            "message": "'types.SimpleNamespace' object has no attribute 'app'"
+          },
+          "outcome": "failed",
+          "phase": "call"
+        },
+        {
+          "duration_seconds": 0.00012250299914740026,
+          "outcome": "passed",
+          "phase": "teardown"
+        }
+      ]
+    },
+    "oracle_tests/test_include_directive.py::test_non_standard_include_names_are_resolved[<name]": {
+      "failure": {
+        "exception_type": "builtins.AttributeError",
+        "kind": "exception",
+        "message": "'types.SimpleNamespace' object has no attribute 'app'"
+      },
+      "outcome": "fail",
+      "phases": [
+        {
+          "duration_seconds": 0.00018461400031810626,
+          "outcome": "passed",
+          "phase": "setup"
+        },
+        {
+          "details": "oracle_tests/test_include_directive.py:75: in test_non_standard_include_names_are_resolved\n    assert directive.run() == []\nsphinx/directives/other.py:404: in run\n    if self.env.app.events.listeners.get('source-read'):\nE   AttributeError: 'types.SimpleNamespace' object has no attribute 'app'",
+          "duration_seconds": 0.0002618200014694594,
+          "failure": {
+            "exception_type": "builtins.AttributeError",
+            "kind": "exception",
+            "message": "'types.SimpleNamespace' object has no attribute 'app'"
+          },
+          "outcome": "failed",
+          "phase": "call"
+        },
+        {
+          "duration_seconds": 9.898999996948987e-05,
+          "outcome": "passed",
+          "phase": "teardown"
+        }
+      ]
+    },
+    "oracle_tests/test_include_directive.py::test_non_standard_include_names_are_resolved[]": {
+      "failure": {
+        "exception_type": "builtins.AttributeError",
+        "kind": "exception",
+        "message": "'types.SimpleNamespace' object has no attribute 'app'"
+      },
+      "outcome": "fail",
+      "phases": [
+        {
+          "duration_seconds": 0.00018040499708149582,
+          "outcome": "passed",
+          "phase": "setup"
+        },
+        {
+          "details": "oracle_tests/test_include_directive.py:75: in test_non_standard_include_names_are_resolved\n    assert directive.run() == []\nsphinx/directives/other.py:404: in run\n    if self.env.app.events.listeners.get('source-read'):\nE   AttributeError: 'types.SimpleNamespace' object has no attribute 'app'",
+          "duration_seconds": 0.00024090800434350967,
+          "failure": {
+            "exception_type": "builtins.AttributeError",
+            "kind": "exception",
+            "message": "'types.SimpleNamespace' object has no attribute 'app'"
+          },
+          "outcome": "failed",
+          "phase": "call"
+        },
+        {
+          "duration_seconds": 9.796399535844103e-05,
+          "outcome": "passed",
+          "phase": "teardown"
+        }
+      ]
+    },
+    "oracle_tests/test_include_directive.py::test_non_standard_include_names_are_resolved[name>]": {
+      "failure": {
+        "exception_type": "builtins.AttributeError",
+        "kind": "exception",
+        "message": "'types.SimpleNamespace' object has no attribute 'app'"
+      },
+      "outcome": "fail",
+      "phases": [
+        {
+          "duration_seconds": 0.00015117299335543066,
+          "outcome": "passed",
+          "phase": "setup"
+        },
+        {
+          "details": "oracle_tests/test_include_directive.py:75: in test_non_standard_include_names_are_resolved\n    assert directive.run() == []\nsphinx/directives/other.py:404: in run\n    if self.env.app.events.listeners.get('source-read'):\nE   AttributeError: 'types.SimpleNamespace' object has no attribute 'app'",
+          "duration_seconds": 0.0002399079967290163,
+          "failure": {
+            "exception_type": "builtins.AttributeError",
+            "kind": "exception",
+            "message": "'types.SimpleNamespace' object has no attribute 'app'"
+          },
+          "outcome": "failed",
+          "phase": "call"
+        },
+        {
+          "duration_seconds": 0.00010999300138792023,
+          "outcome": "passed",
+          "phase": "teardown"
+        }
+      ]
+    },
+    "oracle_tests/test_include_directive.py::test_path_resolution_error_does_not_record_or_run_include": {
+      "failure": {
+        "exception_type": "builtins.AttributeError",
+        "kind": "exception",
+        "message": "'types.SimpleNamespace' object has no attribute 'app'"
+      },
+      "outcome": "fail",
+      "phases": [
+        {
+          "duration_seconds": 0.00011154300591442734,
+          "outcome": "passed",
+          "phase": "setup"
+        },
+        {
+          "details": "oracle_tests/test_include_directive.py:90: in test_path_resolution_error_does_not_record_or_run_include\n    directive.run()\nsphinx/directives/other.py:404: in run\n    if self.env.app.events.listeners.get('source-read'):\nE   AttributeError: 'types.SimpleNamespace' object has no attribute 'app'",
+          "duration_seconds": 0.0002883630004362203,
+          "failure": {
+            "exception_type": "builtins.AttributeError",
+            "kind": "exception",
+            "message": "'types.SimpleNamespace' object has no attribute 'app'"
+          },
+          "outcome": "failed",
+          "phase": "call"
+        },
+        {
+          "duration_seconds": 9.388500620843843e-05,
+          "outcome": "passed",
+          "phase": "teardown"
+        }
+      ]
+    },
+    "oracle_tests/test_include_directive.py::test_standard_docutils_includes_bypass_sphinx_path_handling[<>]": {
+      "failure": {
+        "exception_type": "builtins.AttributeError",
+        "kind": "exception",
+        "message": "'types.SimpleNamespace' object has no attribute 'app'"
+      },
+      "outcome": "fail",
+      "phases": [
+        {
+          "duration_seconds": 0.00014640099834650755,
+          "outcome": "passed",
+          "phase": "setup"
+        },
+        {
+          "details": "oracle_tests/test_include_directive.py:59: in test_standard_docutils_includes_bypass_sphinx_path_handling\n    assert directive.run() is result\nsphinx/directives/other.py:404: in run\n    if self.env.app.events.listeners.get('source-read'):\nE   AttributeError: 'types.SimpleNamespace' object has no attribute 'app'",
+          "duration_seconds": 0.00025057499442482367,
+          "failure": {
+            "exception_type": "builtins.AttributeError",
+            "kind": "exception",
+            "message": "'types.SimpleNamespace' object has no attribute 'app'"
+          },
+          "outcome": "failed",
+          "phase": "call"
+        },
+        {
+          "duration_seconds": 0.00011498200183268636,
+          "outcome": "passed",
+          "phase": "teardown"
+        }
+      ]
+    },
+    "oracle_tests/test_include_directive.py::test_standard_docutils_includes_bypass_sphinx_path_handling[<custom-name>]": {
+      "failure": {
+        "exception_type": "builtins.AttributeError",
+        "kind": "exception",
+        "message": "'types.SimpleNamespace' object has no attribute 'app'"
+      },
+      "outcome": "fail",
+      "phases": [
+        {
+          "duration_seconds": 0.00014806900435360149,
+          "outcome": "passed",
+          "phase": "setup"
+        },
+        {
+          "details": "oracle_tests/test_include_directive.py:59: in test_standard_docutils_includes_bypass_sphinx_path_handling\n    assert directive.run() is result\nsphinx/directives/other.py:404: in run\n    if self.env.app.events.listeners.get('source-read'):\nE   AttributeError: 'types.SimpleNamespace' object has no attribute 'app'",
+          "duration_seconds": 0.00025230299797840416,
+          "failure": {
+            "exception_type": "builtins.AttributeError",
+            "kind": "exception",
+            "message": "'types.SimpleNamespace' object has no attribute 'app'"
+          },
+          "outcome": "failed",
+          "phase": "call"
+        },
+        {
+          "duration_seconds": 0.00011109899787697941,
+          "outcome": "passed",
+          "phase": "teardown"
+        }
+      ]
+    },
+    "oracle_tests/test_include_directive.py::test_standard_docutils_includes_bypass_sphinx_path_handling[<isonum.txt>]": {
+      "failure": {
+        "exception_type": "builtins.AttributeError",
+        "kind": "exception",
+        "message": "'types.SimpleNamespace' object has no attribute 'app'"
+      },
+      "outcome": "fail",
+      "phases": [
+        {
+          "duration_seconds": 0.00014781100617256016,
+          "outcome": "passed",
+          "phase": "setup"
+        },
+        {
+          "details": "oracle_tests/test_include_directive.py:59: in test_standard_docutils_includes_bypass_sphinx_path_handling\n    assert directive.run() is result\nsphinx/directives/other.py:404: in run\n    if self.env.app.events.listeners.get('source-read'):\nE   AttributeError: 'types.SimpleNamespace' object has no attribute 'app'",
+          "duration_seconds": 0.0002855580023606308,
+          "failure": {
+            "exception_type": "builtins.AttributeError",
+            "kind": "exception",
+            "message": "'types.SimpleNamespace' object has no attribute 'app'"
+          },
+          "outcome": "failed",
+          "phase": "call"
+        },
+        {
+          "duration_seconds": 9.770600445335731e-05,
+          "outcome": "passed",
+          "phase": "teardown"
+        }
+      ]
+    }
+  }
+}

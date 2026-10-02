@@ -1,0 +1,11 @@
+HEAD is now at 9d22ab09d5 Merge pull request #24634 from anntzer/ac
+F                                                                        [100%]
+=================================== FAILURES ===================================
+____________________ test_cla_clears_children_axes_and_fig _____________________
+lib/matplotlib/tests/test_axes.py:8382: in test_cla_clears_children_axes_and_fig
+    assert art.axes is None
+E   assert <Axes: > is None
+E    +  where <Axes: > = <matplotlib.lines.Line2D object at 0x7fc0ba364750>.axes
+=========================== short test summary info ============================
+FAILED lib/matplotlib/tests/test_axes.py::test_cla_clears_children_axes_and_fig
+1 failed in 3.35s

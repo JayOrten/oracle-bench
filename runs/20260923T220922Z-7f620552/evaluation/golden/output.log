@@ -1,0 +1,17 @@
+HEAD is now at 9d22ab09d5 Merge pull request #24634 from anntzer/ac
+............F.............F.....................                         [100%]
+=================================== FAILURES ===================================
+______________________ test_clear_resets_scales_to_linear ______________________
+oracle_tests/test_axes_base_clear.py:246: in test_clear_resets_scales_to_linear
+    assert ax.xaxis._scale == "linear"
+E   AssertionError: assert <matplotlib.scale.LinearScale object at 0x7ff306242190> == 'linear'
+E    +  where <matplotlib.scale.LinearScale object at 0x7ff306242190> = <matplotlib.axis.XAxis object at 0x7ff306239750>._scale
+E    +    where <matplotlib.axis.XAxis object at 0x7ff306239750> = <Axes: >.xaxis
+_____________________ test_clear_axes_clip_uses_new_patch ______________________
+oracle_tests/test_axes_base_clear.py:442: in test_clear_axes_clip_uses_new_patch
+    clipbox = axis.get_clipbox()
+E   AttributeError: 'XAxis' object has no attribute 'get_clipbox'
+=========================== short test summary info ============================
+FAILED oracle_tests/test_axes_base_clear.py::test_clear_resets_scales_to_linear
+FAILED oracle_tests/test_axes_base_clear.py::test_clear_axes_clip_uses_new_patch
+2 failed, 46 passed in 4.83s

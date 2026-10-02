@@ -1,0 +1,11 @@
+{
+  "installed_harnesses": {
+    "claude": "2.1.280",
+    "codex": "0.153.4",
+    "opencode": "1.18.32"
+  },
+  "lockfile_sha256": "346fb0e5ea02b430c6bded2861b3129c56aa88d979675ec1968c9d6780b27076",
+  "node": "node:22.14.0-bookworm-slim",
+  "platform": "linux/amd64",
+  "source": "swebench/sweb.eval.x86_64.matplotlib_1776_matplotlib-24627:latest"
+}

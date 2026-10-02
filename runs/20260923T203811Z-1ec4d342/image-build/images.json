@@ -1,0 +1,41 @@
+{
+  "harnesses": {
+    "digests": [
+      "oracle-bench/harnesses@sha256:d6c4130f4f22ddd5d25aad486ab4eb7fea7ae61baaa5727f364258ea9e69c8b6"
+    ],
+    "id": "sha256:d6c4130f4f22ddd5d25aad486ab4eb7fea7ae61baaa5727f364258ea9e69c8b6",
+    "reference": "sha256:d6c4130f4f22ddd5d25aad486ab4eb7fea7ae61baaa5727f364258ea9e69c8b6"
+  },
+  "installed_harnesses": {
+    "claude": "2.1.280",
+    "codex": "0.153.4",
+    "opencode": "1.18.32"
+  },
+  "lockfile_sha256": "346fb0e5ea02b430c6bded2861b3129c56aa88d979675ec1968c9d6780b27076",
+  "node": {
+    "digests": [
+      "node@sha256:1c18d9ab3af4585870b92e4dbc5cac5a0dc77dd13df1a5905cea89fc720eb05b"
+    ],
+    "id": "sha256:1c18d9ab3af4585870b92e4dbc5cac5a0dc77dd13df1a5905cea89fc720eb05b",
+    "reference": "node:22.14.0-bookworm-slim"
+  },
+  "observed_harness_versions": {
+    "claude": "2.1.280 (Claude Code)",
+    "codex": "codex-cli 0.153.4",
+    "opencode": "1.18.32"
+  },
+  "runtime": {
+    "digests": [
+      "oracle-bench/runtime@sha256:17ad4be7ee94fccb1552de864c2e8545fa132c4e05eb49283e59ffa37ce3cf55"
+    ],
+    "id": "sha256:17ad4be7ee94fccb1552de864c2e8545fa132c4e05eb49283e59ffa37ce3cf55",
+    "reference": "sha256:17ad4be7ee94fccb1552de864c2e8545fa132c4e05eb49283e59ffa37ce3cf55"
+  },
+  "source": {
+    "digests": [
+      "swebench/sweb.eval.x86_64.psf_1776_requests-1142@sha256:b2733e57feb4cfaeac24ab5ec496d4cb89a37db53bd0ca72eaededdb2ce19d1c"
+    ],
+    "id": "sha256:b2733e57feb4cfaeac24ab5ec496d4cb89a37db53bd0ca72eaededdb2ce19d1c",
+    "reference": "swebench/sweb.eval.x86_64.psf_1776_requests-1142:latest"
+  }
+}

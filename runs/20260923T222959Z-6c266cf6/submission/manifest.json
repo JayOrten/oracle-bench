@@ -1,0 +1,12 @@
+{
+  "compliant": true,
+  "empty": false,
+  "files": {
+    "oracle_tests/test_rolling_init.py": {
+      "mode": 420,
+      "sha256": "812a24fb600da52a79db022c3d4a8f2e2d1b2031091d7041c783fb2cee080e3a"
+    }
+  },
+  "forbidden_changes": [],
+  "sha256": "f42933210170b3b34a9de489aef4f06dfab3daef9e6ad43166d6b3e62fec4fc3"
+}

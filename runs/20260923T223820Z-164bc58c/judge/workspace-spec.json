@@ -1,0 +1,118 @@
+{
+  "artifacts": [
+    {
+      "destination": "/oracle-judge/buggy/oracle_tests/test_directive_include.py",
+      "sha256": "5a57c0c138dfebf3661b60534bb789633cffc8e6ba119275769456fed76627bb",
+      "source": "submission/files/oracle_tests/test_directive_include.py"
+    },
+    {
+      "destination": "/oracle-judge/evidence/agent-session.log",
+      "sha256": "c18e8ed8ba9577eac51b3e74539b884fa1f3b5ac0b6dce71c169d9c430b3ca29",
+      "source": "generation/session.log"
+    },
+    {
+      "destination": "/oracle-judge/evidence/buggy-output.log",
+      "sha256": "2f4f83956441398013b77786e53b005fcbe4952289dd2a141f8636bf6299b6a7",
+      "source": "evaluation/buggy/output.log"
+    },
+    {
+      "destination": "/oracle-judge/evidence/buggy-tests.json",
+      "sha256": "7c81f6ef7c0d1fb3eaba2862554179430aa65c30b265a91be6b82ee2e060f6cb",
+      "source": "evaluation/buggy/tests.json"
+    },
+    {
+      "destination": "/oracle-judge/evidence/golden-output.log",
+      "sha256": "a36ccdf0dea63cdf393a0ff6db896c7fb6fd2b9a0b77e9121bcebbc80e72c9bf",
+      "source": "evaluation/golden/output.log"
+    },
+    {
+      "destination": "/oracle-judge/evidence/golden-tests.json",
+      "sha256": "5c0bf74bc36db68ee8e936bbd0efd65dc740df35fc62a62e380f55e3b84f53d5",
+      "source": "evaluation/golden/tests.json"
+    },
+    {
+      "destination": "/oracle-judge/evidence/paired-results.json",
+      "sha256": "942126c2a54335a05024a305bfa402724df92979d23b78c6434b40f159788d86",
+      "source": "evaluation/results.json"
+    },
+    {
+      "destination": "/oracle-judge/evidence/submission-manifest.json",
+      "sha256": "ac482ee39327e2d5357f8adc6d87524a9b3e995947f3c1d7f7d934f8ff257b03",
+      "source": "derived/submission-manifest.json"
+    },
+    {
+      "destination": "/oracle-judge/evidence/workspace.diff",
+      "sha256": "7ebc625bed63cf9182ee854ebc46ff579a2b4981f6dccbf4387fde852264cf16",
+      "source": "generation/workspace.diff"
+    },
+    {
+      "destination": "/oracle-judge/golden/oracle_tests/test_directive_include.py",
+      "sha256": "5a57c0c138dfebf3661b60534bb789633cffc8e6ba119275769456fed76627bb",
+      "source": "submission/files/oracle_tests/test_directive_include.py"
+    },
+    {
+      "destination": "/oracle-judge/instance/fix.patch",
+      "sha256": "554906bfbf4a026448678d65fd8eba10ad1e4babbfd943a110238c306c5a4808",
+      "source": "ground-truth/fix.patch"
+    },
+    {
+      "destination": "/oracle-judge/instance/issue.md",
+      "sha256": "b7650d3eb2096678bdbce8230d968f420f3ae26a001581f250932dbe805ed9c7",
+      "source": "ground-truth/issue.md"
+    },
+    {
+      "destination": "/oracle-judge/instance/metadata.json",
+      "sha256": "0eb26b6049d368ef0a9d6bf2cbb21016b2adf15e918eb09088b66d8ee2be95bd",
+      "source": "derived/metadata.json"
+    },
+    {
+      "destination": "/oracle-judge/instance/reference-tests.patch",
+      "sha256": "0d9c5b5e39024ed66a1bb1d6edc192379c40d1100a762594823afd16e85b7edc",
+      "source": "derived/reference-tests.patch"
+    },
+    {
+      "destination": "/oracle-judge/instructions.md",
+      "sha256": "4d382111e2701606b4219217ada28da31b010538077943675612e168dbb01249",
+      "source": "derived/instructions.md"
+    },
+    {
+      "destination": "/oracle-judge/rubric.md",
+      "sha256": "d3a3ce852576de7d07b6ba815b97f89ed7ba39140378b74634e232f7fbb27aab",
+      "source": "judge/rubric.md"
+    }
+  ],
+  "base_commit": "6cb783c0024a873722952a67ebb9f41771c8eb6d",
+  "prepared_image": {
+    "digests": [
+      "oracle-bench/runtime@sha256:4dbeed70767e796db4ef3ffd888f1c3d2d78826e25d2cbfc7af978f2c5208b42"
+    ],
+    "image_id": "sha256:4dbeed70767e796db4ef3ffd888f1c3d2d78826e25d2cbfc7af978f2c5208b42",
+    "reference": "sha256:4dbeed70767e796db4ef3ffd888f1c3d2d78826e25d2cbfc7af978f2c5208b42"
+  },
+  "reconstruction_commands": [
+    [
+      "git",
+      "-C",
+      "/testbed",
+      "worktree",
+      "add",
+      "--detach",
+      "/oracle-judge/buggy",
+      "6cb783c0024a873722952a67ebb9f41771c8eb6d"
+    ],
+    [
+      "git",
+      "-C",
+      "/testbed",
+      "worktree",
+      "add",
+      "--detach",
+      "/oracle-judge/golden",
+      "6cb783c0024a873722952a67ebb9f41771c8eb6d"
+    ]
+  ],
+  "reference_test_patch_sha256": "0d9c5b5e39024ed66a1bb1d6edc192379c40d1100a762594823afd16e85b7edc",
+  "repair_patch_sha256": "554906bfbf4a026448678d65fd8eba10ad1e4babbfd943a110238c306c5a4808",
+  "rubric_sha256": "d3a3ce852576de7d07b6ba815b97f89ed7ba39140378b74634e232f7fbb27aab",
+  "workspace_method": "git_worktree"
+}

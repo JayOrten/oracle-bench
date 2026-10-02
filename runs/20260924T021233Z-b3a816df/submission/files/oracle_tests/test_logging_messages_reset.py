@@ -1,0 +1,122 @@
+import io
+import logging
+
+from _pytest.logging import _LiveLoggingNullHandler
+from _pytest.logging import _LiveLoggingStreamHandler
+from _pytest.logging import LogCaptureHandler
+
+
+def test_messages_interpolate_arguments_without_formatter_decoration(caplog, monkeypatch):
+    logger = logging.getLogger("oracle.messages.interpolation")
+    caplog.set_level(logging.DEBUG, logger=logger.name)
+    monkeypatch.setattr(
+        caplog.handler,
+        "formatter",
+        logging.Formatter("%(levelname)s [%(name)s] %(message)s"),
+    )
+
+    logger.debug("value=%s", 42)
+    logger.warning("plain message")
+
+    assert caplog.messages == ["value=42", "plain message"]
+    assert caplog.records[0].msg == "value=%s"
+    assert caplog.records[0].args == (42,)
+    assert caplog.text == (
+        "DEBUG [oracle.messages.interpolation] value=42\n"
+        "WARNING [oracle.messages.interpolation] plain message\n"
+    )
+
+
+def test_messages_exclude_exception_and_stack_information(caplog):
+    logger = logging.getLogger("oracle.messages.exception")
+    try:
+        raise ValueError("failure details")
+    except ValueError:
+        logger.error("operation %s failed", "write", exc_info=True, stack_info=True)
+
+    assert caplog.messages == ["operation write failed"]
+    assert "ValueError: failure details" in caplog.text
+    assert "Stack (most recent call last)" in caplog.text
+
+
+def test_messages_are_a_fresh_list_and_do_not_change_captured_records(caplog):
+    logger = logging.getLogger("oracle.messages.fresh")
+    logger.warning("first")
+    messages = caplog.messages
+    messages.append("not logged")
+    logger.warning("second")
+
+    assert messages == ["first", "not logged"]
+    assert caplog.messages == ["first", "second"]
+    assert len(caplog.records) == 2
+
+
+def test_handler_reset_replaces_records_and_stream_without_changing_configuration():
+    handler = LogCaptureHandler()
+    handler.setLevel(logging.ERROR)
+    formatter = logging.Formatter("prefix: %(message)s")
+    handler.setFormatter(formatter)
+    logger = logging.getLogger("oracle.reset.handler")
+    first = logger.makeRecord(logger.name, logging.ERROR, __file__, 1, "before", (), None)
+    handler.emit(first)
+    old_records = handler.records
+    old_stream = handler.stream
+
+    handler.reset()
+
+    assert handler.records == []
+    assert handler.records is not old_records
+    assert handler.stream is not old_stream
+    assert handler.stream.getvalue() == ""
+    assert old_records == [first]
+    assert old_stream.getvalue() == "prefix: before\n"
+    assert handler.level == logging.ERROR
+    assert handler.formatter is formatter
+
+    second = logger.makeRecord(logger.name, logging.ERROR, __file__, 2, "after", (), None)
+    handler.emit(second)
+    assert handler.records == [second]
+    assert handler.stream.getvalue() == "prefix: after\n"
+    assert old_records == [first]
+    assert old_stream.getvalue() == "prefix: before\n"
+
+
+def test_caplog_clear_resets_messages_records_and_text_but_capture_continues(caplog):
+    logger = logging.getLogger("oracle.reset.fixture")
+    caplog.set_level(logging.INFO, logger=logger.name)
+    logger.info("before")
+    saved_records = caplog.records
+    assert caplog.messages == ["before"]
+
+    caplog.clear()
+
+    assert caplog.messages == []
+    assert caplog.records == []
+    assert caplog.records is not saved_records
+    assert caplog.text == ""
+    assert [record.getMessage() for record in saved_records] == ["before"]
+    logger.info("after %d", 2)
+    assert caplog.messages == ["after 2"]
+    assert "after 2" in caplog.text
+    assert "before" not in caplog.text
+
+
+def test_live_logging_reset_restores_initial_newline_for_next_test():
+    stream = io.StringIO()
+    handler = _LiveLoggingStreamHandler(stream, None)
+    logger = logging.getLogger("oracle.reset.live")
+    record = logger.makeRecord(logger.name, logging.WARNING, __file__, 1, "message", (), None)
+
+    handler.emit(record)
+    handler.emit(record)
+    assert stream.getvalue() == "\nmessage\nmessage\n"
+
+    handler.reset()
+    handler.emit(record)
+    assert stream.getvalue() == "\nmessage\nmessage\n\nmessage\n"
+
+
+def test_live_logging_null_handler_reset_is_safe():
+    handler = _LiveLoggingNullHandler()
+    handler.reset()
+    handler.reset()

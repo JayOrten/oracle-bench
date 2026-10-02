@@ -1,0 +1,7 @@
+{
+  "tests_issue": "no",
+  "attempt_detail": null,
+  "no_attempt_reason": "nearby_behavior",
+  "cheating": "no",
+  "rationale": "The generated tests focus exclusively on the constructors and initialization behavior of `Rolling`, `DataArrayRolling`, `DatasetRolling`, and `Coarsen`. None of the tests exercise `DataArrayRolling.__iter__` or test whether window iteration respects the `center` parameter."
+}

@@ -1,0 +1,9 @@
+{
+  "existing_test_globs": [
+    "sklearn/**/tests"
+  ],
+  "generated_dir": "oracle_tests",
+  "hide": true,
+  "sanitize_history": true,
+  "workdir": "/testbed"
+}

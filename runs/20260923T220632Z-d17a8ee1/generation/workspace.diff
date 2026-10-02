@@ -1,0 +1,161 @@
+diff --git a/oracle_tests/test_axes_clear.py b/oracle_tests/test_axes_clear.py
+new file mode 100644
+index 0000000..a5e960e
+--- /dev/null
++++ b/oracle_tests/test_axes_clear.py
+@@ -0,0 +1,155 @@
++import matplotlib as mpl
++from matplotlib.figure import Figure
++from matplotlib.ticker import AutoMinorLocator, NullLocator
++import pytest
++
++
++@pytest.mark.parametrize("method", ["clear", "cla"])
++def test_clear_discards_artists_and_restarts_color_cycle(method):
++    with mpl.rc_context({"axes.prop_cycle": mpl.cycler(color=["red", "blue"])}):
++        ax = Figure().add_subplot()
++        line, = ax.plot([0, 1], [1, 2], label="line")
++        ax.bar([0], [2])
++        ax.scatter([1], [2])
++        image = ax.imshow([[1, 2], [3, 4]])
++        ax.text(0.5, 0.5, "annotation")
++        ax.legend()
++        ax.inset_axes([0.1, 0.1, 0.3, 0.3])
++        ax._current_image = image
++        assert ax.containers and ax.child_axes and ax.legend_ is not None
++
++        getattr(ax, method)()
++
++        assert not ax.lines
++        assert not ax.patches
++        assert not ax.collections
++        assert not ax.images
++        assert not ax.texts
++        assert not ax.containers
++        assert not ax.child_axes
++        assert ax.legend_ is None
++        assert ax._current_image is None
++        assert ax._children == []
++        assert ax.plot([0, 1], [1, 2])[0].get_color() == line.get_color()
++
++
++def test_clear_resets_unshared_axis_properties_and_plot_state():
++    ax = Figure().add_subplot()
++    ax.set(xscale="log", yscale="log", xlim=(2, 20), ylim=(3, 30),
++           xlabel="before x", ylabel="before y")
++    ax.set_xticks([2, 10])
++    ax.spines["left"].set_position(("outward", 12))
++    ax.margins(x=0.25, y=0.35, tight=True)
++    ax.use_sticky_edges = False
++    ax.ignore_existing_data_limits = False
++    ax.set_axis_off()
++    ax.stale = False
++
++    ax.clear()
++
++    assert ax.get_xscale() == ax.get_yscale() == "linear"
++    assert ax.get_xlim() == ax.get_ylim() == (0, 1)
++    assert ax.get_xlabel() == ax.get_ylabel() == ""
++    assert ax.spines["left"].get_position() == ("outward", 0)
++    assert ax.margins() == (mpl.rcParams["axes.xmargin"],
++                            mpl.rcParams["axes.ymargin"])
++    assert ax._tight is None
++    assert ax.use_sticky_edges
++    assert ax.ignore_existing_data_limits
++    assert ax.axison
++    assert ax.stale
++
++
++def test_clear_replaces_callback_registry_without_leaking_listeners():
++    ax = Figure().add_subplot()
++    old_calls = []
++    new_calls = []
++    old_registry = ax.callbacks
++    old_registry.connect("xlim_changed", old_calls.append)
++
++    ax.clear()
++    assert ax.callbacks is not old_registry
++    ax.callbacks.connect("xlim_changed", new_calls.append)
++    ax.set_xlim(2, 3)
++
++    assert old_calls == []
++    assert new_calls == [ax]
++
++
++@pytest.mark.parametrize("minor_x, minor_y", [(False, True), (True, False)])
++def test_clear_applies_current_tick_and_grid_rcparams(minor_x, minor_y):
++    ax = Figure().add_subplot()
++    ax.minorticks_on()
++    ax.grid(True, which="both", axis="both")
++
++    with mpl.rc_context({"xtick.minor.visible": minor_x,
++                         "ytick.minor.visible": minor_y,
++                         "axes.grid": True,
++                         "axes.grid.which": "major",
++                         "axes.grid.axis": "x",
++                         "axes.xmargin": 0.15,
++                         "axes.ymargin": 0.25}):
++        ax.clear()
++
++        assert isinstance(ax.xaxis.get_minor_locator(),
++                          AutoMinorLocator if minor_x else NullLocator)
++        assert isinstance(ax.yaxis.get_minor_locator(),
++                          AutoMinorLocator if minor_y else NullLocator)
++        assert ax.xaxis._major_tick_kw["gridOn"]
++        assert not ax.yaxis._major_tick_kw["gridOn"]
++        assert not ax.xaxis._minor_tick_kw["gridOn"]
++        assert not ax.yaxis._minor_tick_kw["gridOn"]
++        assert ax.margins() == (0.15, 0.25)
++
++
++@pytest.mark.parametrize("title_y, auto_title", [(None, True), (0.8, False)])
++def test_clear_rebuilds_titles_and_patch_from_current_settings(title_y, auto_title):
++    ax = Figure().add_subplot()
++    old_patch = ax.patch
++    old_title = ax.title
++    ax.set_title("old title")
++    ax.set_title("old left", loc="left")
++    ax.set_title("old right", loc="right")
++    ax.patch.set_visible(False)
++
++    with mpl.rc_context({"axes.titley": title_y, "axes.titlesize": 18,
++                         "axes.titleweight": "bold", "axes.titlepad": 13}):
++        ax.clear()
++
++        assert ax.patch is not old_patch
++        assert ax.title is not old_title
++        assert ax.patch.get_visible()
++        assert ax.patch.get_edgecolor()[-1] == 0
++        assert ax.patch.get_linewidth() == 0
++        assert ax.xaxis.get_clip_box() is not None
++        assert ax.yaxis.get_clip_box() is not None
++        assert ax._autotitlepos is auto_title
++        for location, x_pos in [("center", 0.5), ("left", 0), ("right", 1)]:
++            title = ax._left_title if location == "left" else (
++                ax._right_title if location == "right" else ax.title)
++            assert ax.get_title(loc=location) == ""
++            assert title.get_position() == (x_pos, 1 if title_y is None else title_y)
++            assert title.get_fontsize() == 18
++            assert title.get_fontweight() == "bold"
++            assert title.axes is ax
++
++
++@pytest.mark.parametrize("shared_axis", ["x", "y"])
++def test_clear_preserves_shared_limits_and_hidden_shared_artists(shared_axis):
++    fig = Figure()
++    master = fig.add_subplot(211)
++    slave = fig.add_subplot(212, **{f"share{shared_axis}": master})
++    getattr(master, f"set_{shared_axis}lim")(2, 7)
++    shared_artist = getattr(slave, f"{shared_axis}axis")
++    shared_artist.set_visible(False)
++    slave.patch.set_visible(False)
++    slave.plot([3, 4], [3, 4])
++
++    slave.clear()
++
++    assert getattr(slave, f"get_{shared_axis}lim")() == (2, 7)
++    assert getattr(master, f"get_{shared_axis}lim")() == (2, 7)
++    assert getattr(slave, f"get_{'y' if shared_axis == 'x' else 'x'}lim")() == (0, 1)
++    assert not shared_artist.get_visible()
++    assert not slave.patch.get_visible()
++    assert not slave.lines

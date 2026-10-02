@@ -1,0 +1,39 @@
+{
+  "collected": 1,
+  "collection_errors": [],
+  "exit_code": 1,
+  "status": "completed",
+  "tests": {
+    "testing/logging/test_fixture.py::test_clear_for_call_stage": {
+      "failure": {
+        "exception_type": "builtins.AssertionError",
+        "kind": "assertion",
+        "message": "assert [<LogRecord: ...\"a_call_log\">] == []\n  Left contains one more item: <LogRecord: test_fixture, 20, /testbed/testing/logging/test_fixture.py, 176, \"a_call_log\">\n  Use -v to get more diff"
+      },
+      "outcome": "fail",
+      "phases": [
+        {
+          "duration_seconds": 0.0005152100056875497,
+          "outcome": "passed",
+          "phase": "setup"
+        },
+        {
+          "details": "testing/logging/test_fixture.py:183: in test_clear_for_call_stage\n    assert caplog.get_records(\"call\") == []\nE   assert [<LogRecord: ...\"a_call_log\">] == []\nE     Left contains one more item: <LogRecord: test_fixture, 20, /testbed/testing/logging/test_fixture.py, 176, \"a_call_log\">\nE     Use -v to get more diff",
+          "duration_seconds": 0.00041743600013433024,
+          "failure": {
+            "exception_type": "builtins.AssertionError",
+            "kind": "assertion",
+            "message": "assert [<LogRecord: ...\"a_call_log\">] == []\n  Left contains one more item: <LogRecord: test_fixture, 20, /testbed/testing/logging/test_fixture.py, 176, \"a_call_log\">\n  Use -v to get more diff"
+          },
+          "outcome": "failed",
+          "phase": "call"
+        },
+        {
+          "duration_seconds": 0.0002405439954600297,
+          "outcome": "passed",
+          "phase": "teardown"
+        }
+      ]
+    }
+  }
+}

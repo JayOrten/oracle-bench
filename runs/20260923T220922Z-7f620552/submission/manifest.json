@@ -1,0 +1,16 @@
+{
+  "compliant": true,
+  "empty": false,
+  "files": {
+    "oracle_tests/conftest.py": {
+      "mode": 420,
+      "sha256": "59249a0f130caa517f77e5f6ba7955a06e2a7c911135d374f1dcece75c411cfb"
+    },
+    "oracle_tests/test_axes_base_clear.py": {
+      "mode": 420,
+      "sha256": "0272c2c575ecfdc75adbf267513a65038cbf22c6d0d8cfe41caed5cfea275548"
+    }
+  },
+  "forbidden_changes": [],
+  "sha256": "d6bb91908c655e968b439096e9fd45e71b9f017703617de3d9750e1d2f2448cd"
+}

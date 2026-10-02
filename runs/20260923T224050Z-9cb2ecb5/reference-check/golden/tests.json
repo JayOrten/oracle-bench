@@ -1,0 +1,48 @@
+{
+  "collected": 2,
+  "collection_errors": [],
+  "exit_code": 0,
+  "status": "completed",
+  "tests": {
+    "tests/test_directive_other.py::test_include_source_read_event": {
+      "outcome": "pass",
+      "phases": [
+        {
+          "duration_seconds": 0.25544797799375374,
+          "outcome": "passed",
+          "phase": "setup"
+        },
+        {
+          "duration_seconds": 0.017481460999988485,
+          "outcome": "passed",
+          "phase": "call"
+        },
+        {
+          "duration_seconds": 0.000340493003022857,
+          "outcome": "passed",
+          "phase": "teardown"
+        }
+      ]
+    },
+    "tests/test_directive_other.py::test_include_source_read_event_nested_includes": {
+      "outcome": "pass",
+      "phases": [
+        {
+          "duration_seconds": 0.010447373002534732,
+          "outcome": "passed",
+          "phase": "setup"
+        },
+        {
+          "duration_seconds": 0.0035977699953946285,
+          "outcome": "passed",
+          "phase": "call"
+        },
+        {
+          "duration_seconds": 0.00041397399763809517,
+          "outcome": "passed",
+          "phase": "teardown"
+        }
+      ]
+    }
+  }
+}

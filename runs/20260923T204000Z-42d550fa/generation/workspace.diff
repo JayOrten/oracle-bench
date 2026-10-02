@@ -1,0 +1,396 @@
+diff --git a/oracle_tests/test_prepare_body.py b/oracle_tests/test_prepare_body.py
+new file mode 100644
+index 0000000..4999c1c
+--- /dev/null
++++ b/oracle_tests/test_prepare_body.py
+@@ -0,0 +1,390 @@
++# -*- coding: utf-8 -*-
++"""Unit tests for requests.models.PreparedRequest.prepare_body."""
++
++import io
++import os
++
++import pytest
++from urllib.parse import parse_qsl
++
++from requests import Request
++from requests.models import PreparedRequest
++from requests.structures import CaseInsensitiveDict
++
++
++def make_prepared(headers=None):
++    """Build a PreparedRequest with headers initialized (required by
++    prepare_body, which writes into self.headers)."""
++    p = PreparedRequest()
++    p.prepare_headers(headers)
++    return p
++
++
++def multipart_boundary(content_type):
++    """Extract the boundary from a multipart Content-Type header value."""
++    if isinstance(content_type, bytes):
++        content_type = content_type.decode('utf-8')
++    assert content_type.startswith('multipart/form-data; boundary=')
++    return content_type.split('boundary=', 1)[1]
++
++
++class FakeFileWithSeek(object):
++    """File-like object supporting read/seek/tell but not iteration."""
++
++    def read(self):
++        return b'data'
++
++    def seek(self, *args):
++        pass
++
++    def tell(self):
++        return 42
++
++
++class BadLenStream(object):
++    """Iterable whose len() raises TypeError, so super_len() fails."""
++
++    def __iter__(self):
++        return iter([b'a', b'b'])
++
++    def __len__(self):
++        raise TypeError('no length available')
++
++
++class LenAttrStream(object):
++    """Iterable exposing a `len` attribute (no __len__)."""
++
++    len = 7
++
++    def __iter__(self):
++        return iter(b'x' * 7)
++
++
++class TestNoData:
++    def test_none_data_sets_none_body_and_zero_length(self):
++        p = make_prepared()
++        p.prepare_body(None, None)
++        assert p.body is None
++        assert p.headers['Content-Length'] == '0'
++
++    def test_none_data_sets_no_content_type_or_transfer_encoding(self):
++        p = make_prepared()
++        p.prepare_body(None, None)
++        assert 'Content-Type' not in p.headers
++        assert 'Transfer-Encoding' not in p.headers
++
++    def test_empty_string_data_behaves_like_none(self):
++        p = make_prepared()
++        p.prepare_body('', None)
++        assert p.body is None
++        assert p.headers['Content-Length'] == '0'
++
++    def test_empty_dict_data_behaves_like_none(self):
++        p = make_prepared()
++        p.prepare_body({}, None)
++        assert p.body is None
++        assert p.headers['Content-Length'] == '0'
++        assert 'Content-Type' not in p.headers
++
++    def test_prepare_body_returns_none(self):
++        p = make_prepared()
++        assert p.prepare_body(None, None) is None
++
++
++class TestFormData:
++    def test_dict_data_is_form_encoded(self):
++        p = make_prepared()
++        p.prepare_body({'a': 'b'}, None)
++        assert p.body == 'a=b'
++
++    def test_dict_data_sets_urlencoded_content_type(self):
++        p = make_prepared()
++        p.prepare_body({'a': 'b'}, None)
++        assert p.headers['Content-Type'] == 'application/x-www-form-urlencoded'
++
++    def test_dict_data_sets_content_length(self):
++        p = make_prepared()
++        p.prepare_body({'a': 'b'}, None)
++        assert p.headers['Content-Length'] == '3'
++
++    def test_multi_key_dict_data_contains_all_pairs(self):
++        p = make_prepared()
++        p.prepare_body({'a': '1', 'b': '2'}, None)
++        assert sorted(parse_qsl(p.body)) == [('a', '1'), ('b', '2')]
++        assert p.headers['Content-Length'] == str(len(p.body))
++
++    def test_dict_with_list_value_uses_doseq(self):
++        p = make_prepared()
++        p.prepare_body({'a': ['1', '2']}, None)
++        assert sorted(parse_qsl(p.body)) == [('a', '1'), ('a', '2')]
++
++    def test_none_values_are_skipped(self):
++        p = make_prepared()
++        p.prepare_body({'a': None, 'b': '2'}, None)
++        assert p.body == 'b=2'
++
++    def test_unicode_values_are_utf8_percent_encoded(self):
++        p = make_prepared()
++        p.prepare_body({'a': u'\xe9'}, None)
++        assert p.body == 'a=%C3%A9'
++        assert p.headers['Content-Length'] == str(len(p.body))
++
++    def test_form_encoded_body_never_sets_transfer_encoding(self):
++        p = make_prepared()
++        p.prepare_body({'a': 'b'}, None)
++        assert 'Transfer-Encoding' not in p.headers
++
++
++class TestRawData:
++    def test_str_data_passed_through_unchanged(self):
++        p = make_prepared()
++        p.prepare_body('rawstr', None)
++        assert p.body == 'rawstr'
++        assert p.headers['Content-Length'] == '6'
++
++    def test_str_data_sets_no_content_type(self):
++        p = make_prepared()
++        p.prepare_body('rawstr', None)
++        assert 'Content-Type' not in p.headers
++
++    def test_bytes_data_passed_through_unchanged(self):
++        p = make_prepared()
++        p.prepare_body(b'rawbytes', None)
++        assert p.body == b'rawbytes'
++        assert p.headers['Content-Length'] == '8'
++
++    def test_bytes_data_gets_urlencoded_content_type(self):
++        # On Python 3 bytes is not `str`, so the content-type branch for
++        # plain strings is not taken.
++        p = make_prepared()
++        p.prepare_body(b'rawbytes', None)
++        assert p.headers['Content-Type'] == 'application/x-www-form-urlencoded'
++
++    def test_unmeasurable_data_raises_type_error(self):
++        # Non-string, non-iterable truthy data reaches prepare_content_length
++        # where len() fails.
++        p = make_prepared()
++        with pytest.raises(TypeError):
++            p.prepare_body(42, None)
++
++    def test_file_like_with_read_seek_tell_uses_tell_for_length(self):
++        obj = FakeFileWithSeek()
++        p = make_prepared()
++        p.prepare_body(obj, None)
++        assert p.body is obj
++        assert p.headers['Content-Length'] == '42'
++
++    def test_file_like_with_read_sets_no_content_type(self):
++        p = make_prepared()
++        p.prepare_body(FakeFileWithSeek(), None)
++        assert 'Content-Type' not in p.headers
++
++
++class TestContentTypePreservation:
++    def test_explicit_content_type_is_not_overridden_for_dict_data(self):
++        p = make_prepared({'Content-Type': 'application/json'})
++        p.prepare_body({'a': 'b'}, None)
++        assert p.headers['Content-Type'] == 'application/json'
++
++    def test_explicit_content_type_check_is_case_insensitive(self):
++        p = make_prepared({'cOnTeNt-TyPe': 'text/plain'})
++        p.prepare_body({'a': 'b'}, None)
++        assert p.headers['Content-Type'] == 'text/plain'
++
++
++class TestFiles:
++    def test_multipart_body_and_headers(self):
++        p = make_prepared()
++        p.prepare_body(None, {'file': ('test.txt', b'content')})
++        boundary = multipart_boundary(p.headers['Content-Type'])
++        expected = (
++            '--%s\r\n'
++            'Content-Disposition: form-data; name="file"; filename="test.txt"\r\n'
++            'Content-Type: text/plain\r\n'
++            '\r\n'
++            'content\r\n'
++            '--%s--\r\n'
++        ) % (boundary, boundary)
++        assert p.body == expected.encode('utf-8')
++
++    def test_multipart_content_length_matches_body(self):
++        p = make_prepared()
++        p.prepare_body(None, {'file': ('test.txt', b'content')})
++        assert p.headers['Content-Length'] == str(len(p.body))
++
++    def test_unknown_extension_defaults_to_octet_stream(self):
++        p = make_prepared()
++        p.prepare_body(None, {'file': ('data.unknownext', b'x')})
++        assert b'Content-Type: application/octet-stream' in p.body
++
++    def test_explicit_file_content_type_3_tuple(self):
++        p = make_prepared()
++        p.prepare_body(None, {'file': ('n.txt', b'x', 'application/json')})
++        assert b'Content-Type: application/json' in p.body
++
++    def test_dict_data_fields_included_before_files(self):
++        p = make_prepared()
++        p.prepare_body({'a': 'b'}, {'file': ('test.txt', b'content')})
++        assert b'name="a"\r\n\r\nb\r\n' in p.body
++        assert b'filename="test.txt"' in p.body
++        assert p.headers['Content-Length'] == str(len(p.body))
++        multipart_boundary(p.headers['Content-Type'])
++
++    def test_empty_dict_data_with_files(self):
++        p = make_prepared()
++        p.prepare_body({}, {'file': ('a.txt', b'A')})
++        assert b'name="file"' in p.body
++        assert p.headers['Content-Length'] == str(len(p.body))
++
++    def test_str_data_with_files_raises_type_error(self):
++        # _encode_files returns None for str data, which cannot be unpacked.
++        p = make_prepared()
++        with pytest.raises(TypeError):
++            p.prepare_body('foo', {'file': ('test.txt', b'content')})
++
++    def test_real_file_object_filename_is_guessed(self, tmp_path):
++        path = tmp_path / 'upload.png'
++        path.write_bytes(b'img')
++        with open(str(path), 'rb') as f:
++            p = make_prepared()
++            p.prepare_body(None, {'file': f})
++        # guess_filename returns the raw .name attribute (full path).
++        assert ('filename="%s"' % str(path)).encode('utf-8') in p.body
++        assert b'Content-Type: image/png' in p.body
++        assert b'\r\n\r\nimg\r\n' in p.body
++
++    def test_multiple_files_same_field_as_list_of_tuples(self):
++        p = make_prepared()
++        files = [('f', ('a.txt', b'A')), ('f', ('b.txt', b'B'))]
++        p.prepare_body(None, files)
++        assert p.body.count(b'Content-Disposition') == 2
++        assert b'filename="a.txt"' in p.body
++        assert b'filename="b.txt"' in p.body
++
++    def test_bytes_file_content_wrapped_in_bytesio(self):
++        p = make_prepared()
++        p.prepare_body(None, [('f', ('a.bin', b'\x00\x01binary'))])
++        assert b'\x00\x01binary' in p.body
++
++
++class TestStreamedBodies:
++    def test_list_body_is_passed_through_with_content_length(self):
++        data = [1, 2, 3]
++        p = make_prepared()
++        p.prepare_body(data, None)
++        assert p.body is data
++        assert p.headers['Content-Length'] == '3'
++
++    def test_list_of_tuples_is_not_form_encoded(self):
++        # Unlike dicts, list data is treated as a stream and left raw.
++        data = [('a', '1'), ('b', '2')]
++        p = make_prepared()
++        p.prepare_body(data, None)
++        assert p.body is data
++        assert 'Content-Type' not in p.headers
++
++    def test_stream_never_sets_content_type(self):
++        p = make_prepared()
++        p.prepare_body([1, 2, 3], None)
++        assert 'Content-Type' not in p.headers
++
++    def test_empty_list_stream_gets_content_length_zero(self):
++        # str(0) == '0' is a truthy string, so Content-Length is used.
++        p = make_prepared()
++        p.prepare_body([], None)
++        assert p.body == []
++        assert p.headers['Content-Length'] == '0'
++        assert 'Transfer-Encoding' not in p.headers
++
++    def test_generator_stream_content_length_is_str_of_none(self):
++        # super_len() returns None for generators; str(None) is truthy,
++        # so the literal 'None' ends up in Content-Length.
++        gen = (i for i in range(3))
++        p = make_prepared()
++        p.prepare_body(gen, None)
++        assert p.body is gen
++        assert p.headers['Content-Length'] == 'None'
++        assert 'Transfer-Encoding' not in p.headers
++
++    def test_chunked_when_length_unavailable(self):
++        data = BadLenStream()
++        p = make_prepared()
++        p.prepare_body(data, None)
++        assert p.body is data
++        assert p.headers['Transfer-Encoding'] == 'chunked'
++        assert 'Content-Length' not in p.headers
++
++    def test_len_attribute_used_for_stream_length(self):
++        data = LenAttrStream()
++        p = make_prepared()
++        p.prepare_body(data, None)
++        assert p.headers['Content-Length'] == '7'
++        assert 'Transfer-Encoding' not in p.headers
++
++    def test_real_file_object_stream_uses_file_size(self, tmp_path):
++        path = tmp_path / 'data.bin'
++        path.write_bytes(b'123456789')
++        with open(str(path), 'rb') as f:
++            p = make_prepared()
++            p.prepare_body(f, None)
++            assert p.body is f
++            assert p.headers['Content-Length'] == '9'
++            assert p.headers['Content-Length'] == str(os.fstat(f.fileno()).st_size)
++
++    def test_stream_with_files_raises_not_implemented(self):
++        p = make_prepared()
++        with pytest.raises(NotImplementedError) as exc:
++            p.prepare_body(iter([1, 2]), {'file': ('a.txt', b'A')})
++        assert 'mutually exclusive' in str(exc.value)
++
++    def test_generator_with_files_raises_not_implemented(self):
++        p = make_prepared()
++        with pytest.raises(NotImplementedError):
++            p.prepare_body((i for i in range(2)), {'file': ('a.txt', b'A')})
++
++    def test_bytesio_stream_raises_unsupported_operation(self):
++        # BytesIO has neither __len__ nor a usable fileno(), so super_len()
++        # propagates io.UnsupportedOperation.
++        p = make_prepared()
++        with pytest.raises(io.UnsupportedOperation):
++            p.prepare_body(io.BytesIO(b'hello'), None)
++
++
++class TestHeadersContainer:
++    def test_headers_written_as_case_insensitive_dict(self):
++        p = make_prepared()
++        p.prepare_body({'a': 'b'}, None)
++        assert isinstance(p.headers, CaseInsensitiveDict)
++        assert p.headers['content-length'] == '3'
++        assert p.headers['CONTENT-TYPE'] == 'application/x-www-form-urlencoded'
++
++
++class TestRequestIntegration:
++    def test_request_prepare_with_form_data(self):
++        r = Request('POST', 'http://example.com/', data={'a': 'b'}).prepare()
++        assert r.body == 'a=b'
++        assert r.headers['Content-Type'] == 'application/x-www-form-urlencoded'
++        assert r.headers['Content-Length'] == '3'
++
++    def test_request_prepare_with_files(self):
++        r = Request(
++            'POST', 'http://example.com/',
++            files={'file': ('test.txt', b'content')}
++        ).prepare()
++        boundary = multipart_boundary(r.headers['Content-Type'])
++        assert isinstance(r.body, bytes)
++        assert r.body.startswith(('--%s\r\n' % boundary).encode('utf-8'))
++        assert r.body.endswith(('--%s--\r\n' % boundary).encode('utf-8'))
++        assert r.headers['Content-Length'] == str(len(r.body))
++
++    def test_request_prepare_stream_and_files_conflict(self):
++        req = Request('POST', 'http://example.com/',
++                      data=(i for i in range(2)),
++                      files={'file': ('a.txt', b'A')})
++        with pytest.raises(NotImplementedError):
++            req.prepare()
++
++    def test_request_prepare_without_data(self):
++        r = Request('GET', 'http://example.com/').prepare()
++        assert r.body is None
++        assert r.headers['Content-Length'] == '0'

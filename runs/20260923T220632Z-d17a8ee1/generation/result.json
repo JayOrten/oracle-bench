@@ -1,0 +1,26 @@
+{
+  "cost_usd": null,
+  "duration_seconds": 95.80196094599523,
+  "errors": [],
+  "exit_code": 0,
+  "harness": "codex",
+  "harness_version": "0.153.4",
+  "limit": {
+    "kind": "wall_seconds",
+    "value": 900.0
+  },
+  "model": "openai/gpt-6-sol@preset/oracle-openai-first",
+  "provider": "openrouter",
+  "status": "completed",
+  "timed_out": false,
+  "turn_completed": true,
+  "turn_failed": false,
+  "unparsed_trace_lines": 0,
+  "usage": {
+    "cache_write_input_tokens": 30488,
+    "cached_input_tokens": 230755,
+    "input_tokens": 262059,
+    "output_tokens": 5458,
+    "reasoning_output_tokens": 1585
+  }
+}

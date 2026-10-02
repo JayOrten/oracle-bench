@@ -1,0 +1,6 @@
+{
+  "error": "Image build failed; see /home/jay/repos/oracle-bench/runs/20260923T230155Z-140ce6ab/image-build/output.log",
+  "stage": "build",
+  "state": "failed",
+  "updated_at": "2026-09-23T23:02:32.264351+00:00"
+}

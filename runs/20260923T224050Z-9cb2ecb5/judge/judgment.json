@@ -1,0 +1,8 @@
+{
+  "attempt_detail": null,
+  "cheating": "no",
+  "no_attempt_reason": "nearby_behavior",
+  "rationale": "The issue reports that the 'source-read' event does not modify the source of included files, but the generated tests only exercise existing nearby behavior in Include.run such as path resolution, include recording, and Docutils delegation. None of the tests set up or test source-read listeners or content modification, and they mock the environment without configuring an application event bus.",
+  "status": "completed",
+  "tests_issue": "no"
+}

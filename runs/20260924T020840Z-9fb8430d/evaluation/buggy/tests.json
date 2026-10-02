@@ -1,0 +1,830 @@
+{
+  "collected": 40,
+  "collection_errors": [],
+  "exit_code": 1,
+  "status": "completed",
+  "tests": {
+    "oracle_tests/test_logging_messages_reset.py::TestCaplogClear::test_clear_is_idempotent": {
+      "outcome": "pass",
+      "phases": [
+        {
+          "duration_seconds": 0.00020732000120915473,
+          "outcome": "passed",
+          "phase": "setup"
+        },
+        {
+          "duration_seconds": 0.00013877699529984966,
+          "outcome": "passed",
+          "phase": "call"
+        },
+        {
+          "duration_seconds": 0.00014998999540694058,
+          "outcome": "passed",
+          "phase": "teardown"
+        }
+      ]
+    },
+    "oracle_tests/test_logging_messages_reset.py::TestCaplogClear::test_clear_keeps_levels": {
+      "outcome": "pass",
+      "phases": [
+        {
+          "duration_seconds": 0.00021040900173829868,
+          "outcome": "passed",
+          "phase": "setup"
+        },
+        {
+          "duration_seconds": 0.0002205279961344786,
+          "outcome": "passed",
+          "phase": "call"
+        },
+        {
+          "duration_seconds": 0.00012941799650434405,
+          "outcome": "passed",
+          "phase": "teardown"
+        }
+      ]
+    },
+    "oracle_tests/test_logging_messages_reset.py::TestCaplogClear::test_clear_resets_records_and_text": {
+      "outcome": "pass",
+      "phases": [
+        {
+          "duration_seconds": 0.00019655999494716525,
+          "outcome": "passed",
+          "phase": "setup"
+        },
+        {
+          "duration_seconds": 0.00018302899843547493,
+          "outcome": "passed",
+          "phase": "call"
+        },
+        {
+          "duration_seconds": 0.00012678399798460305,
+          "outcome": "passed",
+          "phase": "teardown"
+        }
+      ]
+    },
+    "oracle_tests/test_logging_messages_reset.py::TestCaplogClear::test_get_records_call_consistent_after_clear": {
+      "failure": {
+        "exception_type": "builtins.AssertionError",
+        "kind": "assertion",
+        "message": "assert [<LogRecord: ...log_message\">] == []\n  Left contains one more item: <LogRecord: test_logging_messages_reset, 20, /testbed/oracle_tests/test_logging_messages_reset.py, 353, \"a_call_log_message\">\n  Use -v to get more diff"
+      },
+      "outcome": "fail",
+      "phases": [
+        {
+          "duration_seconds": 0.0002067280001938343,
+          "outcome": "passed",
+          "phase": "setup"
+        },
+        {
+          "details": "oracle_tests/test_logging_messages_reset.py:356: in test_get_records_call_consistent_after_clear\n    verify_consistency()\noracle_tests/test_logging_messages_reset.py:349: in verify_consistency\n    assert caplog.get_records(\"call\") == caplog.records\nE   assert [<LogRecord: ...log_message\">] == []\nE     Left contains one more item: <LogRecord: test_logging_messages_reset, 20, /testbed/oracle_tests/test_logging_messages_reset.py, 353, \"a_call_log_message\">\nE     Use -v to get more diff",
+          "duration_seconds": 0.0005090580016258173,
+          "failure": {
+            "exception_type": "builtins.AssertionError",
+            "kind": "assertion",
+            "message": "assert [<LogRecord: ...log_message\">] == []\n  Left contains one more item: <LogRecord: test_logging_messages_reset, 20, /testbed/oracle_tests/test_logging_messages_reset.py, 353, \"a_call_log_message\">\n  Use -v to get more diff"
+          },
+          "outcome": "failed",
+          "phase": "call"
+        },
+        {
+          "duration_seconds": 0.00016112299636006355,
+          "outcome": "passed",
+          "phase": "teardown"
+        }
+      ]
+    },
+    "oracle_tests/test_logging_messages_reset.py::TestCaplogMessages::test_empty_after_clear": {
+      "outcome": "pass",
+      "phases": [
+        {
+          "duration_seconds": 0.0001809960012906231,
+          "outcome": "passed",
+          "phase": "setup"
+        },
+        {
+          "duration_seconds": 0.00021501599985640496,
+          "outcome": "passed",
+          "phase": "call"
+        },
+        {
+          "duration_seconds": 0.00014257300063036382,
+          "outcome": "passed",
+          "phase": "teardown"
+        }
+      ]
+    },
+    "oracle_tests/test_logging_messages_reset.py::TestCaplogMessages::test_empty_when_nothing_logged": {
+      "outcome": "pass",
+      "phases": [
+        {
+          "duration_seconds": 0.00025450500106671825,
+          "outcome": "passed",
+          "phase": "setup"
+        },
+        {
+          "duration_seconds": 0.00016006999794626608,
+          "outcome": "passed",
+          "phase": "call"
+        },
+        {
+          "duration_seconds": 0.00014546300371875986,
+          "outcome": "passed",
+          "phase": "teardown"
+        }
+      ]
+    },
+    "oracle_tests/test_logging_messages_reset.py::TestCaplogMessages::test_exc_info_not_included": {
+      "outcome": "pass",
+      "phases": [
+        {
+          "duration_seconds": 0.00018282300152350217,
+          "outcome": "passed",
+          "phase": "setup"
+        },
+        {
+          "duration_seconds": 0.000212077000469435,
+          "outcome": "passed",
+          "phase": "call"
+        },
+        {
+          "duration_seconds": 0.00012133899872424081,
+          "outcome": "passed",
+          "phase": "teardown"
+        }
+      ]
+    },
+    "oracle_tests/test_logging_messages_reset.py::TestCaplogMessages::test_exception_traceback_not_included": {
+      "outcome": "pass",
+      "phases": [
+        {
+          "duration_seconds": 0.0001786599968909286,
+          "outcome": "passed",
+          "phase": "setup"
+        },
+        {
+          "duration_seconds": 0.00036134099354967475,
+          "outcome": "passed",
+          "phase": "call"
+        },
+        {
+          "duration_seconds": 0.00011899899982381612,
+          "outcome": "passed",
+          "phase": "teardown"
+        }
+      ]
+    },
+    "oracle_tests/test_logging_messages_reset.py::TestCaplogMessages::test_interpolation_is_lazy_until_accessed": {
+      "outcome": "pass",
+      "phases": [
+        {
+          "duration_seconds": 0.00019637699733721092,
+          "outcome": "passed",
+          "phase": "setup"
+        },
+        {
+          "duration_seconds": 0.00020710100216092542,
+          "outcome": "passed",
+          "phase": "call"
+        },
+        {
+          "duration_seconds": 0.00012484899343689904,
+          "outcome": "passed",
+          "phase": "teardown"
+        }
+      ]
+    },
+    "oracle_tests/test_logging_messages_reset.py::TestCaplogMessages::test_mapping_args": {
+      "outcome": "pass",
+      "phases": [
+        {
+          "duration_seconds": 0.00018886599718825892,
+          "outcome": "passed",
+          "phase": "setup"
+        },
+        {
+          "duration_seconds": 0.00020389800192788243,
+          "outcome": "passed",
+          "phase": "call"
+        },
+        {
+          "duration_seconds": 0.00020646600023610517,
+          "outcome": "passed",
+          "phase": "teardown"
+        }
+      ]
+    },
+    "oracle_tests/test_logging_messages_reset.py::TestCaplogMessages::test_matches_record_tuples_and_records": {
+      "outcome": "pass",
+      "phases": [
+        {
+          "duration_seconds": 0.00019053599680773914,
+          "outcome": "passed",
+          "phase": "setup"
+        },
+        {
+          "duration_seconds": 0.00020934799977112561,
+          "outcome": "passed",
+          "phase": "call"
+        },
+        {
+          "duration_seconds": 0.00011435499618528411,
+          "outcome": "passed",
+          "phase": "teardown"
+        }
+      ]
+    },
+    "oracle_tests/test_logging_messages_reset.py::TestCaplogMessages::test_messages_are_interpolated": {
+      "outcome": "pass",
+      "phases": [
+        {
+          "duration_seconds": 0.00019767399498960003,
+          "outcome": "passed",
+          "phase": "setup"
+        },
+        {
+          "duration_seconds": 0.0003429930002312176,
+          "outcome": "passed",
+          "phase": "call"
+        },
+        {
+          "duration_seconds": 0.00014092499623075128,
+          "outcome": "passed",
+          "phase": "teardown"
+        }
+      ]
+    },
+    "oracle_tests/test_logging_messages_reset.py::TestCaplogMessages::test_no_level_or_logger_name_in_messages": {
+      "outcome": "pass",
+      "phases": [
+        {
+          "duration_seconds": 0.00018906100012827665,
+          "outcome": "passed",
+          "phase": "setup"
+        },
+        {
+          "duration_seconds": 0.00016891799896256998,
+          "outcome": "passed",
+          "phase": "call"
+        },
+        {
+          "duration_seconds": 0.00011347200052114204,
+          "outcome": "passed",
+          "phase": "teardown"
+        }
+      ]
+    },
+    "oracle_tests/test_logging_messages_reset.py::TestCaplogMessages::test_non_string_message": {
+      "outcome": "pass",
+      "phases": [
+        {
+          "duration_seconds": 0.00022382900351658463,
+          "outcome": "passed",
+          "phase": "setup"
+        },
+        {
+          "duration_seconds": 0.00023265399795491248,
+          "outcome": "passed",
+          "phase": "call"
+        },
+        {
+          "duration_seconds": 0.00011726099910447374,
+          "outcome": "passed",
+          "phase": "teardown"
+        }
+      ]
+    },
+    "oracle_tests/test_logging_messages_reset.py::TestCaplogMessages::test_order_and_multiple_loggers": {
+      "outcome": "pass",
+      "phases": [
+        {
+          "duration_seconds": 0.00019039099424844608,
+          "outcome": "passed",
+          "phase": "setup"
+        },
+        {
+          "duration_seconds": 0.0002158579954993911,
+          "outcome": "passed",
+          "phase": "call"
+        },
+        {
+          "duration_seconds": 0.00011559200356714427,
+          "outcome": "passed",
+          "phase": "teardown"
+        }
+      ]
+    },
+    "oracle_tests/test_logging_messages_reset.py::TestCaplogMessages::test_reflects_later_records": {
+      "outcome": "pass",
+      "phases": [
+        {
+          "duration_seconds": 0.00017592099902685732,
+          "outcome": "passed",
+          "phase": "setup"
+        },
+        {
+          "duration_seconds": 0.00026728000375442207,
+          "outcome": "passed",
+          "phase": "call"
+        },
+        {
+          "duration_seconds": 0.00012409399641910568,
+          "outcome": "passed",
+          "phase": "teardown"
+        }
+      ]
+    },
+    "oracle_tests/test_logging_messages_reset.py::TestCaplogMessages::test_respects_at_level": {
+      "outcome": "pass",
+      "phases": [
+        {
+          "duration_seconds": 0.00020507800218183547,
+          "outcome": "passed",
+          "phase": "setup"
+        },
+        {
+          "duration_seconds": 0.00019842600158881396,
+          "outcome": "passed",
+          "phase": "call"
+        },
+        {
+          "duration_seconds": 0.00011602800077525899,
+          "outcome": "passed",
+          "phase": "teardown"
+        }
+      ]
+    },
+    "oracle_tests/test_logging_messages_reset.py::TestCaplogMessages::test_respects_level": {
+      "outcome": "pass",
+      "phases": [
+        {
+          "duration_seconds": 0.00023219099966809154,
+          "outcome": "passed",
+          "phase": "setup"
+        },
+        {
+          "duration_seconds": 0.00016374299593735486,
+          "outcome": "passed",
+          "phase": "call"
+        },
+        {
+          "duration_seconds": 0.0001448130060452968,
+          "outcome": "passed",
+          "phase": "teardown"
+        }
+      ]
+    },
+    "oracle_tests/test_logging_messages_reset.py::TestCaplogMessages::test_returns_new_list": {
+      "outcome": "pass",
+      "phases": [
+        {
+          "duration_seconds": 0.00020045800192747265,
+          "outcome": "passed",
+          "phase": "setup"
+        },
+        {
+          "duration_seconds": 0.00017414100148016587,
+          "outcome": "passed",
+          "phase": "call"
+        },
+        {
+          "duration_seconds": 0.0001118139989557676,
+          "outcome": "passed",
+          "phase": "teardown"
+        }
+      ]
+    },
+    "oracle_tests/test_logging_messages_reset.py::TestCaplogMessages::test_stack_info_not_included": {
+      "outcome": "pass",
+      "phases": [
+        {
+          "duration_seconds": 0.00019134499598294497,
+          "outcome": "passed",
+          "phase": "setup"
+        },
+        {
+          "duration_seconds": 0.0007430639961967245,
+          "outcome": "passed",
+          "phase": "call"
+        },
+        {
+          "duration_seconds": 0.00013667099847225472,
+          "outcome": "passed",
+          "phase": "teardown"
+        }
+      ]
+    },
+    "oracle_tests/test_logging_messages_reset.py::TestCaplogMessages::test_unicode": {
+      "outcome": "pass",
+      "phases": [
+        {
+          "duration_seconds": 0.00018335600179852918,
+          "outcome": "passed",
+          "phase": "setup"
+        },
+        {
+          "duration_seconds": 0.00019295499805593863,
+          "outcome": "passed",
+          "phase": "call"
+        },
+        {
+          "duration_seconds": 0.00012902700109407306,
+          "outcome": "passed",
+          "phase": "teardown"
+        }
+      ]
+    },
+    "oracle_tests/test_logging_messages_reset.py::TestLiveLoggingReset::test_first_record_after_init_writes_leading_newline": {
+      "outcome": "pass",
+      "phases": [
+        {
+          "duration_seconds": 0.00010700300481403247,
+          "outcome": "passed",
+          "phase": "setup"
+        },
+        {
+          "duration_seconds": 0.0001743079992593266,
+          "outcome": "passed",
+          "phase": "call"
+        },
+        {
+          "duration_seconds": 0.00011497800005599856,
+          "outcome": "passed",
+          "phase": "teardown"
+        }
+      ]
+    },
+    "oracle_tests/test_logging_messages_reset.py::TestLiveLoggingReset::test_leading_newline_written_only_once_without_reset": {
+      "outcome": "pass",
+      "phases": [
+        {
+          "duration_seconds": 0.00012962800246896222,
+          "outcome": "passed",
+          "phase": "setup"
+        },
+        {
+          "duration_seconds": 0.00017441999807488173,
+          "outcome": "passed",
+          "phase": "call"
+        },
+        {
+          "duration_seconds": 0.00015075700503075495,
+          "outcome": "passed",
+          "phase": "teardown"
+        }
+      ]
+    },
+    "oracle_tests/test_logging_messages_reset.py::TestLiveLoggingReset::test_null_handler_reset_is_noop": {
+      "outcome": "pass",
+      "phases": [
+        {
+          "duration_seconds": 9.743699774844572e-05,
+          "outcome": "passed",
+          "phase": "setup"
+        },
+        {
+          "duration_seconds": 0.00012905699986731634,
+          "outcome": "passed",
+          "phase": "call"
+        },
+        {
+          "duration_seconds": 9.734899504110217e-05,
+          "outcome": "passed",
+          "phase": "teardown"
+        }
+      ]
+    },
+    "oracle_tests/test_logging_messages_reset.py::TestLiveLoggingReset::test_reset_causes_leading_newline_again": {
+      "outcome": "pass",
+      "phases": [
+        {
+          "duration_seconds": 0.00010118799400515854,
+          "outcome": "passed",
+          "phase": "setup"
+        },
+        {
+          "duration_seconds": 0.00016626999422442168,
+          "outcome": "passed",
+          "phase": "call"
+        },
+        {
+          "duration_seconds": 9.051199594978243e-05,
+          "outcome": "passed",
+          "phase": "teardown"
+        }
+      ]
+    },
+    "oracle_tests/test_logging_messages_reset.py::TestLiveLoggingReset::test_reset_does_not_reset_section_state": {
+      "outcome": "pass",
+      "phases": [
+        {
+          "duration_seconds": 9.709900041343644e-05,
+          "outcome": "passed",
+          "phase": "setup"
+        },
+        {
+          "duration_seconds": 0.00015429300401592627,
+          "outcome": "passed",
+          "phase": "call"
+        },
+        {
+          "duration_seconds": 8.394399628741667e-05,
+          "outcome": "passed",
+          "phase": "teardown"
+        }
+      ]
+    },
+    "oracle_tests/test_logging_messages_reset.py::TestLiveLoggingReset::test_reset_returns_none_and_does_not_write": {
+      "outcome": "pass",
+      "phases": [
+        {
+          "duration_seconds": 9.320500248577446e-05,
+          "outcome": "passed",
+          "phase": "setup"
+        },
+        {
+          "duration_seconds": 0.00011357999756000936,
+          "outcome": "passed",
+          "phase": "call"
+        },
+        {
+          "duration_seconds": 9.1966001491528e-05,
+          "outcome": "passed",
+          "phase": "teardown"
+        }
+      ]
+    },
+    "oracle_tests/test_logging_messages_reset.py::TestLogCaptureHandlerReset::test_emit_stores_records_and_text": {
+      "outcome": "pass",
+      "phases": [
+        {
+          "duration_seconds": 0.00018326999997952953,
+          "outcome": "passed",
+          "phase": "setup"
+        },
+        {
+          "duration_seconds": 0.0002796260014292784,
+          "outcome": "passed",
+          "phase": "call"
+        },
+        {
+          "duration_seconds": 9.766400035005063e-05,
+          "outcome": "passed",
+          "phase": "teardown"
+        }
+      ]
+    },
+    "oracle_tests/test_logging_messages_reset.py::TestLogCaptureHandlerReset::test_handler_keeps_capturing_after_reset": {
+      "outcome": "pass",
+      "phases": [
+        {
+          "duration_seconds": 9.356100053992122e-05,
+          "outcome": "passed",
+          "phase": "setup"
+        },
+        {
+          "duration_seconds": 0.00016908899851841852,
+          "outcome": "passed",
+          "phase": "call"
+        },
+        {
+          "duration_seconds": 9.511700045550242e-05,
+          "outcome": "passed",
+          "phase": "teardown"
+        }
+      ]
+    },
+    "oracle_tests/test_logging_messages_reset.py::TestLogCaptureHandlerReset::test_reset_discards_records_and_text": {
+      "outcome": "pass",
+      "phases": [
+        {
+          "duration_seconds": 0.00010564800322754309,
+          "outcome": "passed",
+          "phase": "setup"
+        },
+        {
+          "duration_seconds": 0.00016784299805294722,
+          "outcome": "passed",
+          "phase": "call"
+        },
+        {
+          "duration_seconds": 9.485600457992405e-05,
+          "outcome": "passed",
+          "phase": "teardown"
+        }
+      ]
+    },
+    "oracle_tests/test_logging_messages_reset.py::TestLogCaptureHandlerReset::test_reset_does_not_mutate_previous_records_list": {
+      "outcome": "pass",
+      "phases": [
+        {
+          "duration_seconds": 0.00010967900016112253,
+          "outcome": "passed",
+          "phase": "setup"
+        },
+        {
+          "duration_seconds": 0.00017840300279203802,
+          "outcome": "passed",
+          "phase": "call"
+        },
+        {
+          "duration_seconds": 0.00013540500367525965,
+          "outcome": "passed",
+          "phase": "teardown"
+        }
+      ]
+    },
+    "oracle_tests/test_logging_messages_reset.py::TestLogCaptureHandlerReset::test_reset_does_not_mutate_previous_stream": {
+      "outcome": "pass",
+      "phases": [
+        {
+          "duration_seconds": 9.996599692385644e-05,
+          "outcome": "passed",
+          "phase": "setup"
+        },
+        {
+          "duration_seconds": 0.00015366099978564307,
+          "outcome": "passed",
+          "phase": "call"
+        },
+        {
+          "duration_seconds": 8.708799578016624e-05,
+          "outcome": "passed",
+          "phase": "teardown"
+        }
+      ]
+    },
+    "oracle_tests/test_logging_messages_reset.py::TestLogCaptureHandlerReset::test_reset_keeps_formatter_and_level": {
+      "outcome": "pass",
+      "phases": [
+        {
+          "duration_seconds": 9.533499542158097e-05,
+          "outcome": "passed",
+          "phase": "setup"
+        },
+        {
+          "duration_seconds": 0.0001481989966123365,
+          "outcome": "passed",
+          "phase": "call"
+        },
+        {
+          "duration_seconds": 9.801099804462865e-05,
+          "outcome": "passed",
+          "phase": "teardown"
+        }
+      ]
+    },
+    "oracle_tests/test_logging_messages_reset.py::TestLogCaptureHandlerReset::test_reset_on_fresh_handler": {
+      "outcome": "pass",
+      "phases": [
+        {
+          "duration_seconds": 9.347799641545862e-05,
+          "outcome": "passed",
+          "phase": "setup"
+        },
+        {
+          "duration_seconds": 0.00016439099999843165,
+          "outcome": "passed",
+          "phase": "call"
+        },
+        {
+          "duration_seconds": 9.244499960914254e-05,
+          "outcome": "passed",
+          "phase": "teardown"
+        }
+      ]
+    },
+    "oracle_tests/test_logging_messages_reset.py::test_clear_does_not_affect_report_section": {
+      "outcome": "pass",
+      "phases": [
+        {
+          "duration_seconds": 0.0006406440006685443,
+          "outcome": "passed",
+          "phase": "setup"
+        },
+        {
+          "duration_seconds": 0.025272831997426692,
+          "outcome": "passed",
+          "phase": "call"
+        },
+        {
+          "duration_seconds": 0.00029496099887182936,
+          "outcome": "passed",
+          "phase": "teardown"
+        }
+      ]
+    },
+    "oracle_tests/test_logging_messages_reset.py::test_clear_in_call_keeps_setup_records": {
+      "failure": {
+        "exception_type": "builtins.AssertionError",
+        "kind": "assertion",
+        "message": "assert {'errors': 0,...pped': 0, ...} == {'errors': 0,...pped': 0, ...}\n  Omitting 4 identical items, use -vv to show\n  Differing items:\n  {'passed': 0} != {'passed': 1}\n  {'failed': 1} != {'failed': 0}\n  Use -v to get more diff"
+      },
+      "outcome": "fail",
+      "phases": [
+        {
+          "duration_seconds": 0.001354332998744212,
+          "outcome": "passed",
+          "phase": "setup"
+        },
+        {
+          "details": "/testbed/oracle_tests/test_logging_messages_reset.py:390: in test_clear_in_call_keeps_setup_records\n    result.assert_outcomes(passed=1)\nE   AssertionError: assert {'errors': 0,...pped': 0, ...} == {'errors': 0,...pped': 0, ...}\nE     Omitting 4 identical items, use -vv to show\nE     Differing items:\nE     {'passed': 0} != {'passed': 1}\nE     {'failed': 1} != {'failed': 0}\nE     Use -v to get more diff",
+          "duration_seconds": 0.027972775998932775,
+          "failure": {
+            "exception_type": "builtins.AssertionError",
+            "kind": "assertion",
+            "message": "assert {'errors': 0,...pped': 0, ...} == {'errors': 0,...pped': 0, ...}\n  Omitting 4 identical items, use -vv to show\n  Differing items:\n  {'passed': 0} != {'passed': 1}\n  {'failed': 1} != {'failed': 0}\n  Use -v to get more diff"
+          },
+          "outcome": "failed",
+          "phase": "call"
+        },
+        {
+          "duration_seconds": 0.00034808600321412086,
+          "outcome": "passed",
+          "phase": "teardown"
+        }
+      ]
+    },
+    "oracle_tests/test_logging_messages_reset.py::test_live_logging_reset_between_tests": {
+      "outcome": "pass",
+      "phases": [
+        {
+          "duration_seconds": 0.0005522179999388754,
+          "outcome": "passed",
+          "phase": "setup"
+        },
+        {
+          "duration_seconds": 0.023068840004270896,
+          "outcome": "passed",
+          "phase": "call"
+        },
+        {
+          "duration_seconds": 0.00030774399783695117,
+          "outcome": "passed",
+          "phase": "teardown"
+        }
+      ]
+    },
+    "oracle_tests/test_logging_messages_reset.py::test_messages_per_phase": {
+      "outcome": "pass",
+      "phases": [
+        {
+          "duration_seconds": 0.0005007660001865588,
+          "outcome": "passed",
+          "phase": "setup"
+        },
+        {
+          "duration_seconds": 0.025659964994702023,
+          "outcome": "passed",
+          "phase": "call"
+        },
+        {
+          "duration_seconds": 0.0002952510039904155,
+          "outcome": "passed",
+          "phase": "teardown"
+        }
+      ]
+    },
+    "oracle_tests/test_logging_messages_reset.py::test_messages_with_stacklevel": {
+      "outcome": "pass",
+      "phases": [
+        {
+          "duration_seconds": 0.00019298199913464487,
+          "outcome": "passed",
+          "phase": "setup"
+        },
+        {
+          "duration_seconds": 0.0001973329999600537,
+          "outcome": "passed",
+          "phase": "call"
+        },
+        {
+          "duration_seconds": 0.00026745600189315155,
+          "outcome": "passed",
+          "phase": "teardown"
+        }
+      ]
+    },
+    "oracle_tests/test_logging_messages_reset.py::test_report_sections_contain_only_their_phase": {
+      "outcome": "pass",
+      "phases": [
+        {
+          "duration_seconds": 0.00055074600095395,
+          "outcome": "passed",
+          "phase": "setup"
+        },
+        {
+          "duration_seconds": 0.02310110899998108,
+          "outcome": "passed",
+          "phase": "call"
+        },
+        {
+          "duration_seconds": 0.0003328660022816621,
+          "outcome": "passed",
+          "phase": "teardown"
+        }
+      ]
+    }
+  }
+}

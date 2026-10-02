@@ -1,0 +1,95 @@
+diff --git a/oracle_tests/conftest.py b/oracle_tests/conftest.py
+new file mode 100644
+index 0000000..d8356af
+--- /dev/null
++++ b/oracle_tests/conftest.py
+@@ -0,0 +1,89 @@
++import os
++import subprocess
++import sys
++import textwrap
++from pathlib import Path
++
++import pytest
++
++
++REPO_ROOT = Path(__file__).resolve().parents[1]
++REPO_SRC = REPO_ROOT / "src"
++TARGET_FILE = REPO_SRC / "_pytest" / "logging.py"
++
++
++def _child_env():
++    env = os.environ.copy()
++    env["PYTHONPATH"] = os.pathsep.join(
++        filter(None, [str(REPO_SRC), env.get("PYTHONPATH", "")])
++    )
++    env.pop("PYTEST_ADDOPTS", None)
++    return env
++
++
++def _repo_pytest_version() -> str:
++    version_file = REPO_SRC / "_pytest" / "_version.py"
++    namespace = {}
++    exec(
++        compile(version_file.read_text(encoding="utf-8"), str(version_file), "exec"),
++        namespace,
++    )
++    return str(namespace["version"])
++
++
++@pytest.fixture(scope="session", autouse=True)
++def repo_logging_module_resolves_to_repo_source(tmp_path_factory):
++    assert TARGET_FILE.is_file(), "repo source file not found: %s" % TARGET_FILE
++    workdir = tmp_path_factory.mktemp("repo-import-check")
++    proc = subprocess.run(
++        [sys.executable, "-c", "import _pytest.logging as m; print(m.__file__)"],
++        capture_output=True,
++        text=True,
++        cwd=str(workdir),
++        env=_child_env(),
++    )
++    assert proc.returncode == 0, proc.stderr
++    assert proc.stdout.strip() == str(TARGET_FILE), proc.stdout
++
++
++@pytest.fixture
++def run_repo_python(tmp_path):
++    def run(code: str) -> str:
++        prelude = (
++            "import _pytest.logging as _m\n"
++            "assert _m.__file__ == %r, _m.__file__\n" % str(TARGET_FILE)
++        )
++        proc = subprocess.run(
++            [sys.executable, "-c", prelude + textwrap.dedent(code)],
++            capture_output=True,
++            text=True,
++            cwd=str(tmp_path),
++            env=_child_env(),
++        )
++        assert proc.returncode == 0, (
++            "child process failed (rc=%d)\n--- stdout ---\n%s\n--- stderr ---\n%s"
++            % (proc.returncode, proc.stdout, proc.stderr)
++        )
++        return proc.stdout
++
++    return run
++
++
++@pytest.fixture
++def run_repo_pytest(tmp_path):
++    def run(*args: str):
++        proc = subprocess.run(
++            [sys.executable, "-m", "pytest", "-p", "no:cacheprovider", *args],
++            capture_output=True,
++            text=True,
++            cwd=str(tmp_path),
++            env=_child_env(),
++        )
++        assert _repo_pytest_version() in proc.stdout, (
++            "child pytest did not run from repo sources (%s)\n"
++            "--- stdout ---\n%s\n--- stderr ---\n%s"
++            % (_repo_pytest_version(), proc.stdout, proc.stderr)
++        )
++        return proc
++
++    return run

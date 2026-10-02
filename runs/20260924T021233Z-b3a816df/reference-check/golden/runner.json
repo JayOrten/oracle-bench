@@ -1,0 +1,16 @@
+{
+  "import_modules": [
+    "_pytest"
+  ],
+  "output": "/tmp/oracle-results",
+  "pytest_plugins": [
+    "pytester"
+  ],
+  "source_roots": [
+    "src/_pytest"
+  ],
+  "targets": [
+    "testing/logging/test_fixture.py::test_clear_for_call_stage"
+  ],
+  "workdir": "/testbed"
+}

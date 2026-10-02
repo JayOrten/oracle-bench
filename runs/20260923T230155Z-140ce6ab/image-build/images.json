@@ -1,0 +1,29 @@
+{
+  "harnesses": {
+    "digests": [
+      "oracle-bench/harnesses@sha256:d6c4130f4f22ddd5d25aad486ab4eb7fea7ae61baaa5727f364258ea9e69c8b6"
+    ],
+    "id": "sha256:d6c4130f4f22ddd5d25aad486ab4eb7fea7ae61baaa5727f364258ea9e69c8b6",
+    "reference": "sha256:d6c4130f4f22ddd5d25aad486ab4eb7fea7ae61baaa5727f364258ea9e69c8b6"
+  },
+  "installed_harnesses": {
+    "claude": "2.1.280",
+    "codex": "0.153.4",
+    "opencode": "1.18.32"
+  },
+  "lockfile_sha256": "346fb0e5ea02b430c6bded2861b3129c56aa88d979675ec1968c9d6780b27076",
+  "node": {
+    "digests": [
+      "node@sha256:1c18d9ab3af4585870b92e4dbc5cac5a0dc77dd13df1a5905cea89fc720eb05b"
+    ],
+    "id": "sha256:1c18d9ab3af4585870b92e4dbc5cac5a0dc77dd13df1a5905cea89fc720eb05b",
+    "reference": "node:22.14.0-bookworm-slim"
+  },
+  "source": {
+    "digests": [
+      "swebench/sweb.eval.x86_64.scikit-learn_1776_scikit-learn-14710@sha256:e68930db25c08aeb94b76ce37a4691db5db5cae8db8691ac914160f5c7c331fd"
+    ],
+    "id": "sha256:e68930db25c08aeb94b76ce37a4691db5db5cae8db8691ac914160f5c7c331fd",
+    "reference": "swebench/sweb.eval.x86_64.scikit-learn_1776_scikit-learn-14710:latest"
+  }
+}

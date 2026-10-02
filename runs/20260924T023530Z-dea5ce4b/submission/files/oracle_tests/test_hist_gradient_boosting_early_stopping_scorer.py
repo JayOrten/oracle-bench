@@ -1,0 +1,87 @@
+from unittest.mock import Mock
+
+import numpy as np
+import pytest
+
+from sklearn.ensemble._hist_gradient_boosting.gradient_boosting import (
+    HistGradientBoostingRegressor,
+)
+
+
+@pytest.mark.parametrize("use_validation", [False, True])
+def test_scorer_appends_scores_and_checks_selected_history(use_validation):
+    estimator = HistGradientBoostingRegressor(n_iter_no_change=2)
+    estimator._use_validation_data = use_validation
+    estimator.train_score_ = [0.1]
+    estimator.validation_score_ = [0.2]
+    estimator.scorer_ = Mock(side_effect=[0.3, 0.4])
+    estimator._should_stop = Mock(return_value=True)
+
+    X_train = np.array([[1], [2]], dtype=np.uint8)
+    y_train = np.array([1., 2.])
+    X_val = np.array([[3]], dtype=np.uint8) if use_validation else None
+    y_val = np.array([3.]) if use_validation else None
+
+    result = estimator._check_early_stopping_scorer(
+        X_train, y_train, X_val, y_val
+    )
+
+    assert result is True
+    assert estimator.train_score_ == [0.1, 0.3]
+    assert estimator.validation_score_ == ([0.2, 0.4] if use_validation else [0.2])
+    expected_calls = 2 if use_validation else 1
+    assert estimator.scorer_.call_count == expected_calls
+    train_call = estimator.scorer_.call_args_list[0][0]
+    assert train_call[0] is estimator
+    assert train_call[1] is X_train
+    assert train_call[2] is y_train
+    if use_validation:
+        val_call = estimator.scorer_.call_args_list[1][0]
+        assert val_call[0] is estimator
+        assert val_call[1] is X_val
+        assert val_call[2] is y_val
+    estimator._should_stop.assert_called_once_with(
+        estimator.validation_score_ if use_validation else estimator.train_score_
+    )
+
+
+@pytest.mark.parametrize(
+    "use_validation, train_scores, validation_scores, expected_stop",
+    [
+        (False, [0.5, 0.5, 0.5], None, True),
+        (False, [0.5, 0.5, 0.75], None, False),
+        (True, [0.5, 0.625, 0.75], [0.5, 0.5, 0.5], True),
+        (True, [0.5, 0.5, 0.5], [0.5, 0.75, 0.5], False),
+        (True, [0.5, 0.5, 0.5], [0.5, 0.5, 0.625], True),
+        (True, [0.5, 0.5, 0.5], [0.5, 0.5, 0.75], False),
+    ],
+)
+def test_scorer_stopping_uses_only_relevant_scores(
+    use_validation, train_scores, validation_scores, expected_stop
+):
+    estimator = HistGradientBoostingRegressor(n_iter_no_change=2, tol=0.125)
+    estimator._use_validation_data = use_validation
+    estimator.train_score_ = []
+    estimator.validation_score_ = []
+    X_train = np.array([[1]], dtype=np.uint8)
+    y_train = np.array([1.])
+    X_val = np.array([[2]], dtype=np.uint8) if use_validation else None
+    y_val = np.array([2.]) if use_validation else None
+    train_values = iter(train_scores)
+    validation_values = iter(validation_scores) if use_validation else None
+
+    def scorer(model, X, y):
+        if X is X_train:
+            return next(train_values)
+        assert X is X_val
+        return next(validation_values)
+
+    estimator.scorer_ = scorer
+    results = [
+        estimator._check_early_stopping_scorer(X_train, y_train, X_val, y_val)
+        for _ in train_scores
+    ]
+
+    assert results == [False, False, expected_stop]
+    assert estimator.train_score_ == train_scores
+    assert estimator.validation_score_ == (validation_scores or [])

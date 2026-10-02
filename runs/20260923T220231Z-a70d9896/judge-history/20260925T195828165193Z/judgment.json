@@ -1,0 +1,4 @@
+{
+  "error": "{'type': 'turn.failed', 'error': {'message': '{\"error\":{\"message\":\"Provider returned error\",\"code\":400,\"metadata\":{\"raw\":\"{\\\\n  \\\\\"error\\\\\": {\\\\n    \\\\\"code\\\\\": 400,\\\\n    \\\\\"message\\\\\": \\\\\"Requests ending with a model turn are not supported.\\\\\",\\\\n    \\\\\"status\\\\\": \\\\\"INVALID_ARGUMENT\\\\\"\\\\n  }\\\\n}\\\\n\",\"provider_name\":\"Google\",\"is_byok\":false,\"provider_error_code\":\"400\"}},\"user_id\":\"user_35WoQj6v3TPJBBAjV8PDkVJvAdt\"}'}}",
+  "status": "failed"
+}

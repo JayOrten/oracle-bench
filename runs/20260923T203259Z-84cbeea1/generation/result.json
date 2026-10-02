@@ -1,0 +1,56 @@
+{
+  "cost_usd": null,
+  "duration_seconds": 105.8613452890022,
+  "errors": [],
+  "exit_code": 0,
+  "harness": "claude",
+  "harness_version": "2.1.280",
+  "limit": {
+    "kind": "wall_seconds",
+    "value": 900.0
+  },
+  "model": "anthropic/claude-opus-5.5@preset/oracle-anthropic-first",
+  "model_usage": {
+    "anthropic/claude-opus-5.5@preset/oracle-anthropic-first": {
+      "cacheCreationInputTokens": 32846,
+      "cacheReadInputTokens": 193473,
+      "canonicalModel": "claude-opus-5",
+      "contextWindow": 200000,
+      "costBasis": "list",
+      "costUSD": 0.573494,
+      "inputTokens": 24,
+      "maxOutputTokens": 64000,
+      "outputTokens": 10854,
+      "provider": "firstParty",
+      "thinkingTokens": 1711,
+      "webSearchRequests": 0
+    }
+  },
+  "provider": "openrouter",
+  "status": "completed",
+  "timed_out": false,
+  "turn_completed": true,
+  "turn_failed": false,
+  "unparsed_trace_lines": 0,
+  "usage": {
+    "cache_creation": {
+      "ephemeral_1h_input_tokens": 0,
+      "ephemeral_5m_input_tokens": 32846
+    },
+    "cache_creation_input_tokens": 32846,
+    "cache_read_input_tokens": 193473,
+    "inference_geo": "global",
+    "input_tokens": 24,
+    "iterations": [],
+    "output_tokens": 10854,
+    "output_tokens_details": {
+      "thinking_tokens": 1711
+    },
+    "server_tool_use": {
+      "web_fetch_requests": 0,
+      "web_search_requests": 0
+    },
+    "service_tier": "standard",
+    "speed": "standard"
+  }
+}

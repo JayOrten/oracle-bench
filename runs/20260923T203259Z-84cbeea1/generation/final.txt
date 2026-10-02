@@ -1,0 +1,17 @@
+I added 44 unit tests for `PreparedRequest.prepare_body` in `oracle_tests/test_prepare_body.py`, and all of them pass with the command you gave. I didn't change any application code.
+
+**What the tests cover:**
+- **Empty bodies:** `None`, `{}`, `''` and empty `files` all give `body is None` and `Content-Length: 0`, and no `Content-Type` is set.
+- **Form data:** dicts become URL-encoded bodies with `application/x-www-form-urlencoded`. This includes list values, dropping `None` values, quoting special characters, UTF-8 encoding of non-ASCII text, and keeping a `Content-Type` the caller already set (the header lookup ignores case).
+- **Raw data:** strings pass through with no `Content-Type`. Bytes pass through and are not treated as a stream.
+- **File-like objects that can't be iterated:** they are passed through, the length comes from seek/tell, and the read position is reset to 0 afterwards.
+- **Streams:** a real file, an iterable with a `.len` attribute, and a list all get `Content-Length`. An iterable whose length can't be worked out gets `Transfer-Encoding: chunked`. Passing a stream together with `files` raises `NotImplementedError`.
+- **Multipart uploads:** checks the boundary, extra data fields (including repeated ones), an explicit per-file content type, and how file names are picked (explicit tuple, the object's `.name`, or the dict key when there's no usable name). It also checks that multiple files keep their order and that `Content-Length` equals the body size.
+- **End to end:** a few checks that `Request(...).prepare()` produces the same results.
+
+**Odd behaviour in the current code.** I tested around these rather than locking them in, except where noted:
+- **Generators get a bad header:** `super_len` returns `None` for them, so the code sets `Content-Length: 'None'` instead of using chunked encoding. The generator test only checks that the body is passed through, not that header.
+- **Lists are treated as streams:** so `data=[('a', 'b')]` is not form-encoded, and combining it with `files` raises an error. The tests do assert this current behaviour.
+- **`BytesIO`/`StringIO` crash:** on Python 3 they raise `io.UnsupportedOperation` from `fileno()` inside `super_len`, so I used custom file-like objects instead.
+- **Multipart `Content-Type` is bytes, not a string:** the tests decode it before comparing.
+- **Full paths leak into uploads:** the filename is taken from the object's whole `.name`, not just the last part of the path, so a temp file would send its full path.

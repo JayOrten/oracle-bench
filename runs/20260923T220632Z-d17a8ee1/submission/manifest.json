@@ -1,0 +1,12 @@
+{
+  "compliant": true,
+  "empty": false,
+  "files": {
+    "oracle_tests/test_axes_clear.py": {
+      "mode": 420,
+      "sha256": "90ade4d29f3b1cb510c1e457a0ee9b0b2eef3ed7a30e88eb9eaa784d5d5718c2"
+    }
+  },
+  "forbidden_changes": [],
+  "sha256": "a9898d14899804e0b033c10d5043553ebab901cda4db5fe21a06e5f5beb52a47"
+}

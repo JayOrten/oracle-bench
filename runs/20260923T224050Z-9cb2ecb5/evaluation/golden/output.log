@@ -1,0 +1,82 @@
+HEAD is now at 6cb783c00 Enable SIM105 (use contextlib.suppress)
+FFFFFFFFFFF                                                              [100%]
+=================================== FAILURES ===================================
+_ test_include_resolves_and_records_file_before_running_docutils[parts/intro.inc] _
+oracle_tests/test_include_directive.py:42: in test_include_resolves_and_records_file_before_running_docutils
+    assert directive.run() is result
+sphinx/directives/other.py:404: in run
+    if self.env.app.events.listeners.get('source-read'):
+E   AttributeError: 'types.SimpleNamespace' object has no attribute 'app'
+_ test_include_resolves_and_records_file_before_running_docutils[/shared/intro.inc] _
+oracle_tests/test_include_directive.py:42: in test_include_resolves_and_records_file_before_running_docutils
+    assert directive.run() is result
+sphinx/directives/other.py:404: in run
+    if self.env.app.events.listeners.get('source-read'):
+E   AttributeError: 'types.SimpleNamespace' object has no attribute 'app'
+_ test_include_resolves_and_records_file_before_running_docutils[../intro.inc] _
+oracle_tests/test_include_directive.py:42: in test_include_resolves_and_records_file_before_running_docutils
+    assert directive.run() is result
+sphinx/directives/other.py:404: in run
+    if self.env.app.events.listeners.get('source-read'):
+E   AttributeError: 'types.SimpleNamespace' object has no attribute 'app'
+__ test_standard_docutils_includes_bypass_sphinx_path_handling[<isonum.txt>] ___
+oracle_tests/test_include_directive.py:59: in test_standard_docutils_includes_bypass_sphinx_path_handling
+    assert directive.run() is result
+sphinx/directives/other.py:404: in run
+    if self.env.app.events.listeners.get('source-read'):
+E   AttributeError: 'types.SimpleNamespace' object has no attribute 'app'
+__ test_standard_docutils_includes_bypass_sphinx_path_handling[<custom-name>] __
+oracle_tests/test_include_directive.py:59: in test_standard_docutils_includes_bypass_sphinx_path_handling
+    assert directive.run() is result
+sphinx/directives/other.py:404: in run
+    if self.env.app.events.listeners.get('source-read'):
+E   AttributeError: 'types.SimpleNamespace' object has no attribute 'app'
+_______ test_standard_docutils_includes_bypass_sphinx_path_handling[<>] ________
+oracle_tests/test_include_directive.py:59: in test_standard_docutils_includes_bypass_sphinx_path_handling
+    assert directive.run() is result
+sphinx/directives/other.py:404: in run
+    if self.env.app.events.listeners.get('source-read'):
+E   AttributeError: 'types.SimpleNamespace' object has no attribute 'app'
+_____________ test_non_standard_include_names_are_resolved[<name] ______________
+oracle_tests/test_include_directive.py:75: in test_non_standard_include_names_are_resolved
+    assert directive.run() == []
+sphinx/directives/other.py:404: in run
+    if self.env.app.events.listeners.get('source-read'):
+E   AttributeError: 'types.SimpleNamespace' object has no attribute 'app'
+_____________ test_non_standard_include_names_are_resolved[name>] ______________
+oracle_tests/test_include_directive.py:75: in test_non_standard_include_names_are_resolved
+    assert directive.run() == []
+sphinx/directives/other.py:404: in run
+    if self.env.app.events.listeners.get('source-read'):
+E   AttributeError: 'types.SimpleNamespace' object has no attribute 'app'
+________________ test_non_standard_include_names_are_resolved[] ________________
+oracle_tests/test_include_directive.py:75: in test_non_standard_include_names_are_resolved
+    assert directive.run() == []
+sphinx/directives/other.py:404: in run
+    if self.env.app.events.listeners.get('source-read'):
+E   AttributeError: 'types.SimpleNamespace' object has no attribute 'app'
+__________ test_path_resolution_error_does_not_record_or_run_include ___________
+oracle_tests/test_include_directive.py:90: in test_path_resolution_error_does_not_record_or_run_include
+    directive.run()
+sphinx/directives/other.py:404: in run
+    if self.env.app.events.listeners.get('source-read'):
+E   AttributeError: 'types.SimpleNamespace' object has no attribute 'app'
+____________ test_docutils_error_propagates_after_recording_include ____________
+oracle_tests/test_include_directive.py:108: in test_docutils_error_propagates_after_recording_include
+    directive.run()
+sphinx/directives/other.py:404: in run
+    if self.env.app.events.listeners.get('source-read'):
+E   AttributeError: 'types.SimpleNamespace' object has no attribute 'app'
+=========================== short test summary info ============================
+FAILED oracle_tests/test_include_directive.py::test_include_resolves_and_records_file_before_running_docutils[parts/intro.inc]
+FAILED oracle_tests/test_include_directive.py::test_include_resolves_and_records_file_before_running_docutils[/shared/intro.inc]
+FAILED oracle_tests/test_include_directive.py::test_include_resolves_and_records_file_before_running_docutils[../intro.inc]
+FAILED oracle_tests/test_include_directive.py::test_standard_docutils_includes_bypass_sphinx_path_handling[<isonum.txt>]
+FAILED oracle_tests/test_include_directive.py::test_standard_docutils_includes_bypass_sphinx_path_handling[<custom-name>]
+FAILED oracle_tests/test_include_directive.py::test_standard_docutils_includes_bypass_sphinx_path_handling[<>]
+FAILED oracle_tests/test_include_directive.py::test_non_standard_include_names_are_resolved[<name]
+FAILED oracle_tests/test_include_directive.py::test_non_standard_include_names_are_resolved[name>]
+FAILED oracle_tests/test_include_directive.py::test_non_standard_include_names_are_resolved[]
+FAILED oracle_tests/test_include_directive.py::test_path_resolution_error_does_not_record_or_run_include
+FAILED oracle_tests/test_include_directive.py::test_docutils_error_propagates_after_recording_include
+11 failed in 0.17s

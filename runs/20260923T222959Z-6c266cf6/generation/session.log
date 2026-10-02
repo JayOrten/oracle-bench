@@ -1,0 +1,1225 @@
+AGENT SESSION
+Rendered from saved CLI events; raw events remain in trace.jsonl.
+Only output exposed by the CLI is available. Tool output may be truncated by the CLI.
+
+=== PROMPT ===
+Generate unit tests for the following area of this repository:
+
+`xarray/core/rolling.py (__init__)`
+
+Do not modify the application code.
+
+You are working in a disposable container. The current working directory is the
+repository root. Keep repository exploration within this directory; do not inspect
+parent or system directories. The generated-test directory already exists and may
+be empty. Work only from the visible repository snapshot; prior Git history is
+intentionally unavailable.
+
+Place new tests and fixtures under `oracle_tests/`. Do not edit existing files
+outside that directory.
+
+The project Python is `/opt/miniconda3/envs/testbed/bin/python`. Run the generated tests with:
+
+```sh
+/opt/miniconda3/envs/testbed/bin/python -m pytest -o addopts= oracle_tests
+```
+
+
+=== EVENT 1: thread.started  ===
+{
+  "type": "thread.started",
+  "thread_id": "01a0d064-28e6-76a3-8925-ec433bc000e6"
+}
+
+=== EVENT 2: turn.started  ===
+{
+  "type": "turn.started"
+}
+
+=== EVENT 3: item.completed  ===
+agent_message [item_0]
+I’ll inspect `Rolling.__init__` and nearby test patterns, then add focused tests under `oracle_tests/`.
+
+=== EVENT 4: item.started  ===
+Command [item_1]: /bin/sh -lc "pwd; rg --files -g 'AGENTS.md' -g 'rolling.py' -g '*rolling*' -g 'pyproject.toml' -g 'pytest.ini' -g 'conftest.py' | head -100; ls oracle_tests; git status --short"
+Status: in_progress | Exit code: None
+
+
+=== EVENT 5: item.completed  ===
+Command [item_1]: /bin/sh -lc "pwd; rg --files -g 'AGENTS.md' -g 'rolling.py' -g '*rolling*' -g 'pyproject.toml' -g 'pytest.ini' -g 'conftest.py' | head -100; ls oracle_tests; git status --short"
+Status: completed | Exit code: 0
+/testbed
+conftest.py
+asv_bench/benchmarks/rolling.py
+xarray/tests/conftest.py
+xarray/core/rolling.py
+xarray/core/rolling_exp.py
+pyproject.toml
+properties/conftest.py
+
+
+=== EVENT 6: item.started  ===
+Command [item_2]: /bin/sh -lc "sed -n '1,330p' xarray/core/rolling.py; rg -n 'class .*Rolling|def __init__|rolling\\(' xarray/tests/test_rolling.py | head -100; ls -la oracle_tests; rg --files oracle_tests"
+Status: in_progress | Exit code: None
+
+
+=== EVENT 7: item.completed  ===
+Command [item_2]: /bin/sh -lc "sed -n '1,330p' xarray/core/rolling.py; rg -n 'class .*Rolling|def __init__|rolling\\(' xarray/tests/test_rolling.py | head -100; ls -la oracle_tests; rg --files oracle_tests"
+Status: failed | Exit code: 1
+from __future__ import annotations
+
+import functools
+import itertools
+import math
+import warnings
+from typing import (
+    TYPE_CHECKING,
+    Any,
+    Callable,
+    Generic,
+    Hashable,
+    Iterator,
+    Mapping,
+    TypeVar,
+)
+
+import numpy as np
+
+from . import dtypes, duck_array_ops, utils
+from .arithmetic import CoarsenArithmetic
+from .options import OPTIONS, _get_keep_attrs
+from .pycompat import is_duck_dask_array
+from .types import CoarsenBoundaryOptions, SideOptions, T_Xarray
+from .utils import either_dict_or_kwargs
+
+try:
+    import bottleneck
+except ImportError:
+    # use numpy methods instead
+    bottleneck = None
+
+if TYPE_CHECKING:
+    from .dataarray import DataArray
+    from .dataset import Dataset
+
+    RollingKey = Any
+    _T = TypeVar("_T")
+
+_ROLLING_REDUCE_DOCSTRING_TEMPLATE = """\
+Reduce this object's data windows by applying `{name}` along its dimension.
+
+Parameters
+----------
+keep_attrs : bool, default: None
+    If True, the attributes (``attrs``) will be copied from the original
+    object to the new one. If False, the new object will be returned
+    without attributes. If None uses the global default.
+**kwargs : dict
+    Additional keyword arguments passed on to `{name}`.
+
+Returns
+-------
+reduced : same type as caller
+    New object with `{name}` applied along its rolling dimension.
+"""
+
+
+class Rolling(Generic[T_Xarray]):
+    """A object that implements the moving window pattern.
+
+    See Also
+    --------
+    xarray.Dataset.groupby
+    xarray.DataArray.groupby
+    xarray.Dataset.rolling
+    xarray.DataArray.rolling
+    """
+
+    __slots__ = ("obj", "window", "min_periods", "center", "dim")
+    _attributes = ("window", "min_periods", "center", "dim")
+
+    def __init__(
+        self,
+        obj: T_Xarray,
+        windows: Mapping[Any, int],
+        min_periods: int | None = None,
+        center: bool | Mapping[Any, bool] = False,
+    ) -> None:
+        """
+        Moving window object.
+
+        Parameters
+        ----------
+        obj : Dataset or DataArray
+            Object to window.
+        windows : mapping of hashable to int
+            A mapping from the name of the dimension to create the rolling
+            window along (e.g. `time`) to the size of the moving window.
+        min_periods : int or None, default: None
+            Minimum number of observations in window required to have a value
+            (otherwise result is NA). The default, None, is equivalent to
+            setting min_periods equal to the size of the window.
+        center : bool or dict-like Hashable to bool, default: False
+            Set the labels at the center of the window. If dict-like, set this
+            property per rolling dimension.
+
+        Returns
+        -------
+        rolling : type of input argument
+        """
+        self.dim: list[Hashable] = []
+        self.window: list[int] = []
+        for d, w in windows.items():
+            self.dim.append(d)
+            if w <= 0:
+                raise ValueError("window must be > 0")
+            self.window.append(w)
+
+        self.center = self._mapping_to_list(center, default=False)
+        self.obj: T_Xarray = obj
+
+        # attributes
+        if min_periods is not None and min_periods <= 0:
+            raise ValueError("min_periods must be greater than zero or None")
+
+        self.min_periods = (
+            math.prod(self.window) if min_periods is None else min_periods
+        )
+
+    def __repr__(self) -> str:
+        """provide a nice str repr of our rolling object"""
+
+        attrs = [
+            "{k}->{v}{c}".format(k=k, v=w, c="(center)" if c else "")
+            for k, w, c in zip(self.dim, self.window, self.center)
+        ]
+        return "{klass} [{attrs}]".format(
+            klass=self.__class__.__name__, attrs=",".join(attrs)
+        )
+
+    def __len__(self) -> int:
+        return math.prod(self.obj.sizes[d] for d in self.dim)
+
+    @property
+    def ndim(self) -> int:
+        return len(self.dim)
+
+    def _reduce_method(  # type: ignore[misc]
+        name: str, fillna: Any, rolling_agg_func: Callable | None = None
+    ) -> Callable[..., T_Xarray]:
+        """Constructs reduction methods built on a numpy reduction function (e.g. sum),
+        a bottleneck reduction function (e.g. move_sum), or a Rolling reduction (_mean)."""
+        if rolling_agg_func:
+            array_agg_func = None
+        else:
+            array_agg_func = getattr(duck_array_ops, name)
+
+        bottleneck_move_func = getattr(bottleneck, "move_" + name, None)
+
+        def method(self, keep_attrs=None, **kwargs):
+
+            keep_attrs = self._get_keep_attrs(keep_attrs)
+
+            return self._numpy_or_bottleneck_reduce(
+                array_agg_func,
+                bottleneck_move_func,
+                rolling_agg_func,
+                keep_attrs=keep_attrs,
+                fillna=fillna,
+                **kwargs,
+            )
+
+        method.__name__ = name
+        method.__doc__ = _ROLLING_REDUCE_DOCSTRING_TEMPLATE.format(name=name)
+        return method
+
+    def _mean(self, keep_attrs, **kwargs):
+        result = self.sum(keep_attrs=False, **kwargs) / self.count(keep_attrs=False)
+        if keep_attrs:
+            result.attrs = self.obj.attrs
+        return result
+
+    _mean.__doc__ = _ROLLING_REDUCE_DOCSTRING_TEMPLATE.format(name="mean")
+
+    argmax = _reduce_method("argmax", dtypes.NINF)
+    argmin = _reduce_method("argmin", dtypes.INF)
+    max = _reduce_method("max", dtypes.NINF)
+    min = _reduce_method("min", dtypes.INF)
+    prod = _reduce_method("prod", 1)
+    sum = _reduce_method("sum", 0)
+    mean = _reduce_method("mean", None, _mean)
+    std = _reduce_method("std", None)
+    var = _reduce_method("var", None)
+    median = _reduce_method("median", None)
+
+    def _counts(self, keep_attrs: bool | None) -> T_Xarray:
+        raise NotImplementedError()
+
+    def count(self, keep_attrs: bool | None = None) -> T_Xarray:
+        keep_attrs = self._get_keep_attrs(keep_attrs)
+        rolling_count = self._counts(keep_attrs=keep_attrs)
+        enough_periods = rolling_count >= self.min_periods
+        return rolling_count.where(enough_periods)
+
+    count.__doc__ = _ROLLING_REDUCE_DOCSTRING_TEMPLATE.format(name="count")
+
+    def _mapping_to_list(
+        self,
+        arg: _T | Mapping[Any, _T],
+        default: _T | None = None,
+        allow_default: bool = True,
+        allow_allsame: bool = True,
+    ) -> list[_T]:
+        if utils.is_dict_like(arg):
+            if allow_default:
+                return [arg.get(d, default) for d in self.dim]
+            for d in self.dim:
+                if d not in arg:
+                    raise KeyError(f"Argument has no dimension key {d}.")
+            return [arg[d] for d in self.dim]
+        if allow_allsame:  # for single argument
+            return [arg] * self.ndim  # type: ignore[list-item]  # no check for negatives
+        if self.ndim == 1:
+            return [arg]  # type: ignore[list-item]  # no check for negatives
+        raise ValueError(f"Mapping argument is necessary for {self.ndim}d-rolling.")
+
+    def _get_keep_attrs(self, keep_attrs):
+        if keep_attrs is None:
+            keep_attrs = _get_keep_attrs(default=True)
+
+        return keep_attrs
+
+
+class DataArrayRolling(Rolling["DataArray"]):
+    __slots__ = ("window_labels",)
+
+    def __init__(
+        self,
+        obj: DataArray,
+        windows: Mapping[Any, int],
+        min_periods: int | None = None,
+        center: bool | Mapping[Any, bool] = False,
+    ) -> None:
+        """
+        Moving window object for DataArray.
+        You should use DataArray.rolling() method to construct this object
+        instead of the class constructor.
+
+        Parameters
+        ----------
+        obj : DataArray
+            Object to window.
+        windows : mapping of hashable to int
+            A mapping from the name of the dimension to create the rolling
+            exponential window along (e.g. `time`) to the size of the moving window.
+        min_periods : int, default: None
+            Minimum number of observations in window required to have a value
+            (otherwise result is NA). The default, None, is equivalent to
+            setting min_periods equal to the size of the window.
+        center : bool, default: False
+            Set the labels at the center of the window.
+
+        Returns
+        -------
+        rolling : type of input argument
+
+        See Also
+        --------
+        xarray.DataArray.rolling
+        xarray.DataArray.groupby
+        xarray.Dataset.rolling
+        xarray.Dataset.groupby
+        """
+        super().__init__(obj, windows, min_periods=min_periods, center=center)
+
+        # TODO legacy attribute
+        self.window_labels = self.obj[self.dim[0]]
+
+    def __iter__(self) -> Iterator[tuple[RollingKey, DataArray]]:
+        if self.ndim > 1:
+            raise ValueError("__iter__ is only supported for 1d-rolling")
+        stops = np.arange(1, len(self.window_labels) + 1)
+        starts = stops - int(self.window[0])
+        starts[: int(self.window[0])] = 0
+        for (label, start, stop) in zip(self.window_labels, starts, stops):
+            window = self.obj.isel({self.dim[0]: slice(start, stop)})
+
+            counts = window.count(dim=self.dim[0])
+            window = window.where(counts >= self.min_periods)
+
+            yield (label, window)
+
+    def construct(
+        self,
+        window_dim: Hashable | Mapping[Any, Hashable] | None = None,
+        stride: int | Mapping[Any, int] = 1,
+        fill_value: Any = dtypes.NA,
+        keep_attrs: bool | None = None,
+        **window_dim_kwargs: Hashable,
+    ) -> DataArray:
+        """
+        Convert this rolling object to xr.DataArray,
+        where the window dimension is stacked as a new dimension
+
+        Parameters
+        ----------
+        window_dim : Hashable or dict-like to Hashable, optional
+            A mapping from dimension name to the new window dimension names.
+        stride : int or mapping of int, default: 1
+            Size of stride for the rolling window.
+        fill_value : default: dtypes.NA
+            Filling value to match the dimension size.
+        keep_attrs : bool, default: None
+            If True, the attributes (``attrs``) will be copied from the original
+            object to the new one. If False, the new object will be returned
+            without attributes. If None uses the global default.
+        **window_dim_kwargs : Hashable, optional
+            The keyword arguments form of ``window_dim`` {dim: new_name, ...}.
+
+        Returns
+        -------
+        DataArray that is a view of the original array. The returned array is
+        not writeable.
+
+        Examples
+        --------
+        >>> da = xr.DataArray(np.arange(8).reshape(2, 4), dims=("a", "b"))
+
+        >>> rolling = da.rolling(b=3)
+        >>> rolling.construct("window_dim")
+        <xarray.DataArray (a: 2, b: 4, window_dim: 3)>
+        array([[[nan, nan,  0.],
+                [nan,  0.,  1.],
+                [ 0.,  1.,  2.],
+                [ 1.,  2.,  3.]],
+        <BLANKLINE>
+               [[nan, nan,  4.],
+                [nan,  4.,  5.],
+                [ 4.,  5.,  6.],
+rg: xarray/tests/test_rolling.py: IO error for operation on xarray/tests/test_rolling.py: No such file or directory (os error 2)
+total 12
+drwxr-xr-x 2 oracle oracle 4096 Sep 23 22:30 .
+drwxrwxrwx 1 oracle oracle 4096 Sep 23 22:30 ..
+
+
+=== EVENT 8: item.completed  ===
+reasoning [item_3]
+**Evaluating data methods**
+
+I need to identify existing tests and start rolling methods for the Dataset and DataArray. It’s important to make sure I validate them properly. I wonder if there are certain patterns I should look out for when implementing these rolling methods. I’ll also think about any challenges that might come up during the validation process, as I want to ensure everything works smoothly. Let’s figure this out step by step!
+
+=== EVENT 9: item.started  ===
+Command [item_4]: /bin/sh -lc "rg -n 'def __init__|class DatasetRolling|def _mapping_to_list|def rolling\\(' xarray/core/rolling.py xarray/core/dataarray.py xarray/core/dataset.py; rg --files xarray/tests | rg '(rolling|dataarray|dataset)' | head -60; rg -n '(min_periods|window must be|center=.*\\{|rolling\\(.*center|window_labels)' xarray/tests | head -110; sed -n '125,210p' xarray/core/rolling.py; rg -n 'class DatasetRolling' xarray/core/rolling.py"
+Status: in_progress | Exit code: None
+
+
+=== EVENT 10: item.completed  ===
+Command [item_4]: /bin/sh -lc "rg -n 'def __init__|class DatasetRolling|def _mapping_to_list|def rolling\\(' xarray/core/rolling.py xarray/core/dataarray.py xarray/core/dataset.py; rg --files xarray/tests | rg '(rolling|dataarray|dataset)' | head -60; rg -n '(min_periods|window must be|center=.*\\{|rolling\\(.*center|window_labels)' xarray/tests | head -110; sed -n '125,210p' xarray/core/rolling.py; rg -n 'class DatasetRolling' xarray/core/rolling.py"
+Status: completed | Exit code: 0
+xarray/core/rolling.py:73:    def __init__(
+xarray/core/rolling.py:198:    def _mapping_to_list(
+xarray/core/rolling.py:228:    def __init__(
+xarray/core/rolling.py:587:class DatasetRolling(Rolling["Dataset"]):
+xarray/core/rolling.py:590:    def __init__(
+xarray/core/rolling.py:809:    def __init__(
+xarray/core/dataset.py:356:    def __init__(self, dataset: Dataset):
+xarray/core/dataset.py:409:    def __init__(self, dataset: T_Dataset):
+xarray/core/dataset.py:575:    def __init__(
+xarray/core/dataset.py:8716:    def rolling(
+xarray/core/dataarray.py:197:    def __init__(self, data_array: DataArray):
+xarray/core/dataarray.py:367:    def __init__(
+xarray/core/dataarray.py:5489:    def rolling(
+            "{k}->{v}{c}".format(k=k, v=w, c="(center)" if c else "")
+            for k, w, c in zip(self.dim, self.window, self.center)
+        ]
+        return "{klass} [{attrs}]".format(
+            klass=self.__class__.__name__, attrs=",".join(attrs)
+        )
+
+    def __len__(self) -> int:
+        return math.prod(self.obj.sizes[d] for d in self.dim)
+
+    @property
+    def ndim(self) -> int:
+        return len(self.dim)
+
+    def _reduce_method(  # type: ignore[misc]
+        name: str, fillna: Any, rolling_agg_func: Callable | None = None
+    ) -> Callable[..., T_Xarray]:
+        """Constructs reduction methods built on a numpy reduction function (e.g. sum),
+        a bottleneck reduction function (e.g. move_sum), or a Rolling reduction (_mean)."""
+        if rolling_agg_func:
+            array_agg_func = None
+        else:
+            array_agg_func = getattr(duck_array_ops, name)
+
+        bottleneck_move_func = getattr(bottleneck, "move_" + name, None)
+
+        def method(self, keep_attrs=None, **kwargs):
+
+            keep_attrs = self._get_keep_attrs(keep_attrs)
+
+            return self._numpy_or_bottleneck_reduce(
+                array_agg_func,
+                bottleneck_move_func,
+                rolling_agg_func,
+                keep_attrs=keep_attrs,
+                fillna=fillna,
+                **kwargs,
+            )
+
+        method.__name__ = name
+        method.__doc__ = _ROLLING_REDUCE_DOCSTRING_TEMPLATE.format(name=name)
+        return method
+
+    def _mean(self, keep_attrs, **kwargs):
+        result = self.sum(keep_attrs=False, **kwargs) / self.count(keep_attrs=False)
+        if keep_attrs:
+            result.attrs = self.obj.attrs
+        return result
+
+    _mean.__doc__ = _ROLLING_REDUCE_DOCSTRING_TEMPLATE.format(name="mean")
+
+    argmax = _reduce_method("argmax", dtypes.NINF)
+    argmin = _reduce_method("argmin", dtypes.INF)
+    max = _reduce_method("max", dtypes.NINF)
+    min = _reduce_method("min", dtypes.INF)
+    prod = _reduce_method("prod", 1)
+    sum = _reduce_method("sum", 0)
+    mean = _reduce_method("mean", None, _mean)
+    std = _reduce_method("std", None)
+    var = _reduce_method("var", None)
+    median = _reduce_method("median", None)
+
+    def _counts(self, keep_attrs: bool | None) -> T_Xarray:
+        raise NotImplementedError()
+
+    def count(self, keep_attrs: bool | None = None) -> T_Xarray:
+        keep_attrs = self._get_keep_attrs(keep_attrs)
+        rolling_count = self._counts(keep_attrs=keep_attrs)
+        enough_periods = rolling_count >= self.min_periods
+        return rolling_count.where(enough_periods)
+
+    count.__doc__ = _ROLLING_REDUCE_DOCSTRING_TEMPLATE.format(name="count")
+
+    def _mapping_to_list(
+        self,
+        arg: _T | Mapping[Any, _T],
+        default: _T | None = None,
+        allow_default: bool = True,
+        allow_allsame: bool = True,
+    ) -> list[_T]:
+        if utils.is_dict_like(arg):
+            if allow_default:
+                return [arg.get(d, default) for d in self.dim]
+            for d in self.dim:
+                if d not in arg:
+                    raise KeyError(f"Argument has no dimension key {d}.")
+587:class DatasetRolling(Rolling["Dataset"]):
+
+
+=== EVENT 11: item.completed  ===
+agent_message [item_5]
+The initializer validates windows and `min_periods`; I’ll check both public rolling constructors before testing.
+
+=== EVENT 12: item.started  ===
+Command [item_6]: /bin/sh -lc "sed -n '585,665p' xarray/core/rolling.py; sed -n '5489,5585p' xarray/core/dataarray.py; sed -n '8716,8815p' xarray/core/dataset.py; rg --files xarray/tests | head -80; rg -n 'rolling\\(' xarray/tests | head -75; sed -n '1,100p' conftest.py; sed -n '1,100p' pyproject.toml"
+Status: in_progress | Exit code: None
+
+
+=== EVENT 13: item.completed  ===
+Command [item_6]: /bin/sh -lc "sed -n '585,665p' xarray/core/rolling.py; sed -n '5489,5585p' xarray/core/dataarray.py; sed -n '8716,8815p' xarray/core/dataset.py; rg --files xarray/tests | head -80; rg -n 'rolling\\(' xarray/tests | head -75; sed -n '1,100p' conftest.py; sed -n '1,100p' pyproject.toml"
+Status: completed | Exit code: 0
+
+
+class DatasetRolling(Rolling["Dataset"]):
+    __slots__ = ("rollings",)
+
+    def __init__(
+        self,
+        obj: Dataset,
+        windows: Mapping[Any, int],
+        min_periods: int | None = None,
+        center: bool | Mapping[Any, bool] = False,
+    ) -> None:
+        """
+        Moving window object for Dataset.
+        You should use Dataset.rolling() method to construct this object
+        instead of the class constructor.
+
+        Parameters
+        ----------
+        obj : Dataset
+            Object to window.
+        windows : mapping of hashable to int
+            A mapping from the name of the dimension to create the rolling
+            exponential window along (e.g. `time`) to the size of the moving window.
+        min_periods : int, default: None
+            Minimum number of observations in window required to have a value
+            (otherwise result is NA). The default, None, is equivalent to
+            setting min_periods equal to the size of the window.
+        center : bool or mapping of hashable to bool, default: False
+            Set the labels at the center of the window.
+
+        Returns
+        -------
+        rolling : type of input argument
+
+        See Also
+        --------
+        xarray.Dataset.rolling
+        xarray.DataArray.rolling
+        xarray.Dataset.groupby
+        xarray.DataArray.groupby
+        """
+        super().__init__(obj, windows, min_periods, center)
+        if any(d not in self.obj.dims for d in self.dim):
+            raise KeyError(self.dim)
+        # Keep each Rolling object as a dictionary
+        self.rollings = {}
+        for key, da in self.obj.data_vars.items():
+            # keeps rollings only for the dataset depending on self.dim
+            dims, center = [], {}
+            for i, d in enumerate(self.dim):
+                if d in da.dims:
+                    dims.append(d)
+                    center[d] = self.center[i]
+
+            if dims:
+                w = {d: windows[d] for d in dims}
+                self.rollings[key] = DataArrayRolling(da, w, min_periods, center)
+
+    def _dataset_implementation(self, func, keep_attrs, **kwargs):
+        from .dataset import Dataset
+
+        keep_attrs = self._get_keep_attrs(keep_attrs)
+
+        reduced = {}
+        for key, da in self.obj.data_vars.items():
+            if any(d in da.dims for d in self.dim):
+                reduced[key] = func(self.rollings[key], keep_attrs=keep_attrs, **kwargs)
+            else:
+                reduced[key] = self.obj[key].copy()
+                # we need to delete the attrs of the copied DataArray
+                if not keep_attrs:
+                    reduced[key].attrs = {}
+
+        attrs = self.obj.attrs if keep_attrs else {}
+        return Dataset(reduced, coords=self.obj.coords, attrs=attrs)
+
+    def reduce(
+        self, func: Callable, keep_attrs: bool | None = None, **kwargs: Any
+    ) -> DataArray:
+        """Reduce the items in this group by applying `func` along some
+    def rolling(
+        self,
+        dim: Mapping[Any, int] | None = None,
+        min_periods: int | None = None,
+        center: bool | Mapping[Any, bool] = False,
+        **window_kwargs: int,
+    ) -> DataArrayRolling:
+        """
+        Rolling window object for DataArrays.
+
+        Parameters
+        ----------
+        dim : dict, optional
+            Mapping from the dimension name to create the rolling iterator
+            along (e.g. `time`) to its moving window size.
+        min_periods : int or None, default: None
+            Minimum number of observations in window required to have a value
+            (otherwise result is NA). The default, None, is equivalent to
+            setting min_periods equal to the size of the window.
+        center : bool or Mapping to int, default: False
+            Set the labels at the center of the window.
+        **window_kwargs : optional
+            The keyword arguments form of ``dim``.
+            One of dim or window_kwargs must be provided.
+
+        Returns
+        -------
+        core.rolling.DataArrayRolling
+
+        Examples
+        --------
+        Create rolling seasonal average of monthly data e.g. DJF, JFM, ..., SON:
+
+        >>> da = xr.DataArray(
+        ...     np.linspace(0, 11, num=12),
+        ...     coords=[
+        ...         pd.date_range(
+        ...             "1999-12-15",
+        ...             periods=12,
+        ...             freq=pd.DateOffset(months=1),
+        ...         )
+        ...     ],
+        ...     dims="time",
+        ... )
+        >>> da
+        <xarray.DataArray (time: 12)>
+        array([ 0.,  1.,  2.,  3.,  4.,  5.,  6.,  7.,  8.,  9., 10., 11.])
+        Coordinates:
+          * time     (time) datetime64[ns] 1999-12-15 2000-01-15 ... 2000-11-15
+        >>> da.rolling(time=3, center=True).mean()
+        <xarray.DataArray (time: 12)>
+        array([nan,  1.,  2.,  3.,  4.,  5.,  6.,  7.,  8.,  9., 10., nan])
+        Coordinates:
+          * time     (time) datetime64[ns] 1999-12-15 2000-01-15 ... 2000-11-15
+
+        Remove the NaNs using ``dropna()``:
+
+        >>> da.rolling(time=3, center=True).mean().dropna("time")
+        <xarray.DataArray (time: 10)>
+        array([ 1.,  2.,  3.,  4.,  5.,  6.,  7.,  8.,  9., 10.])
+        Coordinates:
+          * time     (time) datetime64[ns] 2000-01-15 2000-02-15 ... 2000-10-15
+
+        See Also
+        --------
+        core.rolling.DataArrayRolling
+        Dataset.rolling
+        """
+        from .rolling import DataArrayRolling
+
+        dim = either_dict_or_kwargs(dim, window_kwargs, "rolling")
+        return DataArrayRolling(self, dim, min_periods=min_periods, center=center)
+
+    def coarsen(
+        self,
+        dim: Mapping[Any, int] | None = None,
+        boundary: CoarsenBoundaryOptions = "exact",
+        side: SideOptions | Mapping[Any, SideOptions] = "left",
+        coord_func: str | Callable | Mapping[Any, str | Callable] = "mean",
+        **window_kwargs: int,
+    ) -> DataArrayCoarsen:
+        """
+        Coarsen object for DataArrays.
+
+        Parameters
+        ----------
+        dim : mapping of hashable to int, optional
+            Mapping from the dimension name to the window size.
+        boundary : {"exact", "trim", "pad"}, default: "exact"
+            If 'exact', a ValueError will be raised if dimension size is not a
+            multiple of the window size. If 'trim', the excess entries are
+            dropped. If 'pad', NA will be padded.
+        side : {"left", "right"} or mapping of str to {"left", "right"}, default: "left"
+        coord_func : str or mapping of hashable to str, default: "mean"
+            function (name) that is applied to the coordinates,
+            or a mapping from coordinate name to function (name).
+
+    def rolling(
+        self,
+        dim: Mapping[Any, int] | None = None,
+        min_periods: int | None = None,
+        center: bool | Mapping[Any, bool] = False,
+        **window_kwargs: int,
+    ) -> DatasetRolling:
+        """
+        Rolling window object for Datasets.
+
+        Parameters
+        ----------
+        dim : dict, optional
+            Mapping from the dimension name to create the rolling iterator
+            along (e.g. `time`) to its moving window size.
+        min_periods : int or None, default: None
+            Minimum number of observations in window required to have a value
+            (otherwise result is NA). The default, None, is equivalent to
+            setting min_periods equal to the size of the window.
+        center : bool or Mapping to int, default: False
+            Set the labels at the center of the window.
+        **window_kwargs : optional
+            The keyword arguments form of ``dim``.
+            One of dim or window_kwargs must be provided.
+
+        Returns
+        -------
+        core.rolling.DatasetRolling
+
+        See Also
+        --------
+        core.rolling.DatasetRolling
+        DataArray.rolling
+        """
+        from .rolling import DatasetRolling
+
+        dim = either_dict_or_kwargs(dim, window_kwargs, "rolling")
+        return DatasetRolling(self, dim, min_periods=min_periods, center=center)
+
+    def coarsen(
+        self,
+        dim: Mapping[Any, int] | None = None,
+        boundary: CoarsenBoundaryOptions = "exact",
+        side: SideOptions | Mapping[Any, SideOptions] = "left",
+        coord_func: str | Callable | Mapping[Any, str | Callable] = "mean",
+        **window_kwargs: int,
+    ) -> DatasetCoarsen:
+        """
+        Coarsen object for Datasets.
+
+        Parameters
+        ----------
+        dim : mapping of hashable to int, optional
+            Mapping from the dimension name to the window size.
+        boundary : {"exact", "trim", "pad"}, default: "exact"
+            If 'exact', a ValueError will be raised if dimension size is not a
+            multiple of the window size. If 'trim', the excess entries are
+            dropped. If 'pad', NA will be padded.
+        side : {"left", "right"} or mapping of str to {"left", "right"}, default: "left"
+        coord_func : str or mapping of hashable to str, default: "mean"
+            function (name) that is applied to the coordinates,
+            or a mapping from coordinate name to function (name).
+
+        Returns
+        -------
+        core.rolling.DatasetCoarsen
+
+        See Also
+        --------
+        core.rolling.DatasetCoarsen
+        DataArray.coarsen
+        """
+        from .rolling import DatasetCoarsen
+
+        dim = either_dict_or_kwargs(dim, window_kwargs, "coarsen")
+        return DatasetCoarsen(
+            self,
+            dim,
+            boundary=boundary,
+            side=side,
+            coord_func=coord_func,
+        )
+
+    def resample(
+        self,
+        indexer: Mapping[Any, str] | None = None,
+        skipna: bool | None = None,
+        closed: SideOptions | None = None,
+        label: SideOptions | None = None,
+        base: int = 0,
+        keep_attrs: bool | None = None,
+        loffset: datetime.timedelta | str | None = None,
+        restore_coord_dims: bool | None = None,
+        **indexer_kwargs: str,
+    ) -> DatasetResample:
+        """Returns a Resample object for performing resampling operations.
+
+        Handles both downsampling and upsampling. The resampled
+        dimension must be a datetime-like coordinate. If any intervals
+        contain no values from the original object, they will be given
+xarray/tests/data/bears.nc
+xarray/tests/data/example.ict
+xarray/tests/data/example_1.nc
+xarray/tests/data/example_1.nc.gz
+xarray/tests/data/example.grib
+xarray/tests/data/example.uamiv
+xarray/tests/conftest.py
+xarray/tests/__init__.py
+"""Configuration for pytest."""
+
+import pytest
+
+
+def pytest_addoption(parser):
+    """Add command-line flags for pytest."""
+    parser.addoption("--run-flaky", action="store_true", help="runs flaky tests")
+    parser.addoption(
+        "--run-network-tests",
+        action="store_true",
+        help="runs tests requiring a network connection",
+    )
+
+
+def pytest_runtest_setup(item):
+    # based on https://stackoverflow.com/questions/47559524
+    if "flaky" in item.keywords and not item.config.getoption("--run-flaky"):
+        pytest.skip("set --run-flaky option to run flaky tests")
+    if "network" in item.keywords and not item.config.getoption("--run-network-tests"):
+        pytest.skip(
+            "set --run-network-tests to run test requiring an internet connection"
+        )
+
+
+@pytest.fixture(autouse=True)
+def add_standard_imports(doctest_namespace, tmpdir):
+    import numpy as np
+    import pandas as pd
+
+    import xarray as xr
+
+    doctest_namespace["np"] = np
+    doctest_namespace["pd"] = pd
+    doctest_namespace["xr"] = xr
+
+    # always seed numpy.random to make the examples deterministic
+    np.random.seed(0)
+
+    # always switch to the temporary directory, so files get written there
+    tmpdir.chdir()
+[build-system]
+requires = [
+    "setuptools>=42",
+    "wheel",
+    "setuptools_scm[toml]>=3.4",
+    "setuptools_scm_git_archive",
+]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools_scm]
+fallback_version = "999"
+
+
+=== EVENT 14: item.started  ===
+Command [item_7]: /bin/sh -lc "sed -n '5565,5595p' xarray/core/dataarray.py; sed -n '8720,8755p' xarray/core/dataset.py; ls -la xarray/tests | head -28; rg --files | rg '("'^|/)test_.*rolling|rolling.*test'"' | head -35; /opt/miniconda3/envs/testbed/bin/python - <<'PY'
+import xarray as xr
+from xarray.core.rolling import Rolling
+print(xr.__version__)
+a=xr.DataArray([[1,2,3],[4,5,6]], dims=('x','y'), coords={'x':['a','b'], 'y':[10,20,30]})
+for r in [a.rolling({'y':2, 'x':3},center={'y':True}), xr.Dataset({'a':a,'b':('x',[1,2]),'c':42}).rolling({'x':2,'y':3}, center={'y':True})]:
+ print(type(r), r.dim,r.window,r.center,r.min_periods,repr(r)); print(getattr(r,'rollings',None))
+PY"
+Status: in_progress | Exit code: None
+
+
+=== EVENT 15: item.completed  ===
+Command [item_7]: /bin/sh -lc "sed -n '5565,5595p' xarray/core/dataarray.py; sed -n '8720,8755p' xarray/core/dataset.py; ls -la xarray/tests | head -28; rg --files | rg '("'^|/)test_.*rolling|rolling.*test'"' | head -35; /opt/miniconda3/envs/testbed/bin/python - <<'PY'
+import xarray as xr
+from xarray.core.rolling import Rolling
+print(xr.__version__)
+a=xr.DataArray([[1,2,3],[4,5,6]], dims=('x','y'), coords={'x':['a','b'], 'y':[10,20,30]})
+for r in [a.rolling({'y':2, 'x':3},center={'y':True}), xr.Dataset({'a':a,'b':('x',[1,2]),'c':42}).rolling({'x':2,'y':3}, center={'y':True})]:
+ print(type(r), r.dim,r.window,r.center,r.min_periods,repr(r)); print(getattr(r,'rollings',None))
+PY"
+Status: completed | Exit code: 0
+2022.6.0rc1.dev38+g7cc6cc991
+<class 'xarray.core.rolling.DataArrayRolling'> ['y', 'x'] [2, 3] [True, False] 6 DataArrayRolling [y->2(center),x->3]
+None
+<class 'xarray.core.rolling.DatasetRolling'> ['x', 'y'] [2, 3] [False, True] 6 DatasetRolling [x->2,y->3(center)]
+{'a': DataArrayRolling [x->2,y->3(center)], 'b': DataArrayRolling [x->2]}
+
+
+=== EVENT 16: item.completed  ===
+reasoning [item_8]
+**Designing a test suite**
+
+I need to create a test suite with around 12 cases, focusing on various parameters like the dataset for standard windows, scalar center, and explicit min_periods. I’m thinking about multidimensional orders and how to handle attributes. It’s essential to validate parameters, especially for invalid window sizes and minimum periods. I should verify behaviors like threshold means and ensure that rolling sum values with explicit min_periods are accurate. I'll also consider the propagation subtleties for per-variable scenarios.**Ensuring type and dimensions**
+
+I need to confirm that I'm using a hashable tuple for dimensions in my mapping. For example, I’m considering a mapping like {('group', 'id'): 2}. It's also crucial to ensure that pandas or xarray dimensions allow a tuple, so I'll focus on using mapping to retrieve values without iterating through dimensions unnecessarily. A valuable test could be checking a `DataArray` with its dimensions being a tuple, and I'll need to apply a shell command for `apply_patch` since that's the available tool.
+
+=== EVENT 17: item.completed  ===
+agent_message [item_9]
+I’ve confirmed how dataset variables inherit rolling settings. I’ll add constructor tests for those cases and validation.
+
+=== EVENT 18: item.started  ===
+Command [item_10]: /bin/sh -lc "apply_patch <<'PATCH'
+*** Begin Patch
+*** Add File: oracle_tests/test_rolling_init.py
++import numpy as np
++import pytest
++
++import xarray as xr
++from xarray.core.rolling import DataArrayRolling, DatasetRolling, Rolling
++
++
++@pytest.fixture
++def array():
++    return xr.DataArray(
++        np.arange(12).reshape(3, 4),
++        dims=(\"time\", \"place\"),
++        coords={\"time\": [10, 20, 30], \"place\": [\"a\", \"b\", \"c\", \"d\"]},
++    )
++
++
++@pytest.fixture
++def dataset(array):
++    return xr.Dataset(
++        {
++            \"both\": array,
++            \"time_only\": (\"time\", [1, 2, 3]),
++            \"place_only\": (\"place\", [1, 2, 3, 4]),
++            \"constant\": 7,
++        }
++    )
++
++
++@pytest.mark.parametrize(\"kind\", [\"array\", \"dataset\"])
++def test_init_preserves_window_order_and_defaults(kind, request):
++    obj = request.getfixturevalue(kind)
++    rolling = obj.rolling({\"place\": 2, \"time\": 3})
++
++    assert isinstance(rolling, DataArrayRolling if kind == \"array\" else DatasetRolling)
++    assert rolling.obj is obj
++    assert rolling.dim == [\"place\", \"time\"]
++    assert rolling.window == [2, 3]
++    assert rolling.center == [False, False]
++    assert rolling.min_periods == 6
++
++
++@pytest.mark.parametrize(\"kind\", [\"array\", \"dataset\"])
++@pytest.mark.parametrize(
++    (\"center\", \"expected\"),
++    [(True, [True, True]), (False, [False, False]), ({\"time\": True}, [False, True])],
++)
++def test_init_normalizes_center_per_dimension(kind, center, expected, request):
++    obj = request.getfixturevalue(kind)
++
++    rolling = obj.rolling({\"place\": 2, \"time\": 3}, center=center, min_periods=1)
++
++    assert rolling.center == expected
++    assert rolling.min_periods == 1
++
++
++@pytest.mark.parametrize(\"kind\", [\"array\", \"dataset\"])
++@pytest.mark.parametrize(\"window\", [0, -2])
++def test_init_rejects_nonpositive_windows(kind, window, request):
++    obj = request.getfixturevalue(kind)
++
++    with pytest.raises(ValueError, match=\"window must be > 0\"):
++        obj.rolling({\"time\": 2, \"place\": window})
++
++
++@pytest.mark.parametrize(\"kind\", [\"array\", \"dataset\"])
++@pytest.mark.parametrize(\"min_periods\", [0, -1])
++def test_init_rejects_nonpositive_min_periods(kind, min_periods, request):
++    obj = request.getfixturevalue(kind)
++
++    with pytest.raises(ValueError, match=\"min_periods must be greater than zero or None\"):
++        obj.rolling(time=2, min_periods=min_periods)
++
++
++def test_base_init_accepts_single_element_window():
++    array = xr.DataArray([1, 2, 3], dims=\"time\")
++
++    rolling = Rolling(array, {\"time\": 1})
++
++    assert rolling.dim == [\"time\"]
++    assert rolling.window == [1]
++    assert rolling.center == [False]
++    assert rolling.min_periods == 1
++
++
++def test_dataarray_init_exposes_rolling_dimension_labels(array):
++    rolling = array.rolling(time=2)
++
++    assert rolling.window_labels.identical(array[\"time\"])
++
++
++@pytest.mark.parametrize(\"min_periods\", [None, 1])
++def test_dataset_init_creates_only_relevant_variable_rollings(dataset, min_periods):
++    rolling = dataset.rolling(
++        {\"place\": 2, \"time\": 3},
++        center={\"time\": True},
++        min_periods=min_periods,
++    )
++
++    assert set(rolling.rollings) == {\"both\", \"time_only\", \"place_only\"}
++    for name, dims, windows, centers, default_min in [
++        (\"both\", [\"place\", \"time\"], [2, 3], [False, True], 6),
++        (\"time_only\", [\"time\"], [3], [True], 3),
++        (\"place_only\", [\"place\"], [2], [False], 2),
++    ]:
++        variable_rolling = rolling.rollings[name]
++        assert isinstance(variable_rolling, DataArrayRolling)
++        assert variable_rolling.obj.identical(dataset[name])
++        assert variable_rolling.dim == dims
++        assert variable_rolling.window == windows
++        assert variable_rolling.center == centers
++        assert variable_rolling.min_periods == (
++            default_min if min_periods is None else min_periods
++        )
++
++
++def test_dataset_init_rejects_unknown_dimension(dataset):
++    with pytest.raises(KeyError, match=\"unknown\"):
++        dataset.rolling(unknown=2)
+*** End Patch
+PATCH
+/opt/miniconda3/envs/testbed/bin/python -m pytest -o addopts= oracle_tests"
+Status: in_progress | Exit code: None
+
+
+=== EVENT 19: item.completed  ===
+Command [item_10]: /bin/sh -lc "apply_patch <<'PATCH'
+*** Begin Patch
+*** Add File: oracle_tests/test_rolling_init.py
++import numpy as np
++import pytest
++
++import xarray as xr
++from xarray.core.rolling import DataArrayRolling, DatasetRolling, Rolling
++
++
++@pytest.fixture
++def array():
++    return xr.DataArray(
++        np.arange(12).reshape(3, 4),
++        dims=(\"time\", \"place\"),
++        coords={\"time\": [10, 20, 30], \"place\": [\"a\", \"b\", \"c\", \"d\"]},
++    )
++
++
++@pytest.fixture
++def dataset(array):
++    return xr.Dataset(
++        {
++            \"both\": array,
++            \"time_only\": (\"time\", [1, 2, 3]),
++            \"place_only\": (\"place\", [1, 2, 3, 4]),
++            \"constant\": 7,
++        }
++    )
++
++
++@pytest.mark.parametrize(\"kind\", [\"array\", \"dataset\"])
++def test_init_preserves_window_order_and_defaults(kind, request):
++    obj = request.getfixturevalue(kind)
++    rolling = obj.rolling({\"place\": 2, \"time\": 3})
++
++    assert isinstance(rolling, DataArrayRolling if kind == \"array\" else DatasetRolling)
++    assert rolling.obj is obj
++    assert rolling.dim == [\"place\", \"time\"]
++    assert rolling.window == [2, 3]
++    assert rolling.center == [False, False]
++    assert rolling.min_periods == 6
++
++
++@pytest.mark.parametrize(\"kind\", [\"array\", \"dataset\"])
++@pytest.mark.parametrize(
++    (\"center\", \"expected\"),
++    [(True, [True, True]), (False, [False, False]), ({\"time\": True}, [False, True])],
++)
++def test_init_normalizes_center_per_dimension(kind, center, expected, request):
++    obj = request.getfixturevalue(kind)
++
++    rolling = obj.rolling({\"place\": 2, \"time\": 3}, center=center, min_periods=1)
++
++    assert rolling.center == expected
++    assert rolling.min_periods == 1
++
++
++@pytest.mark.parametrize(\"kind\", [\"array\", \"dataset\"])
++@pytest.mark.parametrize(\"window\", [0, -2])
++def test_init_rejects_nonpositive_windows(kind, window, request):
++    obj = request.getfixturevalue(kind)
++
++    with pytest.raises(ValueError, match=\"window must be > 0\"):
++        obj.rolling({\"time\": 2, \"place\": window})
++
++
++@pytest.mark.parametrize(\"kind\", [\"array\", \"dataset\"])
++@pytest.mark.parametrize(\"min_periods\", [0, -1])
++def test_init_rejects_nonpositive_min_periods(kind, min_periods, request):
++    obj = request.getfixturevalue(kind)
++
++    with pytest.raises(ValueError, match=\"min_periods must be greater than zero or None\"):
++        obj.rolling(time=2, min_periods=min_periods)
++
++
++def test_base_init_accepts_single_element_window():
++    array = xr.DataArray([1, 2, 3], dims=\"time\")
++
++    rolling = Rolling(array, {\"time\": 1})
++
++    assert rolling.dim == [\"time\"]
++    assert rolling.window == [1]
++    assert rolling.center == [False]
++    assert rolling.min_periods == 1
++
++
++def test_dataarray_init_exposes_rolling_dimension_labels(array):
++    rolling = array.rolling(time=2)
++
++    assert rolling.window_labels.identical(array[\"time\"])
++
++
++@pytest.mark.parametrize(\"min_periods\", [None, 1])
++def test_dataset_init_creates_only_relevant_variable_rollings(dataset, min_periods):
++    rolling = dataset.rolling(
++        {\"place\": 2, \"time\": 3},
++        center={\"time\": True},
++        min_periods=min_periods,
++    )
++
++    assert set(rolling.rollings) == {\"both\", \"time_only\", \"place_only\"}
++    for name, dims, windows, centers, default_min in [
++        (\"both\", [\"place\", \"time\"], [2, 3], [False, True], 6),
++        (\"time_only\", [\"time\"], [3], [True], 3),
++        (\"place_only\", [\"place\"], [2], [False], 2),
++    ]:
++        variable_rolling = rolling.rollings[name]
++        assert isinstance(variable_rolling, DataArrayRolling)
++        assert variable_rolling.obj.identical(dataset[name])
++        assert variable_rolling.dim == dims
++        assert variable_rolling.window == windows
++        assert variable_rolling.center == centers
++        assert variable_rolling.min_periods == (
++            default_min if min_periods is None else min_periods
++        )
++
++
++def test_dataset_init_rejects_unknown_dimension(dataset):
++    with pytest.raises(KeyError, match=\"unknown\"):
++        dataset.rolling(unknown=2)
+*** End Patch
+PATCH
+/opt/miniconda3/envs/testbed/bin/python -m pytest -o addopts= oracle_tests"
+Status: completed | Exit code: 0
+============================= test session starts ==============================
+platform linux -- Python 3.10.15, pytest-7.4.4, pluggy-1.5.0
+rootdir: /testbed
+configfile: setup.cfg
+plugins: hypothesis-6.115.5, xdist-3.6.1, cov-5.0.0, env-1.1.5
+collected 21 items
+
+oracle_tests/test_rolling_init.py .....................                  [100%]
+
+============================== 21 passed in 1.29s ==============================
+
+
+=== EVENT 20: item.completed  ===
+agent_message [item_11]
+Added 21 unit tests in `oracle_tests/test_rolling_init.py:1` covering rolling defaults, dimension order, center mapping, invalid values, DataArray labels, and Dataset variable-specific settings. No application code was changed.
+
+Validation: all 21 tests passed with the requested pytest command.
+
+=== EVENT 21: turn.completed  ===
+{
+  "type": "turn.completed",
+  "usage": {
+    "input_tokens": 97554,
+    "cached_input_tokens": 77951,
+    "cache_write_input_tokens": 19127,
+    "output_tokens": 2760,
+    "reasoning_output_tokens": 497
+  }
+}
+
+=== HARNESS RESULT ===
+{
+  "cost_usd": null,
+  "duration_seconds": 41.77276869100024,
+  "errors": [],
+  "exit_code": 0,
+  "harness": "codex",
+  "harness_version": "0.153.4",
+  "limit": {
+    "kind": "wall_seconds",
+    "value": 900.0
+  },
+  "model": "openai/gpt-6-sol@preset/oracle-openai-first",
+  "provider": "openrouter",
+  "status": "completed",
+  "timed_out": false,
+  "turn_completed": true,
+  "turn_failed": false,
+  "unparsed_trace_lines": 0,
+  "usage": {
+    "cache_write_input_tokens": 19127,
+    "cached_input_tokens": 77951,
+    "input_tokens": 97554,
+    "output_tokens": 2760,
+    "reasoning_output_tokens": 497
+  }
+}
+
